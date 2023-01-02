@@ -1,4 +1,4 @@
-module kryptoverse-api
+module server
 
 go 1.18
 

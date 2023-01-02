@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"database/sql"
-	"kryptoverse-api/constants"
-	"kryptoverse-api/middlewares"
-	"kryptoverse-api/models"
-	schemas "kryptoverse-api/schemas/auth"
 	"log"
+	"server/constants"
+	"server/middlewares"
+	"server/models"
+	schemas "server/schemas/auth"
 	"time"
 
 	"github.com/gofiber/fiber/v2"

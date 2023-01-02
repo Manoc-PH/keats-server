@@ -1,9 +1,9 @@
 package middlewares
 
 import (
-	"kryptoverse-api/constants"
 	"log"
 	"os"
+	"server/constants"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
