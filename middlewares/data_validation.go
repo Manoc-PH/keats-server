@@ -2,8 +2,8 @@ package middlewares
 
 import (
 	"errors"
-	"kryptoverse-api/utilities"
 	"log"
+	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
 )

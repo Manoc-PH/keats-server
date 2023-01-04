@@ -2,8 +2,8 @@ package setup
 
 import (
 	"database/sql"
-	"kryptoverse-api/utilities"
 	"log"
+	"server/utilities"
 	"time"
 
 	"github.com/gofiber/fiber/v2"

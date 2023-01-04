@@ -1,10 +1,10 @@
 package main
 
 import (
-	"kryptoverse-api/routes"
-	"kryptoverse-api/setup"
-	"kryptoverse-api/utilities"
 	"log"
+	"server/routes"
+	"server/setup"
+	"server/utilities"
 )
 
 func main() {
