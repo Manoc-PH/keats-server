@@ -59,9 +59,23 @@ func ConnectDB() {
 }
 
 func SetupDB(db *sql.DB) error {
-	// !TERRIBLE MODEL
-	// TOO MUCH DATA DUPLICATION
 	_, err := db.Exec(`
+		CREATE TABLE IF NOT EXISTS food(
+			id 									SERIAL PRIMARY KEY,
+			name 								varchar UNIQUE NOT NULL,
+			name_ph 						varchar UNIQUE NOT NULL,
+			brand_name					varchar,
+			barcode							varchar,
+			amount 							float4  NOT NULL,
+			amount_unit 				varchar(4)  NOT NULL,
+			amount_unit_desc 		varchar(40)  NOT NULL,
+			serving_size 				float4,
+			calories 						float4 NOT NULL,
+			protein 						float4 NOT NULL,
+			carbs 							float4 NOT NULL,
+			fats 								float4 NOT NULL);
+
+
 		CREATE TABLE IF NOT EXISTS users (
 			id                      SERIAL PRIMARY KEY,
 			username                VARCHAR(100) UNIQUE NOT NULL,

@@ -16,10 +16,10 @@ type User struct {
 	Profile_Image_Link string `json:"profile_image_link"`
 	Profile_Title      string `json:"profile_title"`
 	// info
-	Weight          uint   `json:"weight"`
-	Height          uint   `json:"height"`
-	Age             uint   `json:"age"`
-	Sex             string `json:"sex"`
-	Activity_Lvl_Id uint   `json:"activity_lvl_id"`
-	Diet_Plan_Id    uint   `json:"diet_plan_id"`
+	Weight          uint      `json:"weight"`
+	Height          uint      `json:"height"`
+	Birthday        time.Time `json:"birthday"`
+	Sex             string    `json:"sex"`
+	Activity_Lvl_Id uint      `json:"activity_lvl_id"`
+	Diet_Plan_Id    uint      `json:"diet_plan_id"`
 }
