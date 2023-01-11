@@ -24,7 +24,7 @@ func Login(c *fiber.Ctx, db *sql.DB) error {
 		})
 	}
 
-	var user = models.User{}
+	var user = models.Account{}
 
 	// checking if user exists
 	row := db.

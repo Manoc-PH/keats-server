@@ -1,6 +1,10 @@
 package schemas
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Req_Sign_Up struct {
 	Username string `json:"username" validate:"required,min=3,max=32"`
@@ -10,6 +14,6 @@ type Req_Sign_Up struct {
 	Height          uint      `json:"height" validate:"required,min=1,max=250"`
 	Birthday        time.Time `json:"birthday" validate:"required,min=8,max=100"`
 	Sex             string    `json:"sex" validate:"required,min=1,max=1"`
-	Activity_Lvl_Id uint      `json:"activity_lvl_id" validate:"required,min=1,max=32"`
-	Diet_Plan_Id    uint      `json:"diet_plan_id" validate:"required,min=1,max=32"`
+	Activity_Lvl_Id uuid.UUID `json:"activity_lvl_id" validate:"required,min=1,max=32"`
+	Diet_Plan_Id    uuid.UUID `json:"diet_plan_id" validate:"required,min=1,max=32"`
 }

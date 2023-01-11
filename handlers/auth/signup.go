@@ -27,7 +27,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 
 	// hashing password and formatting reqData
 	password, _ := bcrypt.GenerateFromPassword([]byte(reqData.Password), 10)
-	user := models.User{
+	user := models.Account{
 		Username:        reqData.Username,
 		Password:        password,
 		Weight:          reqData.Weight,
