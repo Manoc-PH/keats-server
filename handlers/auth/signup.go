@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"server/constants"
+	const_defaults "server/constants/defaults"
 	"server/middlewares"
 	"server/models"
 	schemas "server/schemas/auth"
@@ -27,9 +28,10 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 
 	// hashing password and formatting reqData
 	password, _ := bcrypt.GenerateFromPassword([]byte(reqData.Password), 10)
-	user := models.Account{
-		Username:        reqData.Username,
-		Password:        password,
+	account_id := uuid.New()
+	account_vitals := models.Account_Vitals{
+		ID:              uuid.New(),
+		Account_Id:      account_id,
 		Weight:          reqData.Weight,
 		Height:          reqData.Height,
 		Birthday:        reqData.Birthday,
@@ -37,43 +39,80 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		Activity_Lvl_Id: reqData.Activity_Lvl_Id,
 		Diet_Plan_Id:    reqData.Diet_Plan_Id,
 	}
+	account_profile := models.Account_Profile{
+		ID:         uuid.New(),
+		Account_Id: account_id,
+	}
+	account := models.Account{
+		ID:                 account_id,
+		Username:           reqData.Username,
+		Password:           password,
+		Date_Updated:       time.Now(),
+		Date_Created:       time.Now(),
+		Account_Vitals_Id:  account_vitals.ID,
+		Account_profile_Id: account_profile.ID,
+		Measure_Unit_Id:    const_defaults.Default_Measure_Unit.ID,
+	}
 
-	// saving user
+	// saving account
 	txn, err := db.Begin()
 	if err != nil {
 		log.Fatal(err)
 	}
 	_, err = txn.Exec(
-		`INSERT INTO users 
+		`INSERT INTO account 
 		( id,
 			username,
 			password,
-			updated, 
-			created,
-			profile_image_link,
-			profile_title,
+			date_updated,
+			date_created,
+			account_vitals_id,
+			account_profile_id,
+			measure_unit_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		account.ID,
+		account.Username,
+		account.Password,
+		account.Date_Updated,
+		account.Date_Created,
+		account.Account_Vitals_Id,
+		account.Account_profile_Id,
+		account.Measure_Unit_Id,
+	)
+	if err != nil {
+		log.Println("Error: ", err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(err)
+	}
+	_, err = txn.Exec(
+		`INSERT INTO account_vitals 
+		( id,
+			account_id,
 			weight,
 			height,
-			age,
+			birthday,
 			sex,
-			activity_Lvl_Id,
+			activity_lvl_id,
 			diet_plan_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-		uuid.New(),
-		user.Username,
-		user.Password,
-		time.Now().Format("YYYY-MM-DD"),
-		time.Now().Format("YYYY-MM-DD"),
-		nil,
-		nil,
-		user.Weight,
-		user.Height,
-		user.Birthday,
-		user.Sex,
-		user.Activity_Lvl_Id,
-		user.Diet_Plan_Id,
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		account_vitals.ID,
+		account_vitals.Account_Id,
+		account_vitals.Weight,
+		account_vitals.Height,
+		account_vitals.Birthday,
+		account_vitals.Sex,
+		account_vitals.Activity_Lvl_Id,
+		account_vitals.Diet_Plan_Id,
 	)
-
+	if err != nil {
+		log.Println("Error: ", err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(err)
+	}
+	_, err = txn.Exec(
+		`INSERT INTO account_profile (id, account_id)
+		VALUES ($1, $2)`,
+		account_profile.ID,
+		account_profile.Account_Id,
+	)
 	if err != nil {
 		log.Println("Error: ", err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(err)
@@ -87,7 +126,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 	}
 	// generating jwt token
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		Issuer:    uuid.UUID.String(user.ID),
+		Issuer:    uuid.UUID.String(account.ID),
 		ExpiresAt: jwt.NewNumericDate(time.Now().AddDate(0, 1, 0)),
 	})
 	token, err := claims.SignedString([]byte(constants.SecretKey))
@@ -110,6 +149,6 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 
 	c.Cookie(&cookie)
 
-	log.Println("Successfully registered user")
-	return c.JSON(user)
+	log.Println("Successfully registered account")
+	return c.JSON(account)
 }
