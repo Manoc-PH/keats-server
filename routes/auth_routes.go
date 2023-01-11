@@ -8,7 +8,7 @@ import (
 )
 
 func Auth_Routes(app *fiber.App) {
-	r := app.Group("/api")
+	r := app.Group("/api/auth")
 
 	r.Post("/signup", func(c *fiber.Ctx) error { return handlers.Sign_Up(c, setup.DB) })
 	r.Post("/login", func(c *fiber.Ctx) error { return handlers.Login(c, setup.DB) })
