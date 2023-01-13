@@ -10,8 +10,8 @@ type Req_Sign_Up struct {
 	Username string `json:"username" validate:"required,min=3,max=32"`
 	Password string `json:"password" validate:"required,min=10,max=32"` //,missingRequiredCharacters // add this for password validation
 
-	Weight          uint      `json:"weight" validate:"required,min=1,max=200"`
-	Height          uint      `json:"height" validate:"required,min=1,max=250"`
+	Weight          int       `json:"weight" validate:"required,min=1,max=200"`
+	Height          int       `json:"height" validate:"required,min=1,max=250"`
 	Birthday        time.Time `json:"birthday" validate:"required,min=8,max=100"`
 	Sex             string    `json:"sex" validate:"required,min=1,max=1"`
 	Activity_Lvl_Id uuid.UUID `json:"activity_lvl_id" validate:"required,min=1,max=32"`
