@@ -15,4 +15,5 @@ type Account struct {
 	Account_Vitals_Id  uuid.UUID `json:"account_vitals_id"`
 	Account_profile_Id uuid.UUID `json:"account_profile_id"`
 	Measure_Unit_Id    uuid.UUID `json:"measure_unit_id"`
+	// time.Time SHOULD BE IN ISO STRING
 }

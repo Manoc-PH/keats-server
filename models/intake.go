@@ -12,4 +12,5 @@ type Intake struct {
 	Food_Id      int       `json:"food_id"`
 	Recipe_Id    int       `json:"recipe_id"`
 	Date_Created time.Time `json:"date_created"`
+	// time.Time SHOULD BE IN ISO STRING
 }

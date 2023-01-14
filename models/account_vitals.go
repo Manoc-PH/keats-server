@@ -16,4 +16,5 @@ type Account_Vitals struct {
 	Sex             string    `json:"sex"`
 	Activity_Lvl_Id uuid.UUID `json:"activity_lvl_id"`
 	Diet_Plan_Id    uuid.UUID `json:"diet_plan_id"`
+	// time.Time SHOULD BE IN ISO STRING
 }

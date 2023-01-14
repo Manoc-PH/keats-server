@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"log"
 	"server/constants"
-	const_defaults "server/constants/defaults"
 	"server/middlewares"
 	"server/models"
 	schemas "server/schemas/auth"
@@ -20,7 +19,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 	// data validation
 	reqData := new(schemas.Req_Sign_Up)
 	if err_data, err := middlewares.Body_Validation(reqData, c); err != nil {
-		log.Println("Sign_Up | Error on query validation: ", err.Error())
+		log.Println("Sign_Up | Error on body validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
 	// TODO Query Activity level and Diet Plan tables to verify if both ids sent are valid
@@ -50,37 +49,13 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		Date_Created:       time.Now(),
 		Account_Vitals_Id:  account_vitals.ID,
 		Account_profile_Id: account_profile.ID,
-		Measure_Unit_Id:    const_defaults.Default_Measure_Unit.ID,
+		Measure_Unit_Id:    reqData.Measure_Unit_Id,
 	}
 
 	// saving account
 	txn, err := db.Begin()
 	if err != nil {
 		log.Fatal(err)
-	}
-	_, err = txn.Exec(
-		`INSERT INTO account 
-		( id,
-			username,
-			password,
-			date_updated,
-			date_created,
-			account_vitals_id,
-			account_profile_id,
-			measure_unit_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-		account.ID,
-		account.Username,
-		account.Password,
-		account.Date_Updated,
-		account.Date_Created,
-		account.Account_Vitals_Id,
-		account.Account_profile_Id,
-		account.Measure_Unit_Id,
-	)
-	if err != nil {
-		log.Println("Error: ", err.Error())
-		return c.Status(fiber.StatusInternalServerError).JSON(err)
 	}
 	_, err = txn.Exec(
 		`INSERT INTO account_vitals 
@@ -111,6 +86,30 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		VALUES ($1, $2)`,
 		account_profile.ID,
 		account_profile.Account_Id,
+	)
+	if err != nil {
+		log.Println("Error: ", err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(err)
+	}
+	_, err = txn.Exec(
+		`INSERT INTO account 
+		( id,
+			username,
+			password,
+			date_updated,
+			date_created,
+			account_vitals_id,
+			account_profile_id,
+			measure_unit_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		account.ID,
+		account.Username,
+		account.Password,
+		account.Date_Updated,
+		account.Date_Created,
+		account.Account_Vitals_Id,
+		account.Account_profile_Id,
+		account.Measure_Unit_Id,
 	)
 	if err != nil {
 		log.Println("Error: ", err.Error())

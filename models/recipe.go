@@ -15,4 +15,5 @@ type Recipe struct {
 	Saves           int       `json:"saves"`
 	Date_Created    time.Time `json:"date_created"`
 	Date_Updated    time.Time `json:"date_updated"`
+	// time.Time SHOULD BE IN ISO STRING
 }

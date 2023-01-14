@@ -9,4 +9,5 @@ type Food struct {
 	Name_Brand       string    `json:"name_brand"`
 	Food_Nutrient_Id int       `json:"food_nutrient_id"`
 	Date_Created     time.Time `json:"date_created"`
+	// time.Time SHOULD BE IN ISO STRING
 }
