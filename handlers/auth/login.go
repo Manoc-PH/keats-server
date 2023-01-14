@@ -26,9 +26,26 @@ func Login(c *fiber.Ctx, db *sql.DB) error {
 
 	// checking if user exists
 	row := db.
-		QueryRow("SELECT username, id, password FROM users WHERE username = $1", reqData.Username)
+		QueryRow(`SELECT 
+		username,
+		id,
+		password,
+		date_updated,
+		date_created,
+		account_vitals_id,
+		account_profile_id,
+		measure_unit_id FROM account WHERE username = $1`, reqData.Username)
 	// scanning and returning error
-	if err := row.Scan(&user.Username, &user.ID, &user.Password); err != nil {
+	if err := row.Scan(
+		&user.Username,
+		&user.ID,
+		&user.Password,
+		&user.Date_Updated,
+		&user.Date_Created,
+		&user.Account_Vitals_Id,
+		&user.Account_profile_Id,
+		&user.Measure_Unit_Id); err != nil {
+		log.Println("Login | Error in scanning row: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "user not found",
 		})
@@ -36,6 +53,7 @@ func Login(c *fiber.Ctx, db *sql.DB) error {
 
 	// checking if password matches user
 	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(reqData.Password)); err != nil {
+		log.Println("Login | Error in comparing password: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "inccorect password",
 		})
