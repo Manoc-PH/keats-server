@@ -11,21 +11,21 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func Get_Macro(c *fiber.Ctx, db *sql.DB) error {
+func Get_Macros(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
 	_, id, err := middlewares.AuthMiddleware(c)
 	if err != nil {
-		log.Println("Get_Macro | Error on auth middleware: ", err.Error())
+		log.Println("Get_Macros | Error on auth middleware: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusUnauthorized)
 	}
 	macros := models.Macro{}
 	// querying macro
-	row := query_macro(db, id)
+	row := query_macros(db, id)
 	// scanning and returning error
-	err = scan_macro(row, &macros)
+	err = scan_macros(row, &macros)
 	// Server Error
 	if err != nil && err != sql.ErrNoRows {
-		log.Println("Get_Macro | error in scanning macro: ", err.Error())
+		log.Println("Get_Macros | error in scanning macro: ", err.Error())
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
 	// Macro doesnt exist yet
@@ -44,7 +44,7 @@ func Get_Macro(c *fiber.Ctx, db *sql.DB) error {
 			account_vitals.Birthday,
 		)
 		if err != nil {
-			log.Println("Get_Macro | error in Calculate_Calories: ", err.Error())
+			log.Println("Get_Macros | error in Calculate_Calories: ", err.Error())
 			return utilities.Send_Error(c, "An error occured in calculating your calories", fiber.StatusInternalServerError)
 		}
 		prtn, crbs, fts := utilities.Calculate_Macros(calories, diet_plan.Protein_Percentage, diet_plan.Carbs_Percentage, diet_plan.Fats_Percentage)
@@ -56,14 +56,14 @@ func Get_Macro(c *fiber.Ctx, db *sql.DB) error {
 		// TODO INSERT MACRO TO DATABASE
 		err = insert_macros(db, &macros, &account_vitals)
 		if err != nil {
-			log.Println("Get_Macro | error in insert_macros: ", err.Error())
+			log.Println("Get_Macros | error in insert_macros: ", err.Error())
 			return utilities.Send_Error(c, "An error occured in calculating your calories", fiber.StatusInternalServerError)
 		}
 	}
 	return c.Status(fiber.StatusOK).JSON(macros)
 }
 
-func query_macro(db *sql.DB, user_id uint) *sql.Row {
+func query_macros(db *sql.DB, user_id uint) *sql.Row {
 	row := db.QueryRow(`SELECT
 			id, date_created, calories, protein, carbs, fats, 
 			total_calories, total_protein, total_carbs, total_fats,
@@ -74,7 +74,7 @@ func query_macro(db *sql.DB, user_id uint) *sql.Row {
 	)
 	return row
 }
-func scan_macro(row *sql.Row, macros *models.Macro) error {
+func scan_macros(row *sql.Row, macros *models.Macro) error {
 	err := row.Scan(
 		macros.ID,
 		macros.Date_Created,
