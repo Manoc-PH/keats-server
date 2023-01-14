@@ -47,12 +47,18 @@ func Get_Macro(c *fiber.Ctx, db *sql.DB) error {
 			log.Println("Get_Macro | error in Calculate_Calories: ", err.Error())
 			return utilities.Send_Error(c, "An error occured in calculating your calories", fiber.StatusInternalServerError)
 		}
-		p, c, f := utilities.Calculate_Macros(calories, diet_plan.Protein_Percentage, diet_plan.Carbs_Percentage, diet_plan.Fats_Percentage)
+		prtn, crbs, fts := utilities.Calculate_Macros(calories, diet_plan.Protein_Percentage, diet_plan.Carbs_Percentage, diet_plan.Fats_Percentage)
 		macros.Total_Calories = float32(calories)
-		macros.Total_Protein = p
-		macros.Total_Carbs = c
-		macros.Total_Fats = f
+		macros.Total_Protein = prtn
+		macros.Total_Carbs = crbs
+		macros.Total_Fats = fts
+		macros.Date_Created = time.Now()
 		// TODO INSERT MACRO TO DATABASE
+		err = insert_macros(db, &macros, &account_vitals)
+		if err != nil {
+			log.Println("Get_Macro | error in insert_macros: ", err.Error())
+			return utilities.Send_Error(c, "An error occured in calculating your calories", fiber.StatusInternalServerError)
+		}
 	}
 	return c.Status(fiber.StatusOK).JSON(macros)
 }
@@ -93,6 +99,8 @@ func query_account_details(db *sql.DB, user_id uint) *sql.Row {
 			account_vitals.height,
 			account_vitals.birthday,
 			account_vitals.sex,
+			account_vitals.activity_lvl_id,
+			account_vitals.diet_plan_id,
 			activity_lvl.name,
 			activity_lvl.bmr_multipler,
 			diet_plan.name,
@@ -120,6 +128,8 @@ func scan_account_details(
 		account_vitals.Height,
 		account_vitals.Birthday,
 		account_vitals.Sex,
+		account_vitals.Activity_Lvl_Id,
+		account_vitals.Diet_Plan_Id,
 
 		activity_lvl.Name,
 		activity_lvl.Bmr_Multiplier,
@@ -131,4 +141,34 @@ func scan_account_details(
 		diet_plan.Carbs_Percentage,
 	)
 	return err
+}
+func insert_macros(db *sql.DB, macros *models.Macro, account_vitals *models.Account_Vitals) error {
+	row := db.
+		QueryRow(`INSERT INTO macro (
+			account_id,
+			date_created,
+			calories,
+			protein,
+			carbs,
+			fats,
+			total_calories,
+			total_protein,
+			total_carbs,
+			total_fats,
+			activity_lvl_id,
+			diet_plan_id
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
+			macros.Account_Id, macros.Date_Created, 0, 0, 0, 0,
+			macros.Total_Calories,
+			macros.Total_Protein,
+			macros.Total_Carbs,
+			macros.Total_Fats,
+			account_vitals.Activity_Lvl_Id,
+			account_vitals.Diet_Plan_Id,
+		)
+	err := row.Scan(macros.ID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
