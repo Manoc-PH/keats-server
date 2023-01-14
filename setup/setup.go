@@ -55,7 +55,7 @@ func ConnectDB() {
 	}
 	log.Println("Connected!")
 	DB = db
-	SetupDB(db)
+	// SetupDB(db)
 }
 
 func SetupDB(db *sql.DB) error {
@@ -73,61 +73,7 @@ func SetupDB(db *sql.DB) error {
 			calories 						float4 NOT NULL,
 			protein 						float4 NOT NULL,
 			carbs 							float4 NOT NULL,
-			fats 								float4 NOT NULL);
-
-
-		CREATE TABLE IF NOT EXISTS users (
-			id                      SERIAL PRIMARY KEY,
-			username                VARCHAR(100) UNIQUE NOT NULL,
-			password                VARCHAR(1000) NOT NULL,
-			profile_image_link			VARCHAR(1000)
-		);
-		CREATE TABLE IF NOT EXISTS wallets (
-			id                      SERIAL PRIMARY KEY,
-			owner_id                INT NOT NULL,
-			asset_id     					  INT NOT NULL,
-			asset_code              VARCHAR(10) NOT NULL,
-			asset_desc              VARCHAR(50) NOT NULL,
-			asset_amount            DECIMAL NOT NULL,
-			created                 TIMESTAMP,
-			FOREIGN KEY(owner_id)   REFERENCES users(id) ON DELETE CASCADE
-		);
-		CREATE TABLE IF NOT EXISTS transactions (
-			id                      					SERIAL PRIMARY KEY,
-			transaction_type_id								INT NOT NULL,
-			transaction_type_desc							VARCHAR(100) NOT NULL,
-			originator_id           					INT NOT NULL,
-			originator_username     					VARCHAR(100) NOT NULL,
-			recipient_id            					INT,
-			recipient_username	    					VARCHAR(100),
-			asset_id													INT NOT NULL,
-			asset_code              					VARCHAR(10) NOT NULL,
-			asset_desc              					VARCHAR(100) NOT NULL,
-			asset_amount            					DECIMAL NOT NULL,
-			created														TIMESTAMP,
-			FOREIGN KEY(originator_id)      	REFERENCES users(id) ON DELETE CASCADE,
-			FOREIGN KEY(recipient_id)     		REFERENCES users(id) ON DELETE CASCADE
-		); 
-		CREATE TABLE IF NOT EXISTS trade_positions (
-			id                      					SERIAL PRIMARY KEY,
-			position_type_id									INT NOT NULL,
-			position_type_desc								VARCHAR(100) NOT NULL,
-			position_status_id								INT NOT NULL,
-			position_status_desc							VARCHAR(100) NOT NULL,
-			originator_id           					INT NOT NULL,
-			originator_username     					VARCHAR(100) NOT NULL, 
-			asset_id													INT NOT NULL,
-			asset_code              					VARCHAR(10) NOT NULL,
-			asset_desc              					VARCHAR(50) NOT NULL,
-			asset_amount            					DECIMAL NOT NULL,
-			buy_asset_price          					DECIMAL NOT NULL,
-			buy_asset_amount_usd     					DECIMAL NOT NULL,
-			sell_asset_price         					DECIMAL,
-			sell_asset_amount_usd    					DECIMAL,
-			leverage_amount										INT NOT NULL,
-			updated														TIMESTAMP,
-			created														TIMESTAMP,
-			FOREIGN KEY(originator_id)      	REFERENCES users(id) ON DELETE CASCADE
+			fats 								float4 NOT NULL); 
 		); `)
 	if err != nil {
 		log.Fatalf("an error '%s' was not expected when setting up the db tables", err)

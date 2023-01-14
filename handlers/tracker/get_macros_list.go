@@ -28,8 +28,8 @@ func Get_Macros_List(c *fiber.Ctx, db *sql.DB) error {
 	}
 	days := int(math.Floor(reqData.End_Date.Sub(reqData.Start_Date).Hours() / 24))
 
-	macros := make([]models.Macro, days)
-	// querying macro
+	macros := make([]models.Macros, days)
+	// querying macros
 	rows, err := query_macros_list(db, id, reqData)
 	if err != nil && err != sql.ErrNoRows {
 		log.Println("Get_Macros_List | error in querying macros: ", err.Error())
@@ -51,7 +51,7 @@ func query_macros_list(db *sql.DB, user_id uint, reqData *schemas.Req_Get_Macros
 			id, date_created, calories, protein, carbs, fats, 
 			total_calories, total_protein, total_carbs, total_fats,
 			activity_lvl_id, diet_plan_id
-		FROM macro WHERE account_id = $1
+		FROM macros WHERE account_id = $1
 		AND date_created::date BETWEEN $2 AND $3
 		ORDER BY date_Created asc`,
 		// casting timestamp to date
@@ -59,9 +59,9 @@ func query_macros_list(db *sql.DB, user_id uint, reqData *schemas.Req_Get_Macros
 	)
 	return row, err
 }
-func scan_macros_list(rows *sql.Rows, macros []models.Macro) error {
+func scan_macros_list(rows *sql.Rows, macros []models.Macros) error {
 	for rows.Next() {
-		new_macros := models.Macro{}
+		new_macros := models.Macros{}
 		if err := rows.
 			Scan(
 				&new_macros.ID,

@@ -18,17 +18,17 @@ func Get_Macros(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Get_Macros | Error on auth middleware: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusUnauthorized)
 	}
-	macros := models.Macro{}
-	// querying macro
+	macros := models.Macros{}
+	// querying macros
 	row := query_macros(db, id)
 	// scanning and returning error
 	err = scan_macros(row, &macros)
 	// Server Error
 	if err != nil && err != sql.ErrNoRows {
-		log.Println("Get_Macros | error in scanning macro: ", err.Error())
+		log.Println("Get_Macros | error in scanning macros: ", err.Error())
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
-	// Macro doesnt exist yet
+	// Macros doesnt exist yet
 	if err != nil && err == sql.ErrNoRows {
 		row = query_account_details(db, id)
 		account_vitals := models.Account_Vitals{}
@@ -68,13 +68,13 @@ func query_macros(db *sql.DB, user_id uint) *sql.Row {
 			id, date_created, calories, protein, carbs, fats, 
 			total_calories, total_protein, total_carbs, total_fats,
 			activity_lvl_id, diet_plan_id
-		FROM macro WHERE account_id = $1 AND date_created::date = date $2`,
+		FROM macros WHERE account_id = $1 AND date_created::date = date $2`,
 		user_id, time.Now(),
 		// casting timestamp to date
 	)
 	return row
 }
-func scan_macros(row *sql.Row, macros *models.Macro) error {
+func scan_macros(row *sql.Row, macros *models.Macros) error {
 	err := row.Scan(
 		macros.ID,
 		macros.Date_Created,
@@ -142,9 +142,9 @@ func scan_account_details(
 	)
 	return err
 }
-func insert_macros(db *sql.DB, macros *models.Macro, account_vitals *models.Account_Vitals) error {
+func insert_macros(db *sql.DB, macros *models.Macros, account_vitals *models.Account_Vitals) error {
 	row := db.
-		QueryRow(`INSERT INTO macro (
+		QueryRow(`INSERT INTO macros (
 			account_id,
 			date_created,
 			calories,

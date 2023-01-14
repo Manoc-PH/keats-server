@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Macro struct {
+type Macros struct {
 	ID              int       `json:"id"`
 	Account_Id      uuid.UUID `json:"account_id"`
 	Date_Created    time.Time `json:"date_created"`
