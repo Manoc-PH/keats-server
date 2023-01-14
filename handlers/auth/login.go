@@ -18,12 +18,10 @@ import (
 func Login(c *fiber.Ctx, db *sql.DB) error {
 	// data validation
 	reqData := new(schemas.Req_Login)
-	if err := middlewares.Body_Validation(reqData, c); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+	if err_data, err := middlewares.Body_Validation(reqData, c); err != nil {
+		log.Println("Login | Error on query validation: ", err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
-
 	var user = models.Account{}
 
 	// checking if user exists

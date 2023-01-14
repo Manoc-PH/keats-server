@@ -22,9 +22,9 @@ func Get_Macros_List(c *fiber.Ctx, db *sql.DB) error {
 
 	//* data validation
 	reqData := new(schemas.Req_Get_Macros_List)
-	if err = middlewares.Query_Validation(reqData, c); err != nil {
+	if err_data, err := middlewares.Query_Validation(reqData, c); err != nil {
 		log.Println("Get_Macros_List | Error on query validation: ", err.Error())
-		return utilities.Send_Error(c, err.Error(), fiber.StatusBadRequest)
+		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
 	days := int(math.Floor(reqData.End_Date.Sub(reqData.Start_Date).Hours() / 24))
 

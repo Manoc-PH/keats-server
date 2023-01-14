@@ -13,10 +13,9 @@ import (
 func Update_Profile(c *fiber.Ctx, db *sql.DB) error {
 	// data validation
 	reqData := new(schemas.Req_Update_profile)
-	if err := middlewares.Body_Validation(reqData, c); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+	if err_data, err := middlewares.Body_Validation(reqData, c); err != nil {
+		log.Println("Update_Profile | Error on query validation: ", err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
 	// TODO Query Activity level and Diet Plan tables to verify if both ids sent are valid
 
