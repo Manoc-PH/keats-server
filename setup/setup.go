@@ -20,13 +20,19 @@ var FiberConfig = fiber.Config{
 			code = e.Code
 		}
 		// Send custom error page
-		err = ctx.Status(code).SendFile("./build/notfound.html")
-		if err != nil {
-			// In case the SendFile fails
-			return ctx.Status(fiber.StatusInternalServerError).SendString("Internal Server Error")
+		if code == fiber.StatusMethodNotAllowed {
+			return ctx.Status(fiber.StatusMethodNotAllowed).JSON(fiber.Map{
+				"message": "Method not allowed",
+			})
 		}
-		// Return from handler
-		return nil
+		if code == fiber.StatusNotFound {
+			return ctx.Status(fiber.StatusMethodNotAllowed).JSON(fiber.Map{
+				"message": "Route does not exist",
+			})
+		}
+		return ctx.Status(code).JSON(fiber.Map{
+			"message": err.Error(),
+		})
 	},
 }
 
