@@ -10,6 +10,7 @@ import (
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Get_Macros_List(c *fiber.Ctx, db *sql.DB) error {
@@ -46,7 +47,7 @@ func Get_Macros_List(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(macros)
 }
 
-func query_macros_list(db *sql.DB, user_id uint, reqData *schemas.Req_Get_Macros_List) (*sql.Rows, error) {
+func query_macros_list(db *sql.DB, user_id uuid.UUID, reqData *schemas.Req_Get_Macros_List) (*sql.Rows, error) {
 	row, err := db.Query(`SELECT
 			id, date_created, calories, protein, carbs, fats, 
 			total_calories, total_protein, total_carbs, total_fats,

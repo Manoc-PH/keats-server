@@ -2,15 +2,14 @@ package middlewares
 
 import (
 	"log"
-	"os"
-	"strconv"
+	"server/constants"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 )
 
-func AuthMiddleware(c *fiber.Ctx) (*jwt.Token, uint, error) {
-	SecretKey := os.Getenv("SECRET_KEY")
+func AuthMiddleware(c *fiber.Ctx) (*jwt.Token, uuid.UUID, error) {
 	cookie := c.Cookies("jwt")
 
 	// parsing token
@@ -18,19 +17,18 @@ func AuthMiddleware(c *fiber.Ctx) (*jwt.Token, uint, error) {
 		cookie,
 		&jwt.RegisteredClaims{},
 		func(t *jwt.Token) (interface{}, error) {
-			return []byte(SecretKey), nil
+			return []byte(constants.SecretKey), nil
 		},
 	)
 	if err != nil {
 		log.Println(err)
-		return nil, 0, err
+		return nil, uuid.Nil, err
 	}
 	claims := token.Claims.(*jwt.RegisteredClaims)
-	u64, err := strconv.ParseUint(claims.Issuer, 10, 32)
+	owner_id, err := uuid.Parse(claims.Issuer)
 	if err != nil {
-		return nil, 0, err
+		log.Println(err)
+		return nil, uuid.Nil, err
 	}
-
-	owner_id := uint(u64)
 	return token, owner_id, nil
 }
