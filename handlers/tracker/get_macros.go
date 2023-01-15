@@ -47,7 +47,7 @@ func Get_Macros(c *fiber.Ctx, db *sql.DB) error {
 			return utilities.Send_Error(c, "An error occured in calculating your calories", fiber.StatusInternalServerError)
 		}
 		prtn, crbs, fts := utilities.Calculate_Macros(calories, diet_plan.Protein_Percentage, diet_plan.Carbs_Percentage, diet_plan.Fats_Percentage)
-		macros.Total_Calories = float32(calories)
+		macros.Total_Calories = calories
 		macros.Total_Protein = prtn
 		macros.Total_Carbs = crbs
 		macros.Total_Fats = fts

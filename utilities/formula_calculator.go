@@ -28,9 +28,9 @@ func Calculate_Calories(sex string, w int, h int, bmr_multiplier float32, cal_pe
 	return 0, errors.New("an error occured in calculating calories")
 }
 
-func Calculate_Macros(Cal int, p int, c int, f int) (protein float32, carbs float32, fats float32) {
-	p_pcnt := float32(Cal) * (float32(p) * 0.01)
-	c_pcnt := float32(Cal) * (float32(c) * 0.01)
-	f_pcnt := float32(Cal) * (float32(f) * 0.01)
+func Calculate_Macros(Cal int, p int, c int, f int) (protein int, carbs int, fats int) {
+	p_pcnt := int(float32(Cal) * (float32(p) * 0.01) / 4)
+	c_pcnt := int(float32(Cal) * (float32(c) * 0.01) / 4)
+	f_pcnt := int(float32(Cal) * (float32(f) * 0.01) / 9)
 	return p_pcnt, c_pcnt, f_pcnt
 }
