@@ -7,7 +7,7 @@ import (
 )
 
 type Macros struct {
-	ID              int       `json:"id"`
+	ID              uint      `json:"id"`
 	Account_Id      uuid.UUID `json:"account_id"`
 	Date_Created    time.Time `json:"date_created"`
 	Calories        int       `json:"calories"`
