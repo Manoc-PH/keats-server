@@ -73,8 +73,8 @@ func query_macros(db *sql.DB, user_id uuid.UUID) *sql.Row {
 			id, date_created, calories, protein, carbs, fats, 
 			total_calories, total_protein, total_carbs, total_fats,
 			activity_lvl_id, diet_plan_id
-		FROM macros WHERE account_id = $1 AND date_created::date = $2::date;`,
-		user_id, time.Now(),
+		FROM macros WHERE account_id = $1 AND date_created = $2;`,
+		user_id, time.Now().Format("2006-01-02"),
 		// casting timestamp to date
 	)
 	return row
@@ -159,7 +159,7 @@ func insert_macros(db *sql.DB, macros *models.Macros, account_vitals *models.Acc
 			activity_lvl_id,
 			diet_plan_id
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
-			macros.Account_Id, macros.Date_Created, 0, 0, 0, 0,
+			macros.Account_Id, time.Now().Format("2006-01-02"), 0, 0, 0, 0,
 			macros.Total_Calories,
 			macros.Total_Protein,
 			macros.Total_Carbs,
