@@ -15,7 +15,6 @@ package handlers
 // 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 // 	}
 // 	days := int(math.Floor(reqData.End_Date.Sub(reqData.Start_Date).Hours() / 24))
-
 // 	macros := make([]models.Macros, days)
 // 	// querying macros
 // 	rows, err := query_macros_list(db, id, reqData)

@@ -45,8 +45,8 @@ type Account_Items struct {
 }
 
 type Account_Game_Stat struct {
-	ID           uint      `json:"id"`
-	Account_Id   uuid.UUID `json:"account_id"`
-	Coins        uint      `json:"coins"`
-	Level_Points uint      `json:"level_points"`
+	ID         uint      `json:"id"`
+	Account_Id uuid.UUID `json:"account_id"`
+	Coins      uint      `json:"coins"`
+	XP         uint      `json:"xp"`
 }
