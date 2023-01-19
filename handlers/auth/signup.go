@@ -57,6 +57,11 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 	if err != nil {
 		log.Fatal(err)
 	}
+	_, err = txn.Exec(`INSERT INTO game_stat (account_id,	coins, xp) VALUES ($1, $2, $3)`, account_id, 0, 0)
+	if err != nil {
+		log.Println("Sign_Up | Error: ", err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(err)
+	}
 	_, err = txn.Exec(
 		`INSERT INTO account_vitals 
 		( id,
@@ -78,7 +83,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		account_vitals.Diet_Plan_Id,
 	)
 	if err != nil {
-		log.Println("Error: ", err.Error())
+		log.Println("Sign_Up | Error: ", err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(err)
 	}
 	_, err = txn.Exec(
@@ -88,7 +93,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		account_profile.Account_Id,
 	)
 	if err != nil {
-		log.Println("Error: ", err.Error())
+		log.Println("Sign_Up | Error: ", err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(err)
 	}
 	_, err = txn.Exec(
@@ -112,14 +117,14 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		account.Measure_Unit_Id,
 	)
 	if err != nil {
-		log.Println("Error: ", err.Error())
+		log.Println("Sign_Up | Error: ", err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(err)
 	}
 
 	err = txn.Commit()
 	if err != nil {
 		txn.Rollback()
-		log.Println("Error: ", err.Error())
+		log.Println("Sign_Up | Error: ", err.Error())
 		return err
 	}
 	// generating jwt token

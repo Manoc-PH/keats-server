@@ -1,6 +1,9 @@
 package schemas
 
-import "time"
+import (
+	"server/models"
+	"time"
+)
 
 // *START DATE IS THE OLDEST DATE AND END DATE IS THE NEWEST DATE
 type Req_Get_Macros_List struct {
@@ -15,4 +18,10 @@ type Req_Post_Intake struct {
 	Amount_Unit      string  `json:"amount_unit" validate:"required"`
 	Amount_Unit_Desc string  `json:"amount_unit_desc" validate:"required"`
 	Serving_Size     float32 `json:"serving_size"`
+}
+
+type Res_Post_Intake struct {
+	Food            models.Food              `json:"food"`
+	Macros_Added    models.Macros            `json:"macros"`
+	Game_Stat_Added models.Account_Game_Stat `json:"account_game_stat"`
 }
