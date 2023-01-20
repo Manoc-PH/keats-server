@@ -12,4 +12,5 @@ func Tracker_Routes(app *fiber.App) {
 
 	r.Get("/macros", func(c *fiber.Ctx) error { return handlers.Get_Macros(c, setup.DB) })
 	r.Get("/macros_list", func(c *fiber.Ctx) error { return handlers.Get_Macros_List(c, setup.DB) })
+	r.Post("/intake", func(c *fiber.Ctx) error { return handlers.Post_Intake(c, setup.DB) })
 }

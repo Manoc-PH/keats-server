@@ -54,7 +54,15 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 		}
 		//! macros to add doesnt return the total macros
 		macros_to_add := models.Macros{ID: macros_curr.ID, Account_Id: owner_id}
-		new_intake := models.Intake{Account_Id: owner_id, Date_Created: time.Now(), Food_Id: food.ID}
+		new_intake := models.Intake{
+			Account_Id:       owner_id,
+			Date_Created:     time.Now(),
+			Food_Id:          food.ID,
+			Amount:           reqData.Amount,
+			Amount_Unit:      reqData.Amount_Unit,
+			Amount_Unit_Desc: reqData.Amount_Unit_Desc,
+			Serving_Size:     reqData.Serving_Size,
+		}
 		calc_macros(&macros_to_add, &food_nutrient, *reqData)
 		Coins, XP := utilities.Calc_CnXP_On_Add_Intake(float32(macros_to_add.Calories), float32(macros_curr.Calories), float32(macros_curr.Total_Calories))
 		err = save_intake_macro_and_gamestat(db, &macros_to_add, Coins, XP, &new_intake)
@@ -62,15 +70,21 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 			log.Println("Post_Intake | Error on save_intake_macro_and_gamestat: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
+		response_data.Intake = new_intake
+		response_data.Added_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: uint(Coins), XP: uint(Coins)}
+		response_data.Added_Macros = schemas.Added_Macros{
+			Calories: macros_to_add.Calories,
+			Protein:  macros_to_add.Protein,
+			Carbs:    macros_to_add.Carbs,
+			Fats:     macros_to_add.Fats,
+		}
 		response_data.Food = food
-		response_data.Macros_Added = macros_to_add
-		response_data.Game_Stat_Added.Coins = uint(Coins)
-		response_data.Game_Stat_Added.XP = uint(XP)
 	}
 	// TODO ADD SUPPORT FOR RECIPES
 	if reqData.Recipe_Id != 0 {
 		return utilities.Send_Error(c, "recipes not yet supported", fiber.StatusBadRequest)
 	}
+	// TODO RETURN ACTUAL INTAKE
 	return c.Status(fiber.StatusOK).JSON(response_data)
 }
 
@@ -158,14 +172,33 @@ func save_intake_macro_and_gamestat(db *sql.DB, macros_to_add *models.Macros, co
 		log.Println("save_intake_macro_and_gamestat (update account_game_stat)| Error: ", err.Error())
 		return err
 	}
-	_, err = txn.Exec(
-		`INSERT INTO intake (account_id, date_created, food_id, recipe_id)
-		VALUES ($1, $2, $3, $4)`,
-		intake.Account_Id, intake.Date_Created, intake.Food_Id, intake.Recipe_Id,
-	)
-	if err != nil {
-		log.Println("save_intake_macro_and_gamestat (insert intake)| Error: ", err.Error())
-		return err
+	if intake.Food_Id != 0 && intake.Recipe_Id == 0 {
+		_, err = txn.Exec(
+			`INSERT INTO intake (account_id, date_created, food_id, amount,	amount_unit, amount_unit_desc, serving_size)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+			intake.Account_Id,
+			intake.Date_Created,
+			intake.Food_Id,
+			intake.Amount,
+			intake.Amount_Unit,
+			intake.Amount_Unit_Desc,
+			intake.Serving_Size,
+		)
+		if err != nil {
+			log.Println("save_intake_macro_and_gamestat (insert intake)| Error: ", err.Error())
+			return err
+		}
+	}
+	if intake.Food_Id == 0 && intake.Recipe_Id != 0 {
+		_, err = txn.Exec(
+			`INSERT INTO intake (account_id, date_created, recipe_id)
+			VALUES ($1, $2, $3)`,
+			intake.Account_Id, intake.Date_Created, intake.Recipe_Id,
+		)
+		if err != nil {
+			log.Println("save_intake_macro_and_gamestat (insert intake)| Error: ", err.Error())
+			return err
+		}
 	}
 	err = txn.Commit()
 	if err != nil {

@@ -12,16 +12,27 @@ type Req_Get_Macros_List struct {
 }
 
 type Req_Post_Intake struct {
-	Food_Id          uint    `json:"food_id" validate:"required_if=Recipe_Id nil"`
-	Recipe_Id        uint    `json:"recipe_id" validate:"required_if=Food_Id nil"`
+	Food_Id          uint    `json:"food_id" validate:"required_if=Recipe_Id 0"`
+	Recipe_Id        uint    `json:"recipe_id" validate:"required_if=Food_Id 0"`
 	Amount           float32 `json:"amount" validate:"required"`
-	Amount_Unit      string  `json:"amount_unit" validate:"required"`
-	Amount_Unit_Desc string  `json:"amount_unit_desc" validate:"required"`
+	Amount_Unit      string  `json:"amount_unit" validate:"oneof='g' 'ml'"`
+	Amount_Unit_Desc string  `json:"amount_unit_desc" validate:"oneof='gram' 'milliliter'"`
 	Serving_Size     float32 `json:"serving_size"`
 }
 
+type Added_Macros struct {
+	Calories int `json:"calories"`
+	Protein  int `json:"protein"`
+	Carbs    int `json:"carbs"`
+	Fats     int `json:"fats"`
+}
+type Added_Coins_And_XP struct {
+	Coins uint `json:"coins"`
+	XP    uint `json:"xp"`
+}
 type Res_Post_Intake struct {
-	Food            models.Food              `json:"food"`
-	Macros_Added    models.Macros            `json:"macros"`
-	Game_Stat_Added models.Account_Game_Stat `json:"account_game_stat"`
+	Added_Macros       Added_Macros       `json:"added_macros"`
+	Added_Coins_And_XP Added_Coins_And_XP `json:"added_coins_and_xp"`
+	Intake             models.Intake      `json:"intake"`
+	Food               models.Food        `json:"food"`
 }
