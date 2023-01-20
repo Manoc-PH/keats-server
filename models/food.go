@@ -23,6 +23,11 @@ type Food_Nutrient struct {
 	Protein          float32 `json:"protein"`
 	Carbs            float32 `json:"carbs"`
 	Fats             float32 `json:"fats"`
+	//
+	Trans_Fat     float32 `json:"trans_fat"`
+	Saturated_Fat float32 `json:"saturated_fat"`
+	Sugars        float32 `json:"sugars"`
+	Sodium        float32 `json:"sodium"`
 }
 type Food_Image struct {
 	ID               uint    `json:"id"`
