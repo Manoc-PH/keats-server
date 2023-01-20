@@ -48,10 +48,10 @@ func Get_Macros(c *fiber.Ctx, db *sql.DB) error {
 			return utilities.Send_Error(c, "An error occured in calculating your calories", fiber.StatusInternalServerError)
 		}
 		prtn, crbs, fts := utilities.Calculate_Macros(calories, diet_plan.Protein_Percentage, diet_plan.Carbs_Percentage, diet_plan.Fats_Percentage)
-		macros.Total_Calories = calories
-		macros.Total_Protein = prtn
-		macros.Total_Carbs = crbs
-		macros.Total_Fats = fts
+		macros.Max_Calories = calories
+		macros.Max_Protein = prtn
+		macros.Max_Carbs = crbs
+		macros.Max_Fats = fts
 		macros.Date_Created = time.Now()
 		macros.Activity_Lvl_Id = account_vitals.Activity_Lvl_Id
 		macros.Diet_Plan_Id = account_vitals.Diet_Plan_Id
@@ -72,7 +72,7 @@ func Get_Macros(c *fiber.Ctx, db *sql.DB) error {
 func query_macros(db *sql.DB, user_id uuid.UUID) *sql.Row {
 	row := db.QueryRow(`SELECT
 			id, date_created, calories, protein, carbs, fats, 
-			total_calories, total_protein, total_carbs, total_fats,
+			max_calories, max_protein, max_carbs, max_fats,
 			activity_lvl_id, diet_plan_id
 		FROM macros WHERE account_id = $1 AND date_created = $2;`,
 		user_id, time.Now().Format(constants.YYYY_MM_DD),
@@ -89,10 +89,10 @@ func scan_macros(row *sql.Row, macros *models.Macros) error {
 		&macros.Carbs,
 		&macros.Fats,
 
-		&macros.Total_Calories,
-		&macros.Total_Protein,
-		&macros.Total_Carbs,
-		&macros.Total_Fats,
+		&macros.Max_Calories,
+		&macros.Max_Protein,
+		&macros.Max_Carbs,
+		&macros.Max_Fats,
 		&macros.Activity_Lvl_Id,
 		&macros.Diet_Plan_Id,
 	)
@@ -153,18 +153,18 @@ func insert_macros(db *sql.DB, macros *models.Macros, account_vitals *models.Acc
 			protein,
 			carbs,
 			fats,
-			total_calories,
-			total_protein,
-			total_carbs,
-			total_fats,
+			max_calories,
+			max_protein,
+			max_carbs,
+			max_fats,
 			activity_lvl_id,
 			diet_plan_id
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
 			macros.Account_Id, time.Now().Format(constants.YYYY_MM_DD), 0, 0, 0, 0,
-			macros.Total_Calories,
-			macros.Total_Protein,
-			macros.Total_Carbs,
-			macros.Total_Fats,
+			macros.Max_Calories,
+			macros.Max_Protein,
+			macros.Max_Carbs,
+			macros.Max_Fats,
 			account_vitals.Activity_Lvl_Id,
 			account_vitals.Diet_Plan_Id,
 		)

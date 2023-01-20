@@ -39,7 +39,7 @@ func Get_Macros_List(c *fiber.Ctx, db *sql.DB) error {
 func query_and_scan_macros_list(db *sql.DB, user_id uuid.UUID, reqData *schemas.Req_Get_Macros_List) ([]models.Macros, error) {
 	rows, err := db.Query(`SELECT
 			id, date_created, calories, protein, carbs, fats, 
-			total_calories, total_protein, total_carbs, total_fats,
+			max_calories, max_protein, max_carbs, max_fats,
 			activity_lvl_id, diet_plan_id
 		FROM macros WHERE account_id = $1
 		AND date_created BETWEEN $2 AND $3
@@ -65,10 +65,10 @@ func query_and_scan_macros_list(db *sql.DB, user_id uuid.UUID, reqData *schemas.
 				&new_macros.Carbs,
 				&new_macros.Fats,
 
-				&new_macros.Total_Calories,
-				&new_macros.Total_Protein,
-				&new_macros.Total_Carbs,
-				&new_macros.Total_Fats,
+				&new_macros.Max_Calories,
+				&new_macros.Max_Protein,
+				&new_macros.Max_Carbs,
+				&new_macros.Max_Fats,
 				&new_macros.Activity_Lvl_Id,
 				&new_macros.Diet_Plan_Id,
 			); err != nil {

@@ -64,7 +64,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 			Serving_Size:     reqData.Serving_Size,
 		}
 		calc_macros(&macros_to_add, &food_nutrient, *reqData)
-		Coins, XP := utilities.Calc_CnXP_On_Add_Intake(float32(macros_to_add.Calories), float32(macros_curr.Calories), float32(macros_curr.Total_Calories))
+		Coins, XP := utilities.Calc_CnXP_On_Add_Intake(float32(macros_to_add.Calories), float32(macros_curr.Calories), float32(macros_curr.Max_Calories))
 		err = save_intake_macro_and_gamestat(db, &macros_to_add, Coins, XP, &new_intake)
 		if err != nil {
 			log.Println("Post_Intake | Error on save_intake_macro_and_gamestat: ", err.Error())
