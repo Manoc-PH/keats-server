@@ -63,7 +63,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 			Amount_Unit_Desc: reqData.Amount_Unit_Desc,
 			Serving_Size:     reqData.Serving_Size,
 		}
-		calc_macros(&macros_to_add, &food_nutrient, *reqData)
+		calc_macros(&macros_to_add, &food_nutrient, reqData.Amount)
 		Coins, XP := utilities.Calc_CnXP_On_Add_Intake(float32(macros_to_add.Calories), float32(macros_curr.Calories), float32(macros_curr.Max_Calories))
 		err = save_intake_macro_and_gamestat(db, &macros_to_add, Coins, XP, &new_intake)
 		if err != nil {
@@ -71,7 +71,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
 		response_data.Intake = new_intake
-		response_data.Added_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: uint(Coins), XP: uint(Coins)}
+		response_data.Added_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: uint(Coins), XP: uint(XP)}
 		response_data.Added_Macros = schemas.Added_Macros{
 			Calories: macros_to_add.Calories,
 			Protein:  macros_to_add.Protein,
@@ -130,13 +130,13 @@ func scan_food(row *sql.Row, food *models.Food, food_nutrient *models.Food_Nutri
 	}
 	return nil
 }
-func calc_macros(macros_to_add *models.Macros, food_nutrient *models.Food_Nutrient, reqData schemas.Req_Post_Intake) {
+func calc_macros(macros_to_add *models.Macros, food_nutrient *models.Food_Nutrient, req_amount float32) {
 	// TODO ADD HANDLER FOR DIFFERENT AMOUNT UNIT ||
 	// TODO WRITE A CONVERTER THAT CHANGES THE food_nutrient AMOUNT VALUE TO GRAMS
 	// if reqData.Amount_Unit != food_nutrient.Amount_Unit {}
 
 	// Servings should be converted to amount in grams in the frontend
-	amount_modifier := reqData.Amount / food_nutrient.Amount
+	amount_modifier := req_amount / food_nutrient.Amount
 	macros_to_add.Calories = int(food_nutrient.Calories * amount_modifier)
 	macros_to_add.Protein = int(food_nutrient.Protein * amount_modifier)
 	macros_to_add.Carbs = int(food_nutrient.Carbs * amount_modifier)
@@ -191,9 +191,15 @@ func save_intake_macro_and_gamestat(db *sql.DB, macros_to_add *models.Macros, co
 	}
 	if intake.Food_Id == 0 && intake.Recipe_Id != 0 {
 		_, err = txn.Exec(
-			`INSERT INTO intake (account_id, date_created, recipe_id)
-			VALUES ($1, $2, $3)`,
-			intake.Account_Id, intake.Date_Created, intake.Recipe_Id,
+			`INSERT INTO intake (account_id, date_created, recipe_id, amount,	amount_unit, amount_unit_desc, serving_size)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+			intake.Account_Id,
+			intake.Date_Created,
+			intake.Recipe_Id,
+			intake.Amount,
+			intake.Amount_Unit,
+			intake.Amount_Unit_Desc,
+			intake.Serving_Size,
 		)
 		if err != nil {
 			log.Println("save_intake_macro_and_gamestat (insert intake)| Error: ", err.Error())
