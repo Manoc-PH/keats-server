@@ -43,6 +43,9 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 		// TODO OPTIMIZATION: USE GO ROUTINES
 		row := query_intake_food(reqData.Intake_ID, db)
 		err = scan_intake_food(row, &intake, &food, &food_nutrient)
+		if err == sql.ErrNoRows {
+			return utilities.Send_Error(c, "intake not found", fiber.StatusInternalServerError)
+		}
 		if err != nil {
 			log.Println("Put_Intake | Error on scanning food: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
@@ -53,19 +56,22 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 			log.Println("Put_Intake | Error on scanning macros: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
-
-		old_macros := models.Macros{ID: macros_curr.ID, Account_Id: owner_id}
-		calc_old_macros(&intake, &food_nutrient, &old_macros)
-		old_coins, old_xp := utilities.Calc_CnXP_On_Add_Intake(float32(old_macros.Calories), float32(macros_curr.Calories), float32(macros_curr.Max_Calories))
-
-		new_macros := models.Macros{ID: macros_curr.ID, Account_Id: owner_id}
-		calc_macros(&new_macros, &food_nutrient, reqData.Amount)
-		new_coins, new_xp := utilities.Calc_CnXP_On_Add_Intake(float32(new_macros.Calories), float32(macros_curr.Calories), float32(macros_curr.Max_Calories))
-		new_coins = new_coins - old_coins
-		new_xp = new_xp - old_xp
+		new_coins, new_xp, new_deductions := 0, 0, 0
+		old_intake_macros := models.Macros{ID: macros_curr.ID, Account_Id: owner_id}
+		calc_macros(&old_intake_macros, &food_nutrient, intake.Amount)
+		new_intake_macros := models.Macros{ID: macros_curr.ID, Account_Id: owner_id}
+		calc_macros(&new_intake_macros, &food_nutrient, reqData.Amount)
+		// ! STILL UNSURE OF THIS CODE BLOCK'S STABILITY (like my emotions)
+		if old_intake_macros.Calories != new_intake_macros.Calories {
+			old_coins, old_xp, old_deductions := utilities.Calc_CnXP_On_Add_Intake(float32(old_intake_macros.Calories), float32(macros_curr.Calories-old_intake_macros.Calories), float32(macros_curr.Max_Calories))
+			new_coins, new_xp, new_deductions = utilities.Calc_CnXP_On_Add_Intake(float32(new_intake_macros.Calories), float32(macros_curr.Calories-old_intake_macros.Calories), float32(macros_curr.Max_Calories))
+			new_deductions = (new_deductions * -1) + old_deductions
+			new_coins = (new_coins - old_coins) + new_deductions
+			new_xp = (new_xp - old_xp) + new_deductions
+		}
 
 		macros_to_add := models.Macros{ID: macros_curr.ID, Account_Id: owner_id}
-		calc_macros_update(&old_macros, &new_macros, &macros_to_add)
+		calc_macros_update(&old_intake_macros, &new_intake_macros, &macros_to_add)
 
 		new_intake := models.Intake{}
 		new_intake = intake
@@ -73,14 +79,13 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 		new_intake.Amount_Unit = reqData.Amount_Unit
 		new_intake.Amount_Unit_Desc = reqData.Amount_Unit_Desc
 		new_intake.Serving_Size = reqData.Serving_Size
-
 		err = update_intake_macro_and_gamestat(db, &macros_to_add, new_coins, new_xp, &new_intake)
 		if err != nil {
 			log.Println("Put_Intake | Error on update_intake_macro_and_gamestat: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
 		response_data.Intake = new_intake
-		response_data.Added_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: uint(new_coins), XP: uint(new_xp)}
+		response_data.Added_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: new_coins, XP: new_xp}
 		response_data.Added_Macros = schemas.Added_Macros{
 			Calories: macros_to_add.Calories,
 			Protein:  macros_to_add.Protein,
@@ -151,18 +156,6 @@ func scan_intake_food(row *sql.Row, intake *models.Intake, food *models.Food, fo
 		return err
 	}
 	return nil
-}
-func calc_old_macros(intake *models.Intake, food_nutrient *models.Food_Nutrient, old_macros *models.Macros) {
-	// TODO ADD HANDLER FOR DIFFERENT AMOUNT UNIT ||
-	// TODO WRITE A CONVERTER THAT CHANGES THE food_nutrient AMOUNT VALUE TO GRAMS
-	// if reqData.Amount_Unit != food_nutrient.Amount_Unit {}
-
-	// Servings should be converted to amount in grams in the frontend
-	amount_modifier := intake.Amount / food_nutrient.Amount
-	old_macros.Calories = int(food_nutrient.Calories * amount_modifier)
-	old_macros.Protein = int(food_nutrient.Protein * amount_modifier)
-	old_macros.Carbs = int(food_nutrient.Carbs * amount_modifier)
-	old_macros.Fats = int(food_nutrient.Fats * amount_modifier)
 }
 func calc_macros_update(old_macros *models.Macros, new_macros *models.Macros, macros_to_add *models.Macros) {
 	macros_to_add.Calories = new_macros.Calories - old_macros.Calories

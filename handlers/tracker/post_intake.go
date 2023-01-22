@@ -64,14 +64,16 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 			Serving_Size:     reqData.Serving_Size,
 		}
 		calc_macros(&macros_to_add, &food_nutrient, reqData.Amount)
-		Coins, XP := utilities.Calc_CnXP_On_Add_Intake(float32(macros_to_add.Calories), float32(macros_curr.Calories), float32(macros_curr.Max_Calories))
-		err = save_intake_macro_and_gamestat(db, &macros_to_add, Coins, XP, &new_intake)
+		coins, xp, deductions := utilities.Calc_CnXP_On_Add_Intake(float32(macros_to_add.Calories), float32(macros_curr.Calories), float32(macros_curr.Max_Calories))
+		coins = coins - deductions
+		xp = xp - deductions
+		err = save_intake_macro_and_gamestat(db, &macros_to_add, coins, xp, &new_intake)
 		if err != nil {
 			log.Println("Post_Intake | Error on save_intake_macro_and_gamestat: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
 		response_data.Intake = new_intake
-		response_data.Added_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: uint(Coins), XP: uint(XP)}
+		response_data.Added_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: coins, XP: xp}
 		response_data.Added_Macros = schemas.Added_Macros{
 			Calories: macros_to_add.Calories,
 			Protein:  macros_to_add.Protein,

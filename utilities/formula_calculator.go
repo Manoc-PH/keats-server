@@ -37,32 +37,43 @@ func Calculate_Macros(Cal int, p int, c int, f int) (protein int, carbs int, fat
 }
 
 // Calculating Coins and XP reward and bonus when inputting an intake
-func Calc_CnXP_On_Add_Intake(Cal_Added float32, Cal_Total float32, Cal_Max float32) (Coins int, XP int) {
-	negative_modifier := -1
+func Calc_CnXP_On_Add_Intake(Cal_Added float32, Cal_Total float32, Cal_Max float32) (Coins int, XP int, Deductions int) {
 	new_cal_total := Cal_Added + Cal_Total
-	C := int((Cal_Added / Cal_Max) * float32(const_defaults.Default_Coin_Reward))
-	X := int((Cal_Added / Cal_Max) * float32(const_defaults.Default_XP_Reward))
+	deductions := 0
+	c := int((Cal_Added / Cal_Max) * float32(const_defaults.Default_Coin_Reward))
+	x := int((Cal_Added / Cal_Max) * float32(const_defaults.Default_XP_Reward))
 	// checking if they exceeded their plan
 	// if they did, their coins are deducted while not touching their xp
 	if new_cal_total > Cal_Max {
-		C = C * negative_modifier
-		X = 0
-		return C, X
+		// if it exceeds, only use the excess as the multiplier
+		isAt100AfterAddedCal := (new_cal_total / Cal_Max) >= 1
+		if isAt100AfterAddedCal {
+			excess := new_cal_total - Cal_Max
+			positive_added_cal := Cal_Added - excess
+			deductions = int((excess / Cal_Max) * float32(const_defaults.Default_Coin_Reward))
+			c := int((positive_added_cal / Cal_Max) * float32(const_defaults.Default_Coin_Reward))
+			x := int((positive_added_cal / Cal_Max) * float32(const_defaults.Default_XP_Reward))
+			return c, x, deductions
+		}
+		c = 0
+		x = 0
+		deductions = int((Cal_Added / Cal_Max) * float32(const_defaults.Default_Coin_Reward))
+		return c, x, deductions
 	}
 	// Checks if they already have the bonus
 	// if not, a bonus is added to the total coins and xp
 	isAt90BeforeAddedCal := (Cal_Total / Cal_Max) >= 0.9
 	isAt90AfterAddedCal := (new_cal_total / Cal_Max) >= 0.9
 	if isAt90AfterAddedCal && !isAt90BeforeAddedCal {
-		C = C + const_defaults.Default_Coin_Bonus
-		X = X + const_defaults.Default_XP_Bonus
+		c = c + const_defaults.Default_Coin_Bonus
+		x = x + const_defaults.Default_XP_Bonus
 	}
-	return C, X
+	return c, x, deductions
 }
 func Calc_CnXP_On_Delete_Intake(Cal_Deleted float32, Cal_Total float32, Cal_Max float32) (Coins int, XP int) {
 	new_cal_total := Cal_Deleted - Cal_Total
-	C := int((Cal_Deleted/Cal_Max)*float32(const_defaults.Default_Coin_Reward)) * -1
-	X := int((Cal_Deleted/Cal_Max)*float32(const_defaults.Default_XP_Reward)) * -1
+	c := int((Cal_Deleted/Cal_Max)*float32(const_defaults.Default_Coin_Reward)) * -1
+	x := int((Cal_Deleted/Cal_Max)*float32(const_defaults.Default_XP_Reward)) * -1
 	// Checks if they already have the bonus
 	// if not, the bonus is removed from the total coins and xp
 	isAt90BeforeDeletedCal := (Cal_Total/Cal_Max) >= 0.9 && (Cal_Total/Cal_Max) <= 1
@@ -70,8 +81,8 @@ func Calc_CnXP_On_Delete_Intake(Cal_Deleted float32, Cal_Total float32, Cal_Max 
 	// we check if it was no longer 90 after deleting the cal
 	// and if it was at 90 before deleting the cal
 	if !isAt90AfterDeletedCal && isAt90BeforeDeletedCal {
-		C = C - const_defaults.Default_Coin_Bonus
-		X = X - const_defaults.Default_XP_Bonus
+		c = c - const_defaults.Default_Coin_Bonus
+		x = x - const_defaults.Default_XP_Bonus
 	}
-	return C, X
+	return c, x
 }

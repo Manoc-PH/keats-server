@@ -37,8 +37,8 @@ type Added_Macros struct {
 	Fats     int `json:"fats"`
 }
 type Added_Coins_And_XP struct {
-	Coins uint `json:"coins"`
-	XP    uint `json:"xp"`
+	Coins int `json:"coins"`
+	XP    int `json:"xp"`
 }
 type Res_Post_Intake struct {
 	Added_Macros       Added_Macros       `json:"added_macros"`
