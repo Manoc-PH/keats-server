@@ -44,7 +44,7 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 		row := query_intake_food(reqData.Intake_ID, db)
 		err = scan_intake_food(row, &intake, &food, &food_nutrient)
 		if err == sql.ErrNoRows {
-			return utilities.Send_Error(c, "intake not found", fiber.StatusInternalServerError)
+			return utilities.Send_Error(c, "intake not found", fiber.StatusBadRequest)
 		}
 		if err != nil {
 			log.Println("Put_Intake | Error on scanning food: ", err.Error())
@@ -63,8 +63,8 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 		calc_macros(&new_intake_macros, &food_nutrient, reqData.Amount)
 		// ! STILL UNSURE OF THIS CODE BLOCK'S STABILITY (like my emotions)
 		if old_intake_macros.Calories != new_intake_macros.Calories {
-			old_coins, old_xp, old_deductions := utilities.Calc_CnXP_On_Add_Intake(float32(old_intake_macros.Calories), float32(macros_curr.Calories-old_intake_macros.Calories), float32(macros_curr.Max_Calories))
-			new_coins, new_xp, new_deductions = utilities.Calc_CnXP_On_Add_Intake(float32(new_intake_macros.Calories), float32(macros_curr.Calories-old_intake_macros.Calories), float32(macros_curr.Max_Calories))
+			old_coins, old_xp, old_deductions := utilities.Calc_CnXP_On_Intake(float32(old_intake_macros.Calories), float32(macros_curr.Calories-old_intake_macros.Calories), float32(macros_curr.Max_Calories))
+			new_coins, new_xp, new_deductions = utilities.Calc_CnXP_On_Intake(float32(new_intake_macros.Calories), float32(macros_curr.Calories-old_intake_macros.Calories), float32(macros_curr.Max_Calories))
 			new_deductions = (new_deductions * -1) + old_deductions
 			new_coins = (new_coins - old_coins) + new_deductions
 			new_xp = (new_xp - old_xp) + new_deductions

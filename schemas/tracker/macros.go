@@ -28,6 +28,9 @@ type Req_Post_Intake struct {
 	Amount_Unit_Desc string  `json:"amount_unit_desc" validate:"oneof='gram' 'milliliter'"`
 	Serving_Size     float32 `json:"serving_size"`
 }
+type Req_Delete_Intake struct {
+	Intake_ID uint `json:"intake_id" validate:"required"`
+}
 
 //* RESPONSE
 type Added_Macros struct {
@@ -51,4 +54,16 @@ type Res_Patch_Intake struct {
 	Added_Coins_And_XP Added_Coins_And_XP `json:"added_coins_and_xp"`
 	Intake             models.Intake      `json:"intake"`
 	Food               models.Food        `json:"food"`
+}
+type Deleted_Macros struct {
+	Calories int `json:"calories"`
+	Protein  int `json:"protein"`
+	Carbs    int `json:"carbs"`
+	Fats     int `json:"fats"`
+}
+type Res_Delete_Intake struct {
+	Deleted_Macros       Deleted_Macros     `json:"deleted_macros"`
+	Deleted_Coins_And_XP Added_Coins_And_XP `json:"deleted_coins_and_xp"`
+	Intake               models.Intake      `json:"intake"`
+	Food                 models.Food        `json:"food"`
 }

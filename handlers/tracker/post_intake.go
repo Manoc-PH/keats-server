@@ -64,7 +64,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 			Serving_Size:     reqData.Serving_Size,
 		}
 		calc_macros(&macros_to_add, &food_nutrient, reqData.Amount)
-		coins, xp, deductions := utilities.Calc_CnXP_On_Add_Intake(float32(macros_to_add.Calories), float32(macros_curr.Calories), float32(macros_curr.Max_Calories))
+		coins, xp, deductions := utilities.Calc_CnXP_On_Intake(float32(macros_to_add.Calories), float32(macros_curr.Calories), float32(macros_curr.Max_Calories))
 		coins = coins - deductions
 		xp = xp - deductions
 		err = save_intake_macro_and_gamestat(db, &macros_to_add, coins, xp, &new_intake)
@@ -86,7 +86,6 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 	if reqData.Recipe_Id != 0 {
 		return utilities.Send_Error(c, "recipes not yet supported", fiber.StatusBadRequest)
 	}
-	// TODO RETURN ACTUAL INTAKE
 	return c.Status(fiber.StatusOK).JSON(response_data)
 }
 
@@ -132,13 +131,13 @@ func scan_food(row *sql.Row, food *models.Food, food_nutrient *models.Food_Nutri
 	}
 	return nil
 }
-func calc_macros(macros_to_add *models.Macros, food_nutrient *models.Food_Nutrient, req_amount float32) {
+func calc_macros(macros_to_add *models.Macros, food_nutrient *models.Food_Nutrient, amount float32) {
 	// TODO ADD HANDLER FOR DIFFERENT AMOUNT UNIT ||
 	// TODO WRITE A CONVERTER THAT CHANGES THE food_nutrient AMOUNT VALUE TO GRAMS
 	// if reqData.Amount_Unit != food_nutrient.Amount_Unit {}
 
 	// Servings should be converted to amount in grams in the frontend
-	amount_modifier := req_amount / food_nutrient.Amount
+	amount_modifier := amount / food_nutrient.Amount
 	macros_to_add.Calories = int(food_nutrient.Calories * amount_modifier)
 	macros_to_add.Protein = int(food_nutrient.Protein * amount_modifier)
 	macros_to_add.Carbs = int(food_nutrient.Carbs * amount_modifier)
