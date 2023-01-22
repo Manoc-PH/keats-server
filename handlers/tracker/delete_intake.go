@@ -44,6 +44,7 @@ func Delete_Intake(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Delete_Intake | Error on scanning food: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 	}
+	// TODO DO NOT ALLOW USER TO DELETE INTAKE THAT IS NOT FROM TODAY
 	row = query_macros(db, owner_id)
 	err = scan_macros(row, &macros_curr)
 	if err != nil {
@@ -61,12 +62,12 @@ func Delete_Intake(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Delete_Intake | Error on delete_intake_macro_and_gamestat: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 	}
-	response_data.Deleted_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: coins, XP: xp}
+	response_data.Deleted_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: coins * -1, XP: xp * -1}
 	response_data.Deleted_Macros = schemas.Deleted_Macros{
-		Calories: macros_to_delete.Calories,
-		Protein:  macros_to_delete.Protein,
-		Carbs:    macros_to_delete.Carbs,
-		Fats:     macros_to_delete.Carbs}
+		Calories: macros_to_delete.Calories * -1,
+		Protein:  macros_to_delete.Protein * -1,
+		Carbs:    macros_to_delete.Carbs * -1,
+		Fats:     macros_to_delete.Carbs * -1}
 	response_data.Intake = intake
 	response_data.Food = food
 

@@ -50,6 +50,7 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 			log.Println("Put_Intake | Error on scanning food: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
+		// TODO DO NOT ALLOW USER TO EDIT INTAKE THAT IS NOT FROM TODAY
 		row = query_macros(db, owner_id)
 		err = scan_macros(row, &macros_curr)
 		if err != nil {
