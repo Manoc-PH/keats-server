@@ -48,7 +48,7 @@ func Delete_Intake(c *fiber.Ctx, db *sql.DB) error {
 	is_intake_today := check_if_date_is_today(intake.Date_Created, time.Now())
 	if !is_intake_today {
 		log.Println("Delete_Intake | Error: User trying to delete old intake")
-		return utilities.Send_Error(c, "cannot edit intake from more than a day ago", fiber.StatusBadRequest)
+		return utilities.Send_Error(c, "cannot delete intake from more than a day ago", fiber.StatusBadRequest)
 	}
 	row = query_macros(db, owner_id)
 	err = scan_macros(row, &macros_curr)
