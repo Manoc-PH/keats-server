@@ -32,7 +32,7 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	// Final response
-	response_data := schemas.Res_Patch_Intake{}
+	response_data := schemas.Res_Put_Intake{}
 
 	//* data processing
 	if reqData.Food_Id != 0 {
