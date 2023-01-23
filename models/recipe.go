@@ -9,6 +9,8 @@ import (
 type Recipe struct {
 	ID              uint      `json:"id"`
 	Owner_Id        uuid.UUID `json:"owner_id"`
+	Name            string    `json:"name "`
+	Name_Owner      string    `json:"name_owner"`
 	Main_Image_Link string    `json:"main_image_link"`
 	Prep_Mins       int       `json:"prep_mins"`
 	Servings        int       `json:"servings"`
