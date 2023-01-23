@@ -7,6 +7,7 @@ import (
 	"server/models"
 	schemas "server/schemas/tracker"
 	"server/utilities"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -44,7 +45,11 @@ func Delete_Intake(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Delete_Intake | Error on scanning food: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 	}
-	// TODO DO NOT ALLOW USER TO DELETE INTAKE THAT IS NOT FROM TODAY
+	is_intake_today := check_if_date_is_today(intake.Date_Created, time.Now())
+	if !is_intake_today {
+		log.Println("Delete_Intake | Error: User trying to delete old intake")
+		return utilities.Send_Error(c, "cannot edit intake from more than a day ago", fiber.StatusBadRequest)
+	}
 	row = query_macros(db, owner_id)
 	err = scan_macros(row, &macros_curr)
 	if err != nil {

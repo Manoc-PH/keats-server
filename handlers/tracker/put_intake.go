@@ -50,7 +50,11 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 			log.Println("Put_Intake | Error on scanning food: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
-		// TODO DO NOT ALLOW USER TO EDIT INTAKE THAT IS NOT FROM TODAY
+		is_intake_today := check_if_date_is_today(intake.Date_Created, time.Now())
+		if !is_intake_today {
+			log.Println("Put_Intake | Error: User trying to edit old intake")
+			return utilities.Send_Error(c, "cannot edit intake from more than a day ago", fiber.StatusBadRequest)
+		}
 		row = query_macros(db, owner_id)
 		err = scan_macros(row, &macros_curr)
 		if err != nil {
@@ -111,6 +115,7 @@ func query_intake_food(intake_id uint, db *sql.DB) *sql.Row {
 			intake.amount_unit,
 			intake.amount_unit_desc,
 			intake.serving_size,
+			intake.date_created,
 			food.id, food.name, food.name_ph, food.name_brand,
 			food_nutrient.id,
 			food_nutrient.amount,
@@ -138,6 +143,7 @@ func scan_intake_food(row *sql.Row, intake *models.Intake, food *models.Food, fo
 			&intake.Amount_Unit,
 			&intake.Amount_Unit_Desc,
 			&intake.Serving_Size,
+			&intake.Date_Created,
 
 			&food.ID,
 			&food.Name,
@@ -220,4 +226,10 @@ func update_intake_macro_and_gamestat(db *sql.DB, macros_to_add *models.Macros, 
 		return err
 	}
 	return nil
+}
+func check_if_date_is_today(a time.Time, b time.Time) bool {
+	if a.Day() == b.Day() && a.Month() == b.Month() && a.Year() == b.Year() {
+		return true
+	}
+	return false
 }
