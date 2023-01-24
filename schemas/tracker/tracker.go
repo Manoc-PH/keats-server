@@ -7,6 +7,9 @@ import (
 	"github.com/google/uuid"
 )
 
+type Req_Get_Intake_Details struct {
+	Intake_ID uint `json:"intake_id" validate:"required"`
+}
 type Intake_Details_Food struct {
 	ID               uint   `json:"id"`
 	Name             string `json:"name"`
@@ -33,6 +36,8 @@ type Intake_Food struct {
 	Images  []models.Food_Image `json:"food_image"`
 }
 type Intake_Recipe struct {
+	Name       string `json:"name"`
+	Name_Owner string `json:"name_owner"`
 }
 type Res_Get_Intake_Details struct {
 	ID               uint          `json:"id"`
