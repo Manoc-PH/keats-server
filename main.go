@@ -19,6 +19,7 @@ func main() {
 	// Http routes
 	routes.Auth_Routes(app)
 	routes.Tracker_Routes(app)
+	routes.Food_Routes(app)
 
 	log.Fatal(app.Listen(":" + port))
 }
