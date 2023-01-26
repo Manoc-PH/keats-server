@@ -18,6 +18,12 @@ type Account struct {
 	// time.Time SHOULD BE IN ISO STRING
 }
 
+type Account_Type struct {
+	Id                uuid.UUID `json:"id"`
+	Name              string    `json:"name"`
+	Account_Type_Desc string    `json:"account_type_desc"`
+}
+
 type Account_Vitals struct {
 	ID         uuid.UUID `json:"id"`
 	Account_Id uuid.UUID `json:"account_id"`
