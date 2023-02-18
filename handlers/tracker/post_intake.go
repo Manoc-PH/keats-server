@@ -38,7 +38,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 	if reqData.Food_Id != 0 {
 		food := models.Food{}
 		food_nutrient := models.Food_Nutrient{}
-		macros_curr := models.Macros{}
+		d_nutrients_curr := models.Daily_Nutrients{}
 		// TODO OPTIMIZATION: USE GO ROUTINES
 		row := query_food(reqData.Food_Id, db)
 		err = scan_food(row, &food, &food_nutrient)
@@ -46,14 +46,14 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 			log.Println("Post_Intake | Error on scanning food: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
-		row = query_macros(db, owner_id)
-		err = scan_macros(row, &macros_curr)
+		row = query_d_nutrients(db, owner_id)
+		err = scan_d_nutrients(row, &d_nutrients_curr)
 		if err != nil {
-			log.Println("Post_Intake | Error on scanning macros: ", err.Error())
+			log.Println("Post_Intake | Error on scanning d_nutrients: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
-		//! macros to add doesnt return the total macros
-		macros_to_add := models.Macros{ID: macros_curr.ID, Account_Id: owner_id}
+		//! d_nutrients to add doesnt return the total d_nutrients
+		d_nutrients_to_add := models.Daily_Nutrients{ID: d_nutrients_curr.ID, Account_Id: owner_id}
 		new_intake := models.Intake{
 			Account_Id:       owner_id,
 			Date_Created:     time.Now(),
@@ -63,22 +63,22 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 			Amount_Unit_Desc: reqData.Amount_Unit_Desc,
 			Serving_Size:     reqData.Serving_Size,
 		}
-		calc_macros(&macros_to_add, &food_nutrient, reqData.Amount)
-		coins, xp, deductions := utilities.Calc_CnXP_On_Intake(float32(macros_to_add.Calories), float32(macros_curr.Calories), float32(macros_curr.Max_Calories))
+		calc_d_nutrients(&d_nutrients_to_add, &food_nutrient, reqData.Amount)
+		coins, xp, deductions := utilities.Calc_CnXP_On_Intake(float32(d_nutrients_to_add.Calories), float32(d_nutrients_curr.Calories), float32(d_nutrients_curr.Max_Calories))
 		coins = coins - deductions
 		xp = xp - deductions
-		err = save_intake_macro_and_gamestat(db, &macros_to_add, coins, xp, &new_intake)
+		err = save_intake_d_nutrients_and_gamestat(db, &d_nutrients_to_add, coins, xp, &new_intake)
 		if err != nil {
-			log.Println("Post_Intake | Error on save_intake_macro_and_gamestat: ", err.Error())
+			log.Println("Post_Intake | Error on save_intake_d_nutrients_and_gamestat: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
 		response_data.Intake = new_intake
 		response_data.Added_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: coins, XP: xp}
-		response_data.Added_Macros = schemas.Added_Macros{
-			Calories: macros_to_add.Calories,
-			Protein:  macros_to_add.Protein,
-			Carbs:    macros_to_add.Carbs,
-			Fats:     macros_to_add.Fats,
+		response_data.Added_Daily_Nutrients = schemas.Added_Daily_Nutrients{
+			Calories: d_nutrients_to_add.Calories,
+			Protein:  d_nutrients_to_add.Protein,
+			Carbs:    d_nutrients_to_add.Carbs,
+			Fats:     d_nutrients_to_add.Fats,
 		}
 		response_data.Food = food
 	}
@@ -131,46 +131,46 @@ func scan_food(row *sql.Row, food *models.Food, food_nutrient *models.Food_Nutri
 	}
 	return nil
 }
-func calc_macros(macros_to_add *models.Macros, food_nutrient *models.Food_Nutrient, amount float32) {
+func calc_d_nutrients(d_nutrients_to_add *models.Daily_Nutrients, food_nutrient *models.Food_Nutrient, amount float32) {
 	// TODO ADD HANDLER FOR DIFFERENT AMOUNT UNIT ||
 	// TODO WRITE A CONVERTER THAT CHANGES THE food_nutrient AMOUNT VALUE TO GRAMS
 	// if reqData.Amount_Unit != food_nutrient.Amount_Unit {}
 
 	// Servings should be converted to amount in grams in the frontend
 	amount_modifier := amount / food_nutrient.Amount
-	macros_to_add.Calories = int(food_nutrient.Calories * amount_modifier)
-	macros_to_add.Protein = int(food_nutrient.Protein * amount_modifier)
-	macros_to_add.Carbs = int(food_nutrient.Carbs * amount_modifier)
-	macros_to_add.Fats = int(food_nutrient.Fats * amount_modifier)
+	d_nutrients_to_add.Calories = (food_nutrient.Calories * amount_modifier)
+	d_nutrients_to_add.Protein = (food_nutrient.Protein * amount_modifier)
+	d_nutrients_to_add.Carbs = (food_nutrient.Carbs * amount_modifier)
+	d_nutrients_to_add.Fats = (food_nutrient.Fats * amount_modifier)
 }
-func save_intake_macro_and_gamestat(db *sql.DB, macros_to_add *models.Macros, coins int, xp int, intake *models.Intake) error {
+func save_intake_d_nutrients_and_gamestat(db *sql.DB, d_nutrients_to_add *models.Daily_Nutrients, coins int, xp int, intake *models.Intake) error {
 	txn, err := db.Begin()
 	if err != nil {
 		log.Fatal(err)
 	}
 	_, err = txn.Exec(
-		`UPDATE macros SET
+		`UPDATE daily_nutrients SET
 			calories = calories + $1,
 			protein = protein + $2,
 			carbs = carbs + $3,
 			fats = fats + $4
 		WHERE id = $5`,
-		macros_to_add.Calories,
-		macros_to_add.Protein,
-		macros_to_add.Carbs,
-		macros_to_add.Fats,
-		macros_to_add.ID,
+		d_nutrients_to_add.Calories,
+		d_nutrients_to_add.Protein,
+		d_nutrients_to_add.Carbs,
+		d_nutrients_to_add.Fats,
+		d_nutrients_to_add.ID,
 	)
 	if err != nil {
-		log.Println("save_intake_macro_and_gamestat (update macros) | Error: ", err.Error())
+		log.Println("save_intake_d_nutrients_and_gamestat (update d_nutrients) | Error: ", err.Error())
 		return err
 	}
 	_, err = txn.Exec(
 		`UPDATE account_game_stat SET coins = coins + $1, xp = xp + $2 WHERE account_id = $3`,
-		coins, xp, macros_to_add.Account_Id,
+		coins, xp, d_nutrients_to_add.Account_Id,
 	)
 	if err != nil {
-		log.Println("save_intake_macro_and_gamestat (update account_game_stat)| Error: ", err.Error())
+		log.Println("save_intake_d_nutrients_and_gamestat (update account_game_stat)| Error: ", err.Error())
 		return err
 	}
 	if intake.Food_Id != 0 && intake.Recipe_Id == 0 {
@@ -186,7 +186,7 @@ func save_intake_macro_and_gamestat(db *sql.DB, macros_to_add *models.Macros, co
 			intake.Serving_Size,
 		)
 		if err != nil {
-			log.Println("save_intake_macro_and_gamestat (insert intake)| Error: ", err.Error())
+			log.Println("save_intake_d_nutrients_and_gamestat (insert intake)| Error: ", err.Error())
 			return err
 		}
 	}
@@ -203,14 +203,14 @@ func save_intake_macro_and_gamestat(db *sql.DB, macros_to_add *models.Macros, co
 			intake.Serving_Size,
 		)
 		if err != nil {
-			log.Println("save_intake_macro_and_gamestat (insert intake)| Error: ", err.Error())
+			log.Println("save_intake_d_nutrients_and_gamestat (insert intake)| Error: ", err.Error())
 			return err
 		}
 	}
 	err = txn.Commit()
 	if err != nil {
 		txn.Rollback()
-		log.Println("save_intake_macro_and_gamestat (commit) | Error: ", err.Error())
+		log.Println("save_intake_d_nutrients_and_gamestat (commit) | Error: ", err.Error())
 		return err
 	}
 	return nil

@@ -13,26 +13,26 @@ import (
 	"github.com/google/uuid"
 )
 
-func Get_Macros(c *fiber.Ctx, db *sql.DB) error {
+func Get_Daily_Nutrients(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
 	_, Owner_Id, err := middlewares.AuthMiddleware(c)
 	if err != nil {
-		log.Println("Get_Macros | Error on auth middleware: ", err.Error())
+		log.Println("Get_Daily_Nutrients | Error on auth middleware: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusUnauthorized)
 	}
-	macros := models.Macros{Account_Id: Owner_Id}
-	// querying macros
-	row := query_macros(db, Owner_Id)
+	d_nutrients := models.Daily_Nutrients{Account_Id: Owner_Id}
+	// querying Daily_Nutrients
+	row := query_d_nutrients(db, Owner_Id)
 	// scanning and returning error
-	err = scan_macros(row, &macros)
-	// Macros doesnt exist yet
+	err = scan_d_nutrients(row, &d_nutrients)
+	// Daily_Nutrients doesnt exist yet
 	if err != nil && err == sql.ErrNoRows {
 		account_vitals := models.Account_Vitals{}
 		activity_lvl := models.Activity_Lvl{}
 		diet_plan := models.Diet_Plan{}
 		err := query_and_scan_account_details(db, Owner_Id, &account_vitals, &activity_lvl, &diet_plan)
 		if err != nil {
-			log.Println("Get_Macros | error in query_and_scan_account_details: ", err.Error())
+			log.Println("Get_Daily_Nutrients | error in query_and_scan_account_details: ", err.Error())
 			return utilities.Send_Error(c, "An error occured in getting account details", fiber.StatusInternalServerError)
 		}
 		calories, err := utilities.Calculate_Calories(
@@ -44,57 +44,57 @@ func Get_Macros(c *fiber.Ctx, db *sql.DB) error {
 			account_vitals.Birthday,
 		)
 		if err != nil {
-			log.Println("Get_Macros | error in Calculate_Calories: ", err.Error())
+			log.Println("Get_Daily_Nutrients | error in Calculate_Calories: ", err.Error())
 			return utilities.Send_Error(c, "An error occured in calculating your calories", fiber.StatusInternalServerError)
 		}
-		prtn, crbs, fts := utilities.Calculate_Macros(calories, diet_plan.Protein_Percentage, diet_plan.Carbs_Percentage, diet_plan.Fats_Percentage)
-		macros.Max_Calories = calories
-		macros.Max_Protein = prtn
-		macros.Max_Carbs = crbs
-		macros.Max_Fats = fts
-		macros.Date_Created = time.Now()
-		macros.Activity_Lvl_Id = account_vitals.Activity_Lvl_Id
-		macros.Diet_Plan_Id = account_vitals.Diet_Plan_Id
-		err = insert_macros(db, &macros, &account_vitals)
+		prtn, crbs, fts := utilities.Calculate_Daily_Nutrients(calories, diet_plan.Protein_Percentage, diet_plan.Carbs_Percentage, diet_plan.Fats_Percentage)
+		d_nutrients.Max_Calories = calories
+		d_nutrients.Max_Protein = prtn
+		d_nutrients.Max_Carbs = crbs
+		d_nutrients.Max_Fats = fts
+		d_nutrients.Date_Created = time.Now()
+		d_nutrients.Activity_Lvl_Id = account_vitals.Activity_Lvl_Id
+		d_nutrients.Diet_Plan_Id = account_vitals.Diet_Plan_Id
+		err = insert_d_nutrients(db, &d_nutrients, &account_vitals)
 		if err != nil {
-			log.Println("Get_Macros | error in insert_macros: ", err.Error())
-			return utilities.Send_Error(c, "An error occured in saving your macros", fiber.StatusInternalServerError)
+			log.Println("Get_Daily_Nutrients | error in insert_Daily_Nutrients: ", err.Error())
+			return utilities.Send_Error(c, "An error occured in saving your Daily_Nutrients", fiber.StatusInternalServerError)
 		}
 	}
 	// Server Error
 	if err != nil && err != sql.ErrNoRows {
-		log.Println("Get_Macros | error in scanning macros: ", err.Error())
+		log.Println("Get_Daily_Nutrients | error in scanning Daily_Nutrients: ", err.Error())
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
-	return c.Status(fiber.StatusOK).JSON(macros)
+	return c.Status(fiber.StatusOK).JSON(d_nutrients)
 }
 
-func query_macros(db *sql.DB, user_id uuid.UUID) *sql.Row {
+func query_d_nutrients(db *sql.DB, user_id uuid.UUID) *sql.Row {
 	row := db.QueryRow(`SELECT
-			id, date_created, calories, protein, carbs, fats, 
+			id, date_created, calories, protein, carbs, fats,
 			max_calories, max_protein, max_carbs, max_fats,
 			activity_lvl_id, diet_plan_id
-		FROM macros WHERE account_id = $1 AND date_created = $2;`,
+		FROM daily_nutrients WHERE account_id = $1 AND date_created = $2;`,
 		user_id, time.Now().Format(constants.YYYY_MM_DD),
-		// casting timestamp to date
+	// casting timestamp to date
 	)
 	return row
 }
-func scan_macros(row *sql.Row, macros *models.Macros) error {
+func scan_d_nutrients(row *sql.Row, d_nutrients *models.Daily_Nutrients) error {
 	err := row.Scan(
-		&macros.ID,
-		&macros.Date_Created,
-		&macros.Calories,
-		&macros.Protein,
-		&macros.Carbs,
-		&macros.Fats,
+		&d_nutrients.ID,
+		&d_nutrients.Date_Created,
+		&d_nutrients.Calories,
+		&d_nutrients.Protein,
+		&d_nutrients.Carbs,
+		&d_nutrients.Fats,
 
-		&macros.Max_Calories,
-		&macros.Max_Protein,
-		&macros.Max_Carbs,
-		&macros.Max_Fats,
-		&macros.Activity_Lvl_Id,
-		&macros.Diet_Plan_Id,
+		&d_nutrients.Max_Calories,
+		&d_nutrients.Max_Protein,
+		&d_nutrients.Max_Carbs,
+		&d_nutrients.Max_Fats,
+		&d_nutrients.Activity_Lvl_Id,
+		&d_nutrients.Diet_Plan_Id,
 	)
 	return err
 }
@@ -144,9 +144,9 @@ func query_and_scan_account_details(
 	)
 	return err
 }
-func insert_macros(db *sql.DB, macros *models.Macros, account_vitals *models.Account_Vitals) error {
+func insert_d_nutrients(db *sql.DB, daily_nutrients *models.Daily_Nutrients, account_vitals *models.Account_Vitals) error {
 	row := db.
-		QueryRow(`INSERT INTO macros (
+		QueryRow(`INSERT INTO daily_nutrients (
 			account_id,
 			date_created,
 			calories,
@@ -160,15 +160,15 @@ func insert_macros(db *sql.DB, macros *models.Macros, account_vitals *models.Acc
 			activity_lvl_id,
 			diet_plan_id
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
-			macros.Account_Id, time.Now().Format(constants.YYYY_MM_DD), 0, 0, 0, 0,
-			macros.Max_Calories,
-			macros.Max_Protein,
-			macros.Max_Carbs,
-			macros.Max_Fats,
+			daily_nutrients.Account_Id, time.Now().Format(constants.YYYY_MM_DD), 0, 0, 0, 0,
+			daily_nutrients.Max_Calories,
+			daily_nutrients.Max_Protein,
+			daily_nutrients.Max_Carbs,
+			daily_nutrients.Max_Fats,
 			account_vitals.Activity_Lvl_Id,
 			account_vitals.Diet_Plan_Id,
 		)
-	err := row.Scan(&macros.ID)
+	err := row.Scan(&daily_nutrients.ID)
 	if err != nil {
 		return err
 	}

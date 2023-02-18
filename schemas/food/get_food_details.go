@@ -1,6 +1,10 @@
 package schemas
 
-import "server/models"
+import (
+	"server/models"
+
+	"github.com/google/uuid"
+)
 
 // *REQUESTS
 type Req_Get_Food_Details struct {
@@ -8,11 +12,17 @@ type Req_Get_Food_Details struct {
 }
 
 type Food_Details struct {
-	ID               uint    `json:"id"`
-	Name             string  `json:"name"`
-	Name_Ph          string  `json:"name_ph"`
-	Name_Brand       string  `json:"name_brand"`
-	Food_Nutrient_Id uint    `json:"food_nutrient_id"`
+	ID                 uint      `json:"id"`
+	Name               string    `json:"name"`
+	Name_Ph            string    `json:"name_ph"`
+	Name_Brand         string    `json:"name_brand"`
+	Food_Desc          string    `json:"food_desc"`
+	Barcode            string    `json:"barcode"`
+	Food_Nutrient_Id   uint      `json:"food_nutrient_id"`
+	Food_Brand_Type_Id uint      `json:"food_brand_type_id"`
+	Food_Category_Id   uint      `json:"food_category_id"`
+	Food_Brand_Id      uuid.UUID `json:"food_brand_id"`
+	//
 	Amount           float32 `json:"amount"`
 	Amount_Unit      string  `json:"amount_unit"`
 	Amount_Unit_Desc string  `json:"amount_unit_desc"`

@@ -12,19 +12,23 @@ type Req_Post_Intake struct {
 	Serving_Size     float32 `json:"serving_size"`
 }
 
-type Added_Macros struct {
-	Calories int `json:"calories"`
-	Protein  int `json:"protein"`
-	Carbs    int `json:"carbs"`
-	Fats     int `json:"fats"`
+type Added_Daily_Nutrients struct {
+	Calories      float32 `json:"calories"`
+	Protein       float32 `json:"protein"`
+	Carbs         float32 `json:"carbs"`
+	Fats          float32 `json:"fats"`
+	Trans_Fat     float32 `json:"trans_fat"`
+	Saturated_Fat float32 `json:"saturated_fat"`
+	Sugars        float32 `json:"sugars"`
+	Sodium        float32 `json:"sodium"`
 }
 type Added_Coins_And_XP struct {
 	Coins int `json:"coins"`
 	XP    int `json:"xp"`
 }
 type Res_Post_Intake struct {
-	Added_Macros       Added_Macros       `json:"added_macros"`
-	Added_Coins_And_XP Added_Coins_And_XP `json:"added_coins_and_xp"`
-	Intake             models.Intake      `json:"intake"`
-	Food               models.Food        `json:"food"`
+	Added_Daily_Nutrients Added_Daily_Nutrients `json:"added_daily_nutrients"`
+	Added_Coins_And_XP    Added_Coins_And_XP    `json:"added_coins_and_xp"`
+	Intake                models.Intake         `json:"intake"`
+	Food                  models.Food           `json:"food"`
 }
