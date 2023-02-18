@@ -47,6 +47,12 @@ type Account_Profile struct {
 	Profile_Image_Link string    `json:"profile_image_link"`
 	Profile_Title      string    `json:"profile_title"`
 }
+type Account_Weight_Changes struct {
+	ID           uuid.UUID `json:"id"`
+	Account_Id   uuid.UUID `json:"account_id"`
+	Weight       int       `json:"weight"`
+	Date_Created time.Time `json:"created"`
+}
 
 type Account_Items struct {
 	ID           uint      `json:"id"`
