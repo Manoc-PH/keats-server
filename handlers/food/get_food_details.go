@@ -54,7 +54,12 @@ func query_food(db *sql.DB, food_id uint) *sql.Row {
 			food.name,
 			food.name_ph,
 			food.name_brand,
+			food.thumbnail_image_link,
+			food.food_desc,
 			food.food_nutrient_id,
+			food.food_brand_type_id,
+			food.food_category_id,
+			food.food_brand_id,
 			--	FOOD NUTRIENT
 			food_nutrient.amount,
 			food_nutrient.amount_unit,
@@ -67,32 +72,51 @@ func query_food(db *sql.DB, food_id uint) *sql.Row {
 			food_nutrient.trans_fat,
 			food_nutrient.saturated_fat,
 			food_nutrient.sugars,
-			food_nutrient.sodium
+			food_nutrient.sodium,
+			-- FOOD BRAND TYPE
+			food_brand_type.name,
+			food_brand_type.brand_type_desc,
+			-- FOOD BRAND
+			food_brand.id
+			-- 
 		FROM food
 		LEFT JOIN food_nutrient ON food.food_nutrient_id = food_nutrient.id
+		LEFT JOIN food_brand_type ON food.food_brand_type_id = food_brand_type.id
+		LEFT JOIN food_brand ON food.food_brand_id = food_brand.id
 		WHERE food.id = $1`, food_id,
 	)
 	return row
 }
 func scan_food(row *sql.Row, food *schemas.Res_Get_Food_Details) error {
 	err := row.Scan(
-		&food.Food_Details.ID,
-		&food.Food_Details.Name,
-		&food.Food_Details.Name_Ph,
-		&food.Food_Details.Name_Brand,
-		&food.Food_Details.Food_Nutrient_Id,
-		&food.Food_Details.Amount,
-		&food.Food_Details.Amount_Unit,
-		&food.Food_Details.Amount_Unit_Desc,
-		&food.Food_Details.Serving_Size,
-		&food.Food_Details.Calories,
-		&food.Food_Details.Protein,
-		&food.Food_Details.Carbs,
-		&food.Food_Details.Fats,
-		&food.Food_Details.Trans_Fat,
-		&food.Food_Details.Saturated_Fat,
-		&food.Food_Details.Sugars,
-		&food.Food_Details.Sodium,
+		&food.ID,
+		&food.Name,
+		&food.Name_Ph,
+		&food.Name_Brand,
+		&food.Thumbnail_Image_Link,
+		&food.Food_Desc,
+		&food.Food_Nutrient_Id,
+		&food.Food_Brand_Type_Id,
+		&food.Food_Category_Id,
+		&food.Food_Brand_Id,
+		// FOOD NUTRIENT
+		&food.Food_Nutrients.Amount,
+		&food.Food_Nutrients.Amount_Unit,
+		&food.Food_Nutrients.Amount_Unit_Desc,
+		&food.Food_Nutrients.Serving_Size,
+		&food.Food_Nutrients.Calories,
+		&food.Food_Nutrients.Protein,
+		&food.Food_Nutrients.Carbs,
+		&food.Food_Nutrients.Fats,
+		&food.Food_Nutrients.Trans_Fat,
+		&food.Food_Nutrients.Saturated_Fat,
+		&food.Food_Nutrients.Sugars,
+		&food.Food_Nutrients.Sodium,
+		// FOOD BRAND TYPE
+		&food.Food_Brand_Type.Name,
+		&food.Food_Brand_Type.Brand_Type_Desc,
+		// FOOD BRAND
+		&food.Food_Brand.ID,
 	)
 	return err
 }
