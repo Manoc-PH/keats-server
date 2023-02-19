@@ -26,7 +26,7 @@ func Get_Search_Food(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Get_Search_Food | Error on query validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
-	formatted_term := strings.Join(strings.Split(reqData.Search_Term, " "), "<->") + ":*"
+	formatted_term := strings.Join(strings.Split(reqData.Search_Term, " "), " & ") + ":*"
 	// querying food
 	response, err := search_and_scan_food(db, Owner_Id, formatted_term)
 	// Server Error
@@ -42,9 +42,12 @@ func search_and_scan_food(db *sql.DB, user_id uuid.UUID, search_term string) ([]
 			name,
 			name_ph,
 			name_brand,
-			food_nutrient_id
-		FROM food WHERE search_food @@ to_tsquery($1)
+			food_nutrient_id,
+			ts_rank_cd(search_food, to_tsquery('english', $1)) as ranking
+		FROM food WHERE search_food @@ to_tsquery('english', $2)
+		ORDER BY ranking DESC
 		LIMIT 10;`,
+		search_term,
 		search_term,
 	)
 	if err != nil {
