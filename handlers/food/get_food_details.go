@@ -77,12 +77,15 @@ func query_food(db *sql.DB, food_id uint) *sql.Row {
 			food_brand_type.name,
 			food_brand_type.brand_type_desc,
 			-- FOOD BRAND
-			food_brand.id
-			-- 
+			food_brand.id,
+			-- FOOD CATEGORY
+			food_category.id,
+			food_category.name
 		FROM food
 		LEFT JOIN food_nutrient ON food.food_nutrient_id = food_nutrient.id
 		LEFT JOIN food_brand_type ON food.food_brand_type_id = food_brand_type.id
 		LEFT JOIN food_brand ON food.food_brand_id = food_brand.id
+		LEFT JOIN food_category ON food.food_category_id = food_category.id
 		WHERE food.id = $1`, food_id,
 	)
 	return row
@@ -117,6 +120,9 @@ func scan_food(row *sql.Row, food *schemas.Res_Get_Food_Details) error {
 		&food.Food_Brand_Type.Brand_Type_Desc,
 		// FOOD BRAND
 		&food.Food_Brand.ID,
+		// FOOD CATEGORY
+		&food.Food_Category.ID,
+		&food.Food_Category.Name,
 	)
 	return err
 }

@@ -27,5 +27,6 @@ type Res_Get_Food_Details struct {
 	Food_Nutrients  models.Food_Nutrient   `json:"food_nutrients"`
 	Food_Brand_Type models.Food_Brand_Type `json:"food_brand_type"`
 	Food_Brand      models.Food_Brand      `json:"food_brand"`
+	Food_Category   models.Food_Category   `json:"food_category"`
 	Food_Images     []models.Food_Image    `json:"food_images"`
 }
