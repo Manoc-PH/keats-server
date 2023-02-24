@@ -27,6 +27,11 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 	// hashing password and formatting reqData
 	password, _ := bcrypt.GenerateFromPassword([]byte(reqData.Password), 10)
 	account_id := uuid.New()
+	account_type_id, err := uuid.Parse("2ecedaf9-a36b-4e44-bc3f-90464ac20fab")
+	if err != nil {
+		log.Println("Sign_Up | Error: ", err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(err)
+	}
 	account_vitals := models.Account_Vitals{
 		ID:              uuid.New(),
 		Account_Id:      account_id,
@@ -48,6 +53,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		Date_Updated:       time.Now(),
 		Date_Created:       time.Now(),
 		Account_Vitals_Id:  account_vitals.ID,
+		Account_Type_Id:    account_type_id,
 		Account_profile_Id: account_profile.ID,
 		Measure_Unit_Id:    reqData.Measure_Unit_Id,
 	}
@@ -104,15 +110,17 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 			date_updated,
 			date_created,
 			account_vitals_id,
+			account_type,
 			account_profile_id,
 			measure_unit_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 		account.ID,
 		account.Username,
 		account.Password,
 		account.Date_Updated,
 		account.Date_Created,
 		account.Account_Vitals_Id,
+		account.Account_Type_Id,
 		account.Account_profile_Id,
 		account.Measure_Unit_Id,
 	)
