@@ -11,6 +11,9 @@ import (
 	"github.com/google/uuid"
 )
 
+// TODO Update this handler, make sure to only query either food or recipe and not join them into a single struct
+
+// Gets the details of the intake
 func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
 	_, Owner_Id, err := middlewares.AuthMiddleware(c)

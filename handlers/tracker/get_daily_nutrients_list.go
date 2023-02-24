@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// Gets the summary of daily nutrients through a date range
 func Get_Daily_Nutrients_List(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
 	_, id, err := middlewares.AuthMiddleware(c)

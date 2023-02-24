@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// Gets the intakes for the day
 func Get_Intakes(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
 	_, Owner_Id, err := middlewares.AuthMiddleware(c)
