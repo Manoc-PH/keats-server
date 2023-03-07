@@ -63,7 +63,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = txn.Exec(`INSERT INTO game_stat (account_id,	coins, xp) VALUES ($1, $2, $3)`, account_id, 0, 0)
+	_, err = txn.Exec(`INSERT INTO account_game_stat (account_id,	coins, xp) VALUES ($1, $2, $3)`, account_id, 0, 0)
 	if err != nil {
 		log.Println("Sign_Up | Error: ", err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(err)
@@ -110,7 +110,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 			date_updated,
 			date_created,
 			account_vitals_id,
-			account_type,
+			account_type_id,
 			account_profile_id,
 			measure_unit_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
