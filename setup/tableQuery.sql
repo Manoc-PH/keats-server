@@ -92,12 +92,19 @@ select
     *,
     ts_rank_cd(
         search_food,
-        to_tsquery('english', 'chick:*')
+        to_tsquery(
+            'english',
+            'chick:* & breast:*'
+        )
     ) as ranking
 from food
 where
-    search_food @ @ to_tsquery('english', 'chick:*')
-order by ranking desc;
+    search_food @ @ to_tsquery(
+        'english',
+        'chick:* & breast:*'
+    )
+order by ranking desc
+limit 10;
 
 -- Deprecated
 
@@ -268,8 +275,8 @@ create table
         id uuid primary key,
         username varchar unique NOT NULL,
         password varchar NOT NULL,
-        name_first varchar NOT NULL,
-        name_last varchar NOT NULL,
+        name_first varchar,
+        name_last varchar,
         phone_number varchar,
         date_updated timestamp,
         date_created timestamp,
@@ -337,6 +344,18 @@ create table
         xp int
     );
 
+insert into
+    account_type(id, name, account_type_desc)
+values (uuid_generate_v4(), 'user', ''), (
+        uuid_generate_v4(),
+        'dietician',
+        ''
+    ), (
+        uuid_generate_v4(),
+        'brand_owner',
+        ''
+    );
+
 create table
     game_item(
         id serial primary key,
@@ -389,18 +408,18 @@ create table
     );
 
 create table
-    macros(
+    daily_nutrients(
         id serial primary key,
         account_id uuid not NULL,
         date_created date,
-        calories float not NULL,
-        protein float not NULL,
-        carbs float not NULL,
-        fats float not NULL,
-        max_calories float not NULL,
-        max_protein float not NULL,
-        max_carbs float not NULL,
-        max_fats float not NULL,
+        calories float4 not NULL,
+        protein float4 not NULL,
+        carbs float4 not NULL,
+        fats float4 not NULL,
+        max_calories float4 not NULL,
+        max_protein float4 not NULL,
+        max_carbs float4 not NULL,
+        max_fats float4 not NULL,
         activity_lvl_id uuid NOT NULL,
         diet_plan_id uuid NOT NULL,
         FOREIGN KEY(activity_lvl_id) REFERENCES activity_lvl(id),
@@ -442,7 +461,8 @@ insert into
         wt_liquid_unit_large,
         wt_liquid_desc_large
     )
-values (
+values
+(
         uuid_generate_v4(),
         'metric',
         'mg',
@@ -605,7 +625,8 @@ WHERE
 
 insert into
     account_game_stat (account_id, coins, xp)
-values (
+values
+(
         '898f8e6c-817e-4605-af14-5b437c58bc86',
         0,
         0
