@@ -47,7 +47,7 @@ func Login(c *fiber.Ctx, db *sql.DB) error {
 		&user.Measure_Unit_Id); err != nil {
 		log.Println("Login | Error in scanning row: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "user not found",
+			"message": "user does not exist",
 		})
 	}
 
@@ -55,7 +55,7 @@ func Login(c *fiber.Ctx, db *sql.DB) error {
 	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(reqData.Password)); err != nil {
 		log.Println("Login | Error in comparing password: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "inccorect password",
+			"message": "incorrect password",
 		})
 	}
 

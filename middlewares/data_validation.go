@@ -9,8 +9,8 @@ import (
 )
 
 type Error_Data struct {
-	Message string
-	Data    []*utilities.ErrorResponse
+	Message string                     `json:"message"`
+	Data    []*utilities.ErrorResponse `json:"data"`
 }
 
 func Body_Validation(Req_Struct interface{}, c *fiber.Ctx) (Error_Data, error) {
@@ -20,8 +20,8 @@ func Body_Validation(Req_Struct interface{}, c *fiber.Ctx) (Error_Data, error) {
 	}
 	err := utilities.ValidateStruct(Req_Struct)
 	if err != nil {
-		err_data := Error_Data{Message: "Error in validating body", Data: err}
-		return err_data, errors.New("error in validating body")
+		err_data := Error_Data{Message: "missing or invalid data sent", Data: err}
+		return err_data, errors.New("missing or invalid data sent")
 	}
 	return Error_Data{}, nil
 }
@@ -33,7 +33,7 @@ func Query_Validation(Req_Struct interface{}, c *fiber.Ctx) (Error_Data, error) 
 	err := utilities.ValidateStruct(Req_Struct)
 	if err != nil {
 		err_data := Error_Data{Message: "Error in parsing query", Data: err}
-		return err_data, errors.New("error in validating query")
+		return err_data, errors.New("missing or invalid data sent")
 	}
 	return Error_Data{}, nil
 }
