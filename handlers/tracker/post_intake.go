@@ -13,6 +13,7 @@ import (
 )
 
 func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
+	// TODO Insert new daily nutrient
 	// auth validation
 	_, owner_id, err := middlewares.AuthMiddleware(c)
 	if err != nil {

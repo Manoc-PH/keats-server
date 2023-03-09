@@ -2,7 +2,7 @@ package schemas
 
 import "github.com/google/uuid"
 
-type Req_Update_profile struct {
+type Req_Update_Account_Profile struct {
 	ID       uuid.UUID `json:"id" validate:"required"`
 	Username string    `json:"username" validate:"required,min=3,max=32"`
 	Password string    `json:"password" validate:"required,min=10,max=32"` //,missingRequiredCharacters // add this for password validation

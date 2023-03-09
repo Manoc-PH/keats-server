@@ -18,6 +18,7 @@ func main() {
 
 	// Http routes
 	routes.Auth_Routes(app)
+	routes.Account_Routes(app)
 	routes.Tracker_Routes(app)
 	routes.Food_Routes(app)
 
