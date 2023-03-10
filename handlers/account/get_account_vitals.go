@@ -42,7 +42,11 @@ func query_account_vitals(db *sql.DB, user_id uuid.UUID) *sql.Row {
 			activity_lvl.name as activity_lvl_name,
 			activity_lvl.bmr_multiplier,
 			diet_plan.id as diet_plan_id,
-			diet_plan.name as diet_plan_name
+			diet_plan.name as diet_plan_name,
+			diet_plan.calorie_percentage,
+			diet_plan.protein_percentage,
+			diet_plan.fats_percentage,
+			diet_plan.carbs_percentage
 		FROM account_vitals
 		JOIN activity_lvl ON account_vitals.activity_lvl_id = activity_lvl.id
 		JOIN diet_plan ON account_vitals.diet_plan_id = diet_plan.id 
@@ -64,6 +68,10 @@ func scan_account_vitals(row *sql.Row, account_vitals *schemas.Res_Get_Account_V
 		&account_vitals.Bmr_Multiplier,
 		&account_vitals.Diet_Plan_Id,
 		&account_vitals.Diet_Plan_Name,
+		&account_vitals.Calorie_Percentage,
+		&account_vitals.Protein_Percentage,
+		&account_vitals.Fats_Percentage,
+		&account_vitals.Carbs_Percentage,
 	)
 	return err
 }

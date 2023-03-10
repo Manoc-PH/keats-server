@@ -5,7 +5,6 @@ import "github.com/google/uuid"
 type Req_Update_Account_Profile struct {
 	ID       uuid.UUID `json:"id" validate:"required"`
 	Username string    `json:"username" validate:"required,min=3,max=32"`
-	Password string    `json:"password" validate:"required,min=10,max=32"` //,missingRequiredCharacters // add this for password validation
 
 	Profile_Image_Link string `json:"profile_image_link" validate:"required"`
 	Profile_Title      string `json:"profile_title" validate:"required"`
