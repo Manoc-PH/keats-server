@@ -52,9 +52,9 @@ func query_food(db *sql.DB, food_id uint) *sql.Row {
 	row := db.QueryRow(`SELECT
 			food.id, 
 			food.name,
-			food.name_ph,
-			food.name_brand,
-			food.thumbnail_image_link,
+			coalesce(food.name_ph, ''),
+			coalesce(food.name_brand, ''),
+			coalesce(food.thumbnail_image_link, ''),
 			food.food_desc,
 			food.food_nutrient_id,
 			food.food_brand_type_id,
@@ -75,7 +75,7 @@ func query_food(db *sql.DB, food_id uint) *sql.Row {
 			food_nutrient.sodium,
 			-- FOOD BRAND TYPE
 			food_brand_type.name,
-			food_brand_type.brand_type_desc,
+			coalesce(food_brand_type.brand_type_desc, ''), 
 			-- FOOD BRAND
 			food_brand.id,
 			-- FOOD CATEGORY
