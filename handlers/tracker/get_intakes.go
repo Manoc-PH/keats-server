@@ -51,10 +51,14 @@ func query_and_scan_intakes(db *sql.DB, user_id uuid.UUID) ([]schemas.Res_Get_In
 			COALESCE(food.name_ph, '') as food_name_ph,
 			COALESCE(food.name_brand, '') as food_name_brand,
 			COALESCE(food.food_nutrient_id, 0) as food_nutrient_id,
+			COALESCE(food_nutrient.calories, 0) as food_nutrient_calories,
+			COALESCE(food_nutrient.amount, 0) as food_nutrient_amount,
+			COALESCE(food_nutrient.amount_unit, '') as food_nutrient_amount_unit,
 			COALESCE(recipe.name, '') as recipe_name,
 			COALESCE(recipe.name_owner, '') as recipe_name_owner
 		FROM intake
 		LEFT JOIN food ON intake.food_id = food.id
+		LEFT JOIN food_nutrient ON food.food_nutrient_id = food_nutrient.id
 		LEFT JOIN recipe ON intake.recipe_id = recipe.id
 		WHERE intake.account_id = $1 AND intake.date_created >= $2`,
 		user_id, time.Now().Format(constants.YYYY_MM_DD),
@@ -85,6 +89,9 @@ func query_and_scan_intakes(db *sql.DB, user_id uuid.UUID) ([]schemas.Res_Get_In
 				&new_intake.Food_Name_Ph,
 				&new_intake.Food_Name_Brand,
 				&new_intake.Food_Nutrient_Id,
+				&new_intake.Food_Nutrient_Calories,
+				&new_intake.Food_Nutrient_Amount,
+				&new_intake.Food_Nutrient_Amount_Unit,
 				&new_intake.Recipe_Name,
 				&new_intake.Recipe_Name_Owner,
 			); err != nil {

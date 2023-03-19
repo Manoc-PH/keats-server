@@ -18,10 +18,14 @@ type Res_Get_Intakes struct {
 	Amount_Unit_Desc string    `json:"amount_unit_desc"`
 	Serving_Size     float32   `json:"serving_size"`
 	// Food
-	Food_Name        string `json:"food_name"`
-	Food_Name_Ph     string `json:"food_name_ph"`
-	Food_Name_Brand  string `json:"food_name_brand"`
-	Food_Nutrient_Id uint   `json:"food_nutrient_id"`
+	Food_Name                 string  `json:"food_name"`
+	Food_Name_Ph              string  `json:"food_name_ph"`
+	Food_Name_Brand           string  `json:"food_name_brand"`
+	Food_Nutrient_Id          uint    `json:"food_nutrient_id"`
+	Food_Nutrient_Calories    float32 `json:"food_nutrient_calories"`
+	Food_Nutrient_Amount      float32 `json:"food_nutrient_amount"`
+	Food_Nutrient_Amount_Unit string  `json:"food_nutrient_amount_unit"`
+
 	// Recipe
 	Recipe_Name       string `json:"recipe_name"`
 	Recipe_Name_Owner string `json:"recipe_name_owner"`
