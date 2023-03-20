@@ -98,6 +98,7 @@ func query_and_scan_intakes(db *sql.DB, user_id uuid.UUID) ([]schemas.Res_Get_In
 			log.Println("Get_Intakes | error in scanning intakes: ", err.Error())
 			return nil, err
 		}
+		new_intake.Calories = (new_intake.Food_Nutrient_Calories / new_intake.Food_Nutrient_Amount) * new_intake.Amount
 		intakes = append(intakes, new_intake)
 	}
 	return intakes, nil
