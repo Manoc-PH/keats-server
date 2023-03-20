@@ -175,9 +175,9 @@ func save_intake_d_nutrients_and_gamestat(db *sql.DB, d_nutrients_to_add *models
 		return err
 	}
 	if intake.Food_Id != 0 && intake.Recipe_Id == 0 {
-		_, err = txn.Exec(
+		row := txn.QueryRow(
 			`INSERT INTO intake (account_id, date_created, food_id, amount,	amount_unit, amount_unit_desc, serving_size)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+			VALUES ($1, $2, $3, $4, $5, $6, $7)  RETURNING id`,
 			intake.Account_Id,
 			intake.Date_Created,
 			intake.Food_Id,
@@ -186,6 +186,7 @@ func save_intake_d_nutrients_and_gamestat(db *sql.DB, d_nutrients_to_add *models
 			intake.Amount_Unit_Desc,
 			intake.Serving_Size,
 		)
+		err := row.Scan(&intake.ID)
 		if err != nil {
 			log.Println("save_intake_d_nutrients_and_gamestat (insert intake)| Error: ", err.Error())
 			return err
