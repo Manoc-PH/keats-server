@@ -60,7 +60,8 @@ func query_and_scan_intakes(db *sql.DB, user_id uuid.UUID) ([]schemas.Res_Get_In
 		LEFT JOIN food ON intake.food_id = food.id
 		LEFT JOIN food_nutrient ON food.food_nutrient_id = food_nutrient.id
 		LEFT JOIN recipe ON intake.recipe_id = recipe.id
-		WHERE intake.account_id = $1 AND intake.date_created >= $2`,
+		WHERE intake.account_id = $1 AND intake.date_created >= $2
+		ORDER BY intake.date_created DESC`,
 		user_id, time.Now().Format(constants.YYYY_MM_DD),
 	)
 	if err != nil {
