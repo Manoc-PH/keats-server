@@ -2,6 +2,7 @@ package schemas
 
 import "github.com/google/uuid"
 
+// TODO Add birthday and remove age
 type Req_Update_Account_Profile struct {
 	ID       uuid.UUID `json:"id" validate:"required"`
 	Username string    `json:"username" validate:"required,min=3,max=32"`
