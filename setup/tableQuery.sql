@@ -411,7 +411,7 @@ create table
     daily_nutrients(
         id serial primary key,
         account_id uuid not NULL,
-        date_created date,
+        date_created date not NULL,
         calories float4 not NULL,
         protein float4 not NULL,
         carbs float4 not NULL,
@@ -461,8 +461,7 @@ insert into
         wt_liquid_unit_large,
         wt_liquid_desc_large
     )
-values
-(
+values (
         uuid_generate_v4(),
         'metric',
         'mg',
@@ -625,8 +624,7 @@ WHERE
 
 insert into
     account_game_stat (account_id, coins, xp)
-values
-(
+values (
         '898f8e6c-817e-4605-af14-5b437c58bc86',
         0,
         0
