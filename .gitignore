@@ -1,3 +1,5 @@
 .env
 /build
 main.exe
+pg_data
+pgdata

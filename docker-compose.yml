@@ -1,0 +1,48 @@
+version: '3.9'
+services:
+  app:
+    container_name: golang_container
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - PORT=${PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DB=${DB_DB}
+      - DB_HOST=postgresdb
+    tty: true
+    build: .
+    ports:
+      - 8080:8080
+    restart: on-failure
+    volumes:
+      - .:/app
+    depends_on:
+      - postgresdb
+    env_file:
+      - .env
+    networks:
+      - keats 
+
+  postgresdb:
+    image: postgres:latest
+    container_name: postgres_container
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB} 
+    ports:
+      - '5432:5432'
+    env_file:
+      - .env
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - keats 
+
+volumes:
+  pg_data:
+
+# Networks to be created to facilitate communication between containers
+networks:
+  keats:
+    driver: bridge

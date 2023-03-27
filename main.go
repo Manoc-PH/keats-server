@@ -2,16 +2,16 @@ package main
 
 import (
 	"log"
+	"os"
 	"server/routes"
 	"server/setup"
-	"server/utilities"
 )
 
 func main() {
 	setup.ConnectDB()
 	app := setup.SetupApp()
 
-	port := utilities.GoDotEnvVariable("PORT")
+	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"
 	}
