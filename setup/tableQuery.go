@@ -1,21 +1,23 @@
---create table nutrient(id int, name varchar, unit_name varchar, nutrient_nbr float8, rank int);
+// --create table nutrient(id int, name varchar, unit_name varchar, nutrient_nbr float8, rank int);
 
---COPY nutrient FROM 'D:\.FOR PRODUCTIVITY\Manoc\FoodData Central\csv\nutrient.csv' WITH CSV HEADER;
+// --COPY nutrient FROM 'D:\.FOR PRODUCTIVITY\Manoc\FoodData Central\csv\nutrient.csv' WITH CSV HEADER;
 
---
+// --
 
---create table food_nutrient(id int, fdc_id int, nutrient_id int, amount float8, data_points varchar, derivation_id varchar, min varchar, max varchar, median varchar, loq varchar, footnote varchar, min_year_acquired varchar);
+// --create table food_nutrient(id int, fdc_id int, nutrient_id int, amount float8, data_points varchar, derivation_id varchar, min varchar, max varchar, median varchar, loq varchar, footnote varchar, min_year_acquired varchar);
 
---COPY food_nutrient FROM 'D:\.FOR PRODUCTIVITY\Manoc\FoodData Central\excel\food_nutrient.csv' with csv header;
+// --COPY food_nutrient FROM 'D:\.FOR PRODUCTIVITY\Manoc\FoodData Central\excel\food_nutrient.csv' with csv header;
 
---
+// --
 
---create table food(fdc_id int, data_type varchar, description varchar, food_category_id varchar, publication_date varchar);
+// --create table food(fdc_id int, data_type varchar, description varchar, food_category_id varchar, publication_date varchar);
 
---COPY food FROM 'D:\.FOR PRODUCTIVITY\Manoc\FoodData Central\excel\food.csv' with csv header;
+// --COPY food FROM 'D:\.FOR PRODUCTIVITY\Manoc\FoodData Central\excel\food.csv' with csv header;
 
---
+// --
+package setup
 
+var backup = `
 create table
     food(
         id serial primary key,
@@ -84,7 +86,7 @@ select
     ) as ranking
 from food
 where
-    search_food @ @ to_tsquery('english', 'chicken')
+    search_food @@ to_tsquery('english', 'chicken')
     and name_brand = 'USDA'
 order by ranking desc;
 
@@ -99,7 +101,7 @@ select
     ) as ranking
 from food
 where
-    search_food @ @ to_tsquery(
+    search_food @@ to_tsquery(
         'english',
         'chick:* & breast:*'
     )
@@ -634,4 +636,4 @@ ALTER TABLE food MODIFY COLUMN name_brand VARCHAR() DEFAULT '';
 
 update food_nutrient set serving_size = 0 where serving_size is null;
 
-SELECT name FROM food;
+SELECT name FROM food;`
