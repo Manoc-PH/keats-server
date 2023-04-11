@@ -18,6 +18,41 @@
 package setup
 
 var backup = `
+
+CREATE TABLE ingredient(
+    id serial primary key,
+    name varchar not null UNIQUE,
+    name_ph varchar DEFAULT '',
+    name_brand varchar DEFAULT '',
+    date_created date,
+    barcode varchar unique,
+    thumbnail_image_link varchar,
+    ingredient_desc varchar default '',
+    category_id int,
+    FOREIGN KEY(category_id) REFERENCES edible_category(id)
+);
+CREATE TABLE ingredient_variant(
+    id serial primary key,
+    name varchar not null,
+    ingredient_id int NOT NULL
+);
+CREATE TABLE ingredient_cook_type(
+    id serial primary key,
+    name varchar not null,
+    ingredient_variant_id int NOT NULL,
+    nutrient_id int not null UNIQUE,
+    FOREIGN KEY(ingredient_variant_id) REFERENCES ingredient_variant(id),
+    FOREIGN KEY(nutrient_id) REFERENCES nutrient(id) ON DELETE cascade
+);
+create table ingredient_image(
+    id serial primary key,
+    ingredient_id int not null,
+    name_file varchar not NULL,
+    amount float4 not NULL,
+    amount_unit varchar(4) not NULL,
+    amount_unit_desc varchar(40) not NULL
+);
+
 create table
     food(
         id serial primary key,
@@ -79,34 +114,48 @@ create index search_food_idx on food using GIN(search_food);
 --sample query (full text)
 
 select
-    *,
+    food.name,
+    food.name_brand,
+    nutrient.calories,
+    nutrient.carbs,
+    nutrient.fats,
+    nutrient.protein,
     ts_rank_cd(
         search_food,
         to_tsquery('english', 'chicken')
     ) as ranking
 from food
+    JOIN nutrient ON food.food_nutrient_id = nutrient.id
 where
-    search_food @@ to_tsquery('english', 'chicken')
+    search_food @@to_tsquery('english', 'chicken')
     and name_brand = 'USDA'
+    and food_category_id = 6 
 order by ranking desc;
 
 select
-    *,
+    food.name,
+    food.name_brand,
     ts_rank_cd(
-        search_food,
+        food.search_food,
         to_tsquery(
             'english',
-            'chick:* & breast:*'
+            'chick:* & fried:*'
         )
-    ) as ranking
+    ) as ranking,
+    nutrient.calories,
+    nutrient.carbs,
+    nutrient.fats,
+    nutrient.protein
 from food
+    JOIN nutrient ON food.food_nutrient_id = nutrient.id
 where
-    search_food @@ to_tsquery(
+    search_food @@to_tsquery(
         'english',
-        'chick:* & breast:*'
+        'chick:* & fried:* '
     )
-order by ranking desc
-limit 10;
+    and name_brand = 'USDA'
+    and food_category_id = 6 
+order by ranking desc;
 
 -- Deprecated
 
@@ -139,7 +188,7 @@ limit 10;
 -- select * from food where search_food @@ to_tsquery('chicken') ORDER By score DESC;
 
 create table
-    food_nutrient(
+    nutrient(
         id serial primary key,
         amount float4 not NULL,
         amount_unit varchar(4) not NULL,
@@ -166,7 +215,7 @@ create table
     );
 
 create table
-    food_category(
+    edible_category(
         id int primary key,
         name varchar not null
     );
@@ -207,7 +256,7 @@ insert into
 values (uuid_generate_v4(), 'iFNRI', 1), (uuid_generate_v4(), 'USDA', 1);
 
 insert into
-    food_category(id, name)
+    edible_category(id, name)
 values (1, 'cereals'), (
         2,
         'starchy roots, and tubers'
