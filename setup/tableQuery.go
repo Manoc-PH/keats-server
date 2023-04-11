@@ -39,6 +39,7 @@ CREATE TABLE ingredient_variant(
 CREATE TABLE ingredient_cook_type(
     id serial primary key,
     name varchar not null,
+    ingredient_id int NOT NULL,
     ingredient_variant_id int NOT NULL,
     nutrient_id int not null UNIQUE,
     FOREIGN KEY(ingredient_variant_id) REFERENCES ingredient_variant(id),
@@ -139,7 +140,7 @@ select
         food.search_food,
         to_tsquery(
             'english',
-            'chick:* & fried:*'
+            'chick:* & broiler:* & fryer:*'
         )
     ) as ranking,
     nutrient.calories,
@@ -151,10 +152,11 @@ from food
 where
     search_food @@to_tsquery(
         'english',
-        'chick:* & fried:* '
+        'chick:* & broiler:* & fryer:*'
     )
     and name_brand = 'USDA'
     and food_category_id = 6 
+    and name not like '%rotisserie%'
 order by ranking desc;
 
 -- Deprecated
