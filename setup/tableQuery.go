@@ -42,6 +42,7 @@ CREATE TABLE ingredient_cook_type(
     ingredient_id int NOT NULL,
     ingredient_variant_id int NOT NULL,
     nutrient_id int not null UNIQUE,
+    FOREIGN KEY(ingredient_id) REFERENCES ingredient(id),
     FOREIGN KEY(ingredient_variant_id) REFERENCES ingredient_variant(id),
     FOREIGN KEY(nutrient_id) REFERENCES nutrient(id) ON DELETE cascade
 );
@@ -54,25 +55,47 @@ create table ingredient_image(
     amount_unit_desc varchar(40) not NULL
 );
 
-create table
-    food(
-        id serial primary key,
-        name varchar not null UNIQUE,
-        name_ph varchar DEFAULT '',
-        name_brand varchar DEFAULT '',
-        date_created date,
-        barcode varchar unique,
-        thumbnail_image_link varchar,
-        food_desc varchar default '',
-        food_nutrient_id int not null UNIQUE,
-        food_brand_type_id int not null,
-        food_category_id int,
-        food_brand_id uuid not null,
-        FOREIGN KEY(food_brand_type_id) REFERENCES food_brand_type(id),
-        FOREIGN KEY(food_nutrient_id) REFERENCES food_nutrient(id) ON DELETE cascade,
-        FOREIGN KEY(food_category_id) REFERENCES food_category(id),
-        FOREIGN KEY(food_brand_id) REFERENCES food_brand(id)
-    );
+create table nutrient(
+    id serial primary key,
+    amount float4 not NULL,
+    amount_unit varchar(4) not NULL,
+    amount_unit_desc varchar(40) not NULL,
+    serving_size float4 default 0,
+    calories float4 not NULL,
+    protein float4 not NULL,
+    carbs float4 not NULL,
+    fats float4 not null,
+    trans_fat float4,
+    saturated_fat float4,
+    sugars float4,
+    fiber float4,
+    sodium float4,
+    iron float4,
+    calcium float4,
+);
+
+create table edible_category(
+    id int primary key,
+    name varchar not null
+);
+create table food(
+    id serial primary key,
+    name varchar not null UNIQUE,
+    name_ph varchar DEFAULT '',
+    name_brand varchar DEFAULT '',
+    date_created date,
+    barcode varchar unique,
+    thumbnail_image_link varchar,
+    food_desc varchar default '',
+    food_nutrient_id int not null UNIQUE,
+    food_brand_type_id int not null,
+    food_category_id int,
+    food_brand_id uuid not null,
+    FOREIGN KEY(food_brand_type_id) REFERENCES food_brand_type(id),
+    FOREIGN KEY(food_nutrient_id) REFERENCES food_nutrient(id) ON DELETE cascade,
+    FOREIGN KEY(food_category_id) REFERENCES food_category(id),
+    FOREIGN KEY(food_brand_id) REFERENCES food_brand(id)
+);
 
 -- For Text Search
 
@@ -190,7 +213,7 @@ order by ranking desc;
 -- select * from food where search_food @@ to_tsquery('chicken') ORDER By score DESC;
 
 create table
-    nutrient(
+    food_nutrient(
         id serial primary key,
         amount float4 not NULL,
         amount_unit varchar(4) not NULL,
@@ -203,7 +226,10 @@ create table
         trans_fat float4,
         saturated_fat float4,
         sugars float4,
-        sodium float4
+        fiber float4,
+        sodium float4,
+        iron float4,
+        calcium float4,
     );
 
 create table
@@ -217,7 +243,7 @@ create table
     );
 
 create table
-    edible_category(
+    food_category(
         id int primary key,
         name varchar not null
     );
