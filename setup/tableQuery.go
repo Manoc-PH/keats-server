@@ -78,24 +78,6 @@ create table edible_category(
     id int primary key,
     name varchar not null
 );
-create table food(
-    id serial primary key,
-    name varchar not null UNIQUE,
-    name_ph varchar DEFAULT '',
-    name_brand varchar DEFAULT '',
-    date_created date,
-    barcode varchar unique,
-    thumbnail_image_link varchar,
-    food_desc varchar default '',
-    food_nutrient_id int not null UNIQUE,
-    food_brand_type_id int not null,
-    food_category_id int,
-    food_brand_id uuid not null,
-    FOREIGN KEY(food_brand_type_id) REFERENCES food_brand_type(id),
-    FOREIGN KEY(food_nutrient_id) REFERENCES food_nutrient(id) ON DELETE cascade,
-    FOREIGN KEY(food_category_id) REFERENCES food_category(id),
-    FOREIGN KEY(food_brand_id) REFERENCES food_brand(id)
-);
 
 -- For Text Search
 
@@ -212,6 +194,25 @@ order by ranking desc;
 
 -- select * from food where search_food @@ to_tsquery('chicken') ORDER By score DESC;
 
+create table
+    food(
+        id serial primary key,
+        name varchar not null UNIQUE,
+        name_ph varchar DEFAULT '',
+        name_brand varchar DEFAULT '',
+        date_created date,
+        barcode varchar unique,
+        thumbnail_image_link varchar,
+        food_desc varchar default '',
+        food_nutrient_id int not null UNIQUE,
+        food_brand_type_id int not null,
+        food_category_id int,
+        food_brand_id uuid not null,
+        FOREIGN KEY(food_brand_type_id) REFERENCES food_brand_type(id),
+        FOREIGN KEY(food_nutrient_id) REFERENCES food_nutrient(id) ON DELETE cascade,
+        FOREIGN KEY(food_category_id) REFERENCES food_category(id),
+        FOREIGN KEY(food_brand_id) REFERENCES food_brand(id)
+    );
 create table
     food_nutrient(
         id serial primary key,
@@ -349,177 +350,158 @@ create table
         step_desc varchar not NULL
     );
 
-create table
-    account(
-        id uuid primary key,
-        username varchar unique NOT NULL,
-        password varchar NOT NULL,
-        name_first varchar,
-        name_last varchar,
-        phone_number varchar,
-        date_updated timestamp,
-        date_created timestamp,
-        account_type_id uuid NOT NULL,
-        account_vitals_id uuid NOT NULL,
-        account_profile_id uuid NOT NULL,
-        measure_unit_id uuid NOT NULL,
-        FOREIGN KEY(account_type_id) REFERENCES account_type(id),
-        FOREIGN KEY(account_vitals_id) REFERENCES account_vitals(id),
-        FOREIGN KEY(account_profile_id) REFERENCES account_profile(id),
-        FOREIGN KEY(measure_unit_id) REFERENCES measure_unit(id)
-    );
+create table account(
+    id uuid primary key,
+    username varchar unique NOT NULL,
+    password varchar NOT NULL,
+    name_first varchar,
+    name_last varchar,
+    phone_number varchar,
+    date_updated timestamp,
+    date_created timestamp,
+    account_type_id uuid NOT NULL,
+    account_vitals_id uuid NOT NULL,
+    account_profile_id uuid NOT NULL,
+    measure_unit_id uuid NOT NULL,
+    FOREIGN KEY(account_type_id) REFERENCES account_type(id),
+    FOREIGN KEY(account_vitals_id) REFERENCES account_vitals(id),
+    FOREIGN KEY(account_profile_id) REFERENCES account_profile(id),
+    FOREIGN KEY(measure_unit_id) REFERENCES measure_unit(id)
+);
 
-create table
-    account_type(
-        id uuid primary key,
-        name varchar unique NOT NULL,
-        account_type_desc varchar
-    );
+create table account_type(
+    id uuid primary key,
+    name varchar unique NOT NULL,
+    account_type_desc varchar
+);
 
-create table
-    account_vitals(
-        id uuid primary key,
-        account_id uuid not NULL unique,
-        weight int2 NOT NULL,
-        height int2 NOT NULL,
-        birthday date NOT NULL,
-        sex varchar NOT null,
-        activity_lvl_id uuid NOT NULL,
-        diet_plan_id uuid NOT NULL,
-        --    FOREIGN KEY(account_id) REFERENCES account(id),
-        FOREIGN KEY(activity_lvl_id) REFERENCES activity_lvl(id),
-        FOREIGN KEY(diet_plan_id) REFERENCES diet_plan(id)
-    );
+create table account_vitals(
+    id uuid primary key,
+    account_id uuid not NULL unique,
+    weight int2 NOT NULL,
+    height int2 NOT NULL,
+    birthday date NOT NULL,
+    sex varchar NOT null,
+    activity_lvl_id uuid NOT NULL,
+    diet_plan_id uuid NOT NULL,
+    --    FOREIGN KEY(account_id) REFERENCES account(id),
+    FOREIGN KEY(activity_lvl_id) REFERENCES activity_lvl(id),
+    FOREIGN KEY(diet_plan_id) REFERENCES diet_plan(id)
+);
 
-create table
-    account_weight_changes(
-        id serial primary key,
-        account_id uuid not NULL unique,
-        weight int2 NOT NULL,
-        date_created date
-    );
+create table account_weight_changes(
+    id serial primary key,
+    account_id uuid not NULL unique,
+    weight int2 NOT NULL,
+    date_created date
+);
 
-create table
-    account_profile(
-        id uuid primary key,
-        account_id uuid not null UNIQUE,
-        account_image_link varchar,
-        account_title varchar --    FOREIGN KEY(account_id) REFERENCES account(id),
-    );
+create table account_profile(
+    id uuid primary key,
+    account_id uuid not null UNIQUE,
+    account_image_link varchar,
+    account_title varchar --    FOREIGN KEY(account_id) REFERENCES account(id),
+);
 
-create table
-    account_items(
-        id serial primary key,
-        account_id uuid not NULL,
-        game_item_id int not null,
-        FOREIGN KEY(game_item_id) REFERENCES game_item(id)
-    );
+create table account_items(
+    id serial primary key,
+    account_id uuid not NULL,
+    game_item_id int not null,
+    FOREIGN KEY(game_item_id) REFERENCES game_item(id)
+);
 
-create table
-    account_game_stat(
-        id serial primary key,
-        account_id uuid not null UNIQUE,
-        coins int,
-        xp int
-    );
+create table account_game_stat(
+    id serial primary key,
+    account_id uuid not null UNIQUE,
+    coins int,
+    xp int
+);
 
-insert into
-    account_type(id, name, account_type_desc)
-values (uuid_generate_v4(), 'user', ''), (
-        uuid_generate_v4(),
-        'dietician',
-        ''
-    ), (
-        uuid_generate_v4(),
-        'brand_owner',
-        ''
-    );
+insert into account_type(id, name, account_type_desc)
+    values
+    (uuid_generate_v4(), 'user', ''),
+    (uuid_generate_v4(), 'dietician', ''),
+    (uuid_generate_v4(), 'brand_owner', '');
 
-create table
-    game_item(
-        id serial primary key,
-        name varchar,
-        price int,
-        commentary varchar,
-        game_item_desc varchar,
-        game_item_image_link varchar
-    );
+create table game_item(
+    id serial primary key,
+    name varchar,
+    price int,
+    commentary varchar,
+    game_item_desc varchar,
+    game_item_image_link varchar
+);
 
-create table
-    measure_unit(
-        id uuid primary key,
-        name varchar,
-        wt_solid_unit_small varchar(4) NOT NULL,
-        wt_solid_desc_small varchar(40) NOT NULL,
-        wt_solid_unit_medium varchar(4) NOT NULL,
-        wt_solid_desc_medium varchar(40) NOT NULL,
-        wt_solid_unit_large varchar(4) NOT NULL,
-        wt_solid_desc_large varchar(40) NOT NULL,
-        wt_liquid_unit_small varchar(4) NOT NULL,
-        wt_liquid_desc_small varchar(40) NOT NULL,
-        wt_liquid_unit_medium varchar(4) NOT NULL,
-        wt_liquid_desc_medium varchar(40) NOT null,
-        wt_liquid_unit_large varchar(4) NOT NULL,
-        wt_liquid_desc_large varchar(40) NOT null
-    );
+create table measure_unit(
+    id uuid primary key,
+    name varchar,
+    wt_solid_unit_small varchar(4) NOT NULL,
+    wt_solid_desc_small varchar(40) NOT NULL,
+    wt_solid_unit_medium varchar(4) NOT NULL,
+    wt_solid_desc_medium varchar(40) NOT NULL,
+    wt_solid_unit_large varchar(4) NOT NULL,
+    wt_solid_desc_large varchar(40) NOT NULL,
+    wt_liquid_unit_small varchar(4) NOT NULL,
+    wt_liquid_desc_small varchar(40) NOT NULL,
+    wt_liquid_unit_medium varchar(4) NOT NULL,
+    wt_liquid_desc_medium varchar(40) NOT null,
+    wt_liquid_unit_large varchar(4) NOT NULL,
+    wt_liquid_desc_large varchar(40) NOT null
+);
 
-create table
-    diet_plan(
-        id uuid primary key,
-        name varchar UNIQUE,
-        main_image_link varchar,
-        background_color varchar,
-        diet_plan_desc varchar,
-        calorie_percentage int,
-        protein_percentage int,
-        fats_percentage int,
-        carbs_percentage int
-    );
+create table diet_plan(
+    id uuid primary key,
+    name varchar UNIQUE,
+    main_image_link varchar,
+    background_color varchar,
+    diet_plan_desc varchar,
+    calorie_percentage int,
+    protein_percentage int,
+    fats_percentage int,
+    carbs_percentage int
+);
 
-create table
-    activity_lvl(
-        id uuid primary key,
-        name varchar,
-        main_image_link varchar,
-        background_color varchar,
-        activity_lvl_desc varchar,
-        bmr_multiplier float
-    );
+create table activity_lvl(
+    id uuid primary key,
+    name varchar,
+    main_image_link varchar,
+    background_color varchar,
+    activity_lvl_desc varchar,
+    bmr_multiplier float
+);
 
-create table
-    daily_nutrients(
-        id serial primary key,
-        account_id uuid not NULL,
-        date_created date not NULL,
-        calories float4 not NULL,
-        protein float4 not NULL,
-        carbs float4 not NULL,
-        fats float4 not NULL,
-        max_calories float4 not NULL,
-        max_protein float4 not NULL,
-        max_carbs float4 not NULL,
-        max_fats float4 not NULL,
-        activity_lvl_id uuid NOT NULL,
-        diet_plan_id uuid NOT NULL,
-        FOREIGN KEY(activity_lvl_id) REFERENCES activity_lvl(id),
-        FOREIGN KEY(diet_plan_id) REFERENCES diet_plan(id)
-    );
+create table daily_nutrients(
+    id serial primary key,
+    account_id uuid not NULL,
+    date_created date not NULL,
+    calories float4 not NULL,
+    protein float4 not NULL,
+    carbs float4 not NULL,
+    fats float4 not NULL,
+    max_calories float4 not NULL,
+    max_protein float4 not NULL,
+    max_carbs float4 not NULL,
+    max_fats float4 not NULL,
+    activity_lvl_id uuid NOT NULL,
+    diet_plan_id uuid NOT NULL,
+    FOREIGN KEY(activity_lvl_id) REFERENCES activity_lvl(id),
+    FOREIGN KEY(diet_plan_id) REFERENCES diet_plan(id)
+);
 
-create table
-    intake(
-        id serial primary key,
-        account_id uuid not NULL,
-        date_created timestamp,
-        amount float4 not NULL,
-        amount_unit varchar(4) not NULL,
-        amount_unit_desc varchar(40) not NULL,
-        serving_size float4 default 0,
-        --	! YOU NEED TO BE EXTRA CAREFUL WITH HAVING 2 SIMILAR COLUMNS
-        food_id int,
-        recipe_id int,
-        FOREIGN KEY(food_id) REFERENCES food(id),
-        FOREIGN KEY(recipe_id) REFERENCES recipe(id)
-    );
+create table intake(
+    id serial primary key,
+    account_id uuid not NULL,
+    date_created timestamp,
+    amount float4 not NULL,
+    amount_unit varchar(4) not NULL,
+    amount_unit_desc varchar(40) not NULL,
+    serving_size float4 default 0,
+    --	! YOU NEED TO BE EXTRA CAREFUL WITH HAVING 2 SIMILAR COLUMNS
+    food_id int,
+    recipe_id int,
+    FOREIGN KEY(food_id) REFERENCES food(id),
+    FOREIGN KEY(recipe_id) REFERENCES recipe(id)
+);
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -557,128 +539,29 @@ values (
         'litre'
     );
 
-insert into
-    diet_plan(
-        id,
-        name,
-        calorie_percentage,
-        protein_percentage,
-        fats_percentage,
-        carbs_percentage
-    )
-values (
-        uuid_generate_v4(),
-        'mild weight loss',
-        90,
-        10,
-        30,
-        60
-    ), (
-        uuid_generate_v4(),
-        'mild fat loss (low carb)',
-        90,
-        20,
-        30,
-        50
-    ), (
-        uuid_generate_v4(),
-        'mild fat loss (low fat)',
-        90,
-        20,
-        20,
-        60
-    ), (
-        uuid_generate_v4(),
-        'weight loss',
-        80,
-        12,
-        30,
-        58
-    ), (
-        uuid_generate_v4(),
-        'fat loss (low carb)',
-        80,
-        22,
-        30,
-        48
-    ), (
-        uuid_generate_v4(),
-        'fat loss (low fat)',
-        80,
-        22,
-        18,
-        60
-    ), (
-        uuid_generate_v4(),
-        'more moderate weight loss',
-        70,
-        15,
-        30,
-        55
-    ), (
-        uuid_generate_v4(),
-        'more moderate fat loss (low carb)',
-        70,
-        25,
-        30,
-        45
-    ), (
-        uuid_generate_v4(),
-        'more moderate fat loss (low fat)',
-        70,
-        25,
-        15,
-        60
-    ), (
-        uuid_generate_v4(),
-        'extreme weight loss',
-        60,
-        20,
-        25,
-        55
-    ), (
-        uuid_generate_v4(),
-        'extreme fat loss (low carb)',
-        60,
-        30,
-        30,
-        40
-    ), (
-        uuid_generate_v4(),
-        'extreme fat loss (low fat)',
-        60,
-        30,
-        15,
-        55
-    );
+insert into diet_plan(id, name, calorie_percentage, protein_percentage, fats_percentage, carbs_percentage)
+    values
+    (uuid_generate_v4(), 'mild weight loss', 90, 10, 30, 60),
+    (uuid_generate_v4(), 'mild fat loss (low carb)', 90, 20, 30, 50),
+    (uuid_generate_v4(), 'mild fat loss (low fat)', 90, 20, 20, 60),
+    (uuid_generate_v4(), 'weight loss', 80, 12, 30, 58),
+    (uuid_generate_v4(), 'fat loss (low carb)', 80, 22, 30, 48),
+    (uuid_generate_v4(), 'fat loss (low fat)', 80, 22, 18, 60),
+    (uuid_generate_v4(), 'more moderate weight loss', 70, 15, 30, 55),
+    (uuid_generate_v4(), 'more moderate fat loss (low carb)', 70, 25, 30, 45),
+    (uuid_generate_v4(), 'more moderate fat loss (low fat)', 70, 25, 15, 60),
+    (uuid_generate_v4(), 'extreme weight loss', 60, 20, 25, 55),
+    (uuid_generate_v4(), 'extreme fat loss (low carb)', 60, 30, 30, 40),
+    (uuid_generate_v4(), 'extreme fat loss (low fat)', 60, 30, 15, 55);
 
-insert into
-    activity_lvl(id, name, bmr_multiplier)
-values (
-        uuid_generate_v4(),
-        'inactive',
-        1.2
-    ), (
-        uuid_generate_v4(),
-        'lightly active',
-        1.375
-    ), (
-        uuid_generate_v4(),
-        'moderately active',
-        1.465
-    ), (
-        uuid_generate_v4(),
-        'active',
-        1.55
-    ), (
-        uuid_generate_v4(),
-        'very active',
-        1.725
-    ), (
-        uuid_generate_v4(),
-        'extremely active',
-        1.9
-    );
+insert into activity_lvl(id, name, bmr_multiplier)
+    values
+    (uuid_generate_v4(), 'inactive', 1.2),
+    (uuid_generate_v4(), 'lightly active', 1.375),
+    (uuid_generate_v4(), 'moderately active', 1.465),
+    (uuid_generate_v4(), 'active', 1.55),
+    (uuid_generate_v4(), 'very active', 1.725),
+    (uuid_generate_v4(), 'extremely active', 1.9);
 
 SELECT
     account_vitals.account_id,
