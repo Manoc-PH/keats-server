@@ -187,6 +187,7 @@ create table
         food_brand_type_id int not null,
         food_category_id int,
         food_brand_id uuid not null,
+        removed bool DEFAULT FALSE NOT NULL,
         FOREIGN KEY(food_brand_type_id) REFERENCES food_brand_type(id),
         FOREIGN KEY(food_nutrient_id) REFERENCES food_nutrient(id) ON DELETE cascade,
         FOREIGN KEY(food_category_id) REFERENCES food_category(id),

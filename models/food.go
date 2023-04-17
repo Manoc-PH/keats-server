@@ -18,6 +18,7 @@ type Food struct {
 	Food_Brand_Type_Id   uint      `json:"food_brand_type_id"`
 	Food_Category_Id     uint      `json:"food_category_id"`
 	Food_Brand_Id        uuid.UUID `json:"food_brand_id"`
+	Removed              bool      `json:"removed"`
 	// time.Time SHOULD BE IN ISO STRING
 }
 
