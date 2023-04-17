@@ -91,29 +91,11 @@ create text search configuration simple_tsc (copy = simple);
 alter text search configuration simple_tsc alter mapping for asciiword
 with simple_tsd;
 
-alter table food
-add
-    column search_food tsvector generated always as (
-        setweight(
-            to_tsvector(
-                'english',
-                coalesce(food.name, '')
-            ),
-            'A'
-        ) || setweight(
-            to_tsvector(
-                'english',
-                coalesce(food.name_ph, '')
-            ),
-            'B'
-        ) || setweight(
-            to_tsvector(
-                'english',
-                coalesce(food.name_brand, '')
-            ),
-            'C'
-        )
-    ) STORED;
+alter table food add column search_food tsvector generated always as (
+    setweight(to_tsvector('english',coalesce(food.name, '')),'A') ||
+    setweight(to_tsvector('english',coalesce(food.name_ph, '')),'B') ||
+	setweight(to_tsvector('english',coalesce(food.name_brand, '')),'C')
+) STORED;
 
 create index search_food_idx on food using GIN(search_food);
 
@@ -122,16 +104,16 @@ create index search_food_idx on food using GIN(search_food);
 select
     food.name,
     food.name_brand,
-    nutrient.calories,
-    nutrient.carbs,
-    nutrient.fats,
-    nutrient.protein,
+    food_nutrient.calories,
+    food_nutrient.carbs,
+    food_nutrient.fats,
+    food_nutrient.protein,
     ts_rank_cd(
         search_food,
         to_tsquery('english', 'chicken')
     ) as ranking
 from food
-    JOIN nutrient ON food.food_nutrient_id = nutrient.id
+    JOIN food_nutrient ON food.food_nutrient_id = food_nutrient.id
 where
     search_food @@to_tsquery('english', 'chicken')
     and name_brand = 'USDA'
@@ -141,19 +123,16 @@ order by ranking desc;
 select
     food.name,
     food.name_brand,
+    food_nutrient.calories,
+    food_nutrient.carbs,
+    food_nutrient.fats,
+    food_nutrient.protein,
     ts_rank_cd(
-        food.search_food,
-        to_tsquery(
-            'english',
-            'chick:* & broiler:* & fryer:*'
-        )
-    ) as ranking,
-    nutrient.calories,
-    nutrient.carbs,
-    nutrient.fats,
-    nutrient.protein
+        search_food,
+        to_tsquery('english', 'chicken')
+    ) as ranking
 from food
-    JOIN nutrient ON food.food_nutrient_id = nutrient.id
+    JOIN food_nutrient ON food.food_nutrient_id = food_nutrient.id
 where
     search_food @@to_tsquery(
         'english',
@@ -230,7 +209,7 @@ create table
         fiber float4,
         sodium float4,
         iron float4,
-        calcium float4,
+        calcium float4
     );
 
 create table
@@ -496,11 +475,8 @@ create table intake(
     amount_unit varchar(4) not NULL,
     amount_unit_desc varchar(40) not NULL,
     serving_size float4 default 0,
-    --	! YOU NEED TO BE EXTRA CAREFUL WITH HAVING 2 SIMILAR COLUMNS
     food_id int,
-    recipe_id int,
-    FOREIGN KEY(food_id) REFERENCES food(id),
-    FOREIGN KEY(recipe_id) REFERENCES recipe(id)
+    FOREIGN KEY(food_id) REFERENCES food(id)
 );
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
