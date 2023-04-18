@@ -264,18 +264,26 @@ insert into
     food_brand(id, name, food_brand_type_id)
 values (uuid_generate_v4(), 'iFNRI', 1), (uuid_generate_v4(), 'USDA', 1);
 
-insert into
-    edible_category(id, name)
-values (1, 'cereals'), (
-        2,
-        'starchy roots, and tubers'
-    ), (
-        3,
-        'nuts, dried beans, and seeds'
-    ), (4, 'vegetables'), (5, 'fruits'), (6, 'meats'), (7, 'seafood'), (8, 'eggs'), (9, 'dairy'), (10, 'fats and oils'), (11, 'sweets'), (12, 'spices and herbs'), (13, 'alcoholic beverages'), (14, 'non-alcoholic beverages'), (15, 'baby foods'), (
-        16,
-        'soups, sauces, and gravies'
-    ), (17, 'miscellaneous'), (18, 'branded');
+insert into edible_category(id, name)
+    values 
+        (1, 'cereals'),
+        (2, 'starchy roots, and tubers'),
+        (3, 'nuts, dried beans, and seeds'),
+        (4, 'vegetables'),
+        (5, 'fruits'),
+        (6, 'meats'),
+        (7, 'seafood'),
+        (8, 'eggs'),
+        (9, 'dairy'),
+        (10, 'fats and oils'),
+        (11, 'sweets'),
+        (12, 'spices and herbs'),
+        (13, 'alcoholic beverages'),
+        (14, 'non-alcoholic beverages'),
+        (15, 'baby foods'),
+        (16, 'soups, sauces, and gravies'),
+        (17, 'miscellaneous'),
+        (18, 'branded');
 
 create table
     recipe(
