@@ -33,20 +33,26 @@ CREATE TABLE ingredient(
 );
 CREATE TABLE ingredient_variant(
     id serial primary key,
-    name varchar not null,
-    ingredient_id int NOT NULL
+    name varchar not null UNIQUE, 
+    name_ph varchar UNIQUE
 );
-CREATE TABLE ingredient_cook_type(
+CREATE TABLE ingredient_subvariant(
     id serial primary key,
-    name varchar not null,
+    name varchar not null UNIQUE, 
+    name_ph varchar UNIQUE
+);
+CREATE TABLE ingredient_nutrient(
+    id serial primary key,
     ingredient_id int NOT NULL,
     ingredient_variant_id int NOT NULL,
+    ingredient_subvariant_id int NOT NULL,
     nutrient_id int not null UNIQUE,
     FOREIGN KEY(ingredient_id) REFERENCES ingredient(id),
     FOREIGN KEY(ingredient_variant_id) REFERENCES ingredient_variant(id),
+    FOREIGN KEY(ingredient_subvariant_id) REFERENCES ingredient_subvariant(id),
     FOREIGN KEY(nutrient_id) REFERENCES nutrient(id) ON DELETE cascade
 );
-create table ingredient_image(
+CREATE TABLE ingredient_image(
     id serial primary key,
     ingredient_id int not null,
     name_file varchar not NULL,
@@ -55,7 +61,7 @@ create table ingredient_image(
     amount_unit_desc varchar(40) not NULL
 );
 
-create table nutrient(
+CREATE TABLE nutrient(
     id serial primary key,
     amount float4 not NULL,
     amount_unit varchar(4) not NULL,
@@ -74,10 +80,33 @@ create table nutrient(
     calcium float4,
 );
 
-create table edible_category(
+CREATE TABLE edible_category(
     id int primary key,
     name varchar not null
 );
+
+-- VIEW
+CREATE VIEW ingredient_details AS
+    SELECT 
+        ingredient.id,
+        ingredient.name,
+        ingredient.name_ph,
+        ingredient.name_brand,
+        ingredient_variant.name as variant_name,
+        ingredient_subvariant.name as subvariant_name,
+        nutrient.amount,
+        nutrient.amount_unit,
+        nutrient.calories,
+        nutrient.protein,
+        nutrient.carbs,
+        nutrient.fats
+    FROM ingredient_mapping 
+    JOIN ingredient on ingredient_mapping.ingredient_id = ingredient.id
+    JOIN ingredient_variant on ingredient_mapping.ingredient_variant_id = ingredient_variant.id 
+    JOIN ingredient_subvariant on ingredient_mapping.ingredient_subvariant_id = ingredient_subvariant.id 
+    JOIN nutrient on ingredient_mapping.nutrient_id = nutrient.id 
+
+
 
 -- For Text Search
 
@@ -120,28 +149,40 @@ where
     and food_category_id = 6 
 order by ranking desc;
 
-select
-    food.name,
-    food.name_brand,
-    food_nutrient.calories,
-    food_nutrient.carbs,
-    food_nutrient.fats,
-    food_nutrient.protein,
-    ts_rank_cd(
-        search_food,
-        to_tsquery('english', 'chicken')
-    ) as ranking
-from food
-    JOIN food_nutrient ON food.food_nutrient_id = food_nutrient.id
-where
+select * from food 
+where 
     search_food @@to_tsquery(
         'english',
-        'chick:* & broiler:* & fryer:*'
-    )
+        'Alcoholic & beverage'
+    ) 
+	and removed = false
     and name_brand = 'USDA'
-    and food_category_id = 6 
-    and name not like '%rotisserie%'
-order by ranking desc;
+    and food_category_id = 14
+order by name desc;
+
+select name, removed from food 
+where removed = false
+    and name_brand = 'USDA'
+    and food_category_id = 17
+order by name asc;
+
+SELECT 
+    ingredient.name AS ingredient_name,
+    ingredient_variant.name as part,
+    ingredient_cook_type.name as cook_type,
+    nutrient.calories,
+    nutrient.carbs,
+    nutrient.fats,
+    nutrient.protein
+FROM ingredient_cook_type
+    JOIN ingredient on ingredient_cook_type.ingredient_id = ingredient.id
+    JOIN ingredient_variant on ingredient_cook_type.ingredient_variant_id = ingredient_variant.id
+    JOIN nutrient on ingredient_cook_type.nutrient_id = nutrient.id;
+where ingredient.category_id = 4;
+ 
+select * from FOOD where removed = false and name_brand = 'USDA' ;
+--delete from ingredient_variant where ingredient_id = 6;
+--update food set removed = false where food_category_id = 6 ; 
 
 -- Deprecated
 
