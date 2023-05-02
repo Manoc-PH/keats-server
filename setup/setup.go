@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
+	"server/utilities"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -48,12 +48,12 @@ func SetupApp() *fiber.App {
 }
 
 func ConnectDB() {
-	SecretKey = os.Getenv("SECRET_KEY")
-	// connStr := os.Getenv("POSTGRES_URL")
-	dbuser := os.Getenv("DB_USER")
-	dbpass := os.Getenv("DB_PASSWORD")
-	dbname := os.Getenv("DB_DB")
-	dbhost := os.Getenv("DB_HOST")
+	SecretKey = utilities.GoDotEnvVariable("SECRET_KEY")
+	// connStr := utilities.GoDotEnvVariable("POSTGRES_URL")
+	dbuser := utilities.GoDotEnvVariable("DB_USER")
+	dbpass := utilities.GoDotEnvVariable("DB_PASSWORD")
+	dbname := utilities.GoDotEnvVariable("DB_DB")
+	dbhost := utilities.GoDotEnvVariable("DB_HOST")
 	var err error
 	psqlInfo := fmt.Sprintf(`host=%s port=%d user=%v password=%v dbname=%v sslmode=disable`,
 		dbhost, 5432, dbuser, dbpass, dbname)

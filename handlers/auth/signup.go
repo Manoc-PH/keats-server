@@ -27,7 +27,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 	// hashing password and formatting reqData
 	password, _ := bcrypt.GenerateFromPassword([]byte(reqData.Password), 10)
 	account_id := uuid.New()
-	account_type_id, err := uuid.Parse("2ecedaf9-a36b-4e44-bc3f-90464ac20fab")
+	account_type_id, err := uuid.Parse("4c3c69b0-2eae-4b3c-80e1-619f4718d272")
 	if err != nil {
 		log.Println("Sign_Up | Error: ", err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(err)
