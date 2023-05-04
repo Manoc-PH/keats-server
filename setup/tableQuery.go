@@ -169,15 +169,16 @@ order by name asc;
 SELECT 
     ingredient.name AS ingredient_name,
     ingredient_variant.name as part,
-    ingredient_cook_type.name as cook_type,
+    ingredient_subvariant.name as cook_type,
     nutrient.calories,
     nutrient.carbs,
     nutrient.fats,
     nutrient.protein
-FROM ingredient_cook_type
-    JOIN ingredient on ingredient_cook_type.ingredient_id = ingredient.id
-    JOIN ingredient_variant on ingredient_cook_type.ingredient_variant_id = ingredient_variant.id
-    JOIN nutrient on ingredient_cook_type.nutrient_id = nutrient.id;
+FROM ingredient_mapping
+    JOIN ingredient on ingredient_mapping.ingredient_id = ingredient.id
+    JOIN ingredient_variant on ingredient_mapping.ingredient_variant_id = ingredient_variant.id
+    JOIN ingredient_subvariant on ingredient_mapping.ingredient_subvariant_id = ingredient_subvariant.id
+    JOIN nutrient on ingredient_mapping.nutrient_id = nutrient.id;
 where ingredient.category_id = 4;
  
 select * from FOOD where removed = false and name_brand = 'USDA' ;
@@ -214,95 +215,139 @@ select * from FOOD where removed = false and name_brand = 'USDA' ;
 
 -- select * from food where search_food @@ to_tsquery('chicken') ORDER By score DESC;
 
-create table
-    food(
-        id serial primary key,
-        name varchar not null UNIQUE,
-        name_ph varchar DEFAULT '',
-        name_brand varchar DEFAULT '',
-        date_created date,
-        barcode varchar unique,
-        thumbnail_image_link varchar,
-        food_desc varchar default '',
-        food_nutrient_id int not null UNIQUE,
-        food_brand_type_id int not null,
-        food_category_id int,
-        food_brand_id uuid not null,
-        removed bool DEFAULT FALSE NOT NULL,
-        FOREIGN KEY(food_brand_type_id) REFERENCES food_brand_type(id),
-        FOREIGN KEY(food_nutrient_id) REFERENCES food_nutrient(id) ON DELETE cascade,
-        FOREIGN KEY(food_category_id) REFERENCES food_category(id),
-        FOREIGN KEY(food_brand_id) REFERENCES food_brand(id)
-    );
-create table
-    food_nutrient(
-        id serial primary key,
-        amount float4 not NULL,
-        amount_unit varchar(4) not NULL,
-        amount_unit_desc varchar(40) not NULL,
-        serving_size float4 default 0,
-        calories float4 not NULL,
-        protein float4 not NULL,
-        carbs float4 not NULL,
-        fats float4 not null,
-        trans_fat float4,
-        saturated_fat float4,
-        sugars float4,
-        fiber float4,
-        sodium float4,
-        iron float4,
-        calcium float4
-    );
+-- create table
+--     food(
+--         id serial primary key,
+--         name varchar not null UNIQUE,
+--         name_ph varchar DEFAULT '',
+--         name_brand varchar DEFAULT '',
+--         date_created date,
+--         barcode varchar unique,
+--         thumbnail_image_link varchar,
+--         food_desc varchar default '',
+--         food_nutrient_id int not null UNIQUE,
+--         food_brand_type_id int not null,
+--         food_category_id int,
+--         food_brand_id uuid not null,
+--         removed bool DEFAULT FALSE NOT NULL,
+--         FOREIGN KEY(food_brand_type_id) REFERENCES food_brand_type(id),
+--         FOREIGN KEY(food_nutrient_id) REFERENCES food_nutrient(id) ON DELETE cascade,
+--         FOREIGN KEY(food_category_id) REFERENCES food_category(id),
+--         FOREIGN KEY(food_brand_id) REFERENCES food_brand(id)
+--     );
+-- create table
+--     food_nutrient(
+--         id serial primary key,
+--         amount float4 not NULL,
+--         amount_unit varchar(4) not NULL,
+--         amount_unit_desc varchar(40) not NULL,
+--         serving_size float4 default 0,
+--         calories float4 not NULL,
+--         protein float4 not NULL,
+--         carbs float4 not NULL,
+--         fats float4 not null,
+--         trans_fat float4,
+--         saturated_fat float4,
+--         sugars float4,
+--         fiber float4,
+--         sodium float4,
+--         iron float4,
+--         calcium float4
+--     );
 
-create table
-    food_image(
-        id serial primary key,
-        food_id int not null,
-        name_file varchar not NULL,
-        amount float4 not NULL,
-        amount_unit varchar(4) not NULL,
-        amount_unit_desc varchar(40) not NULL
-    );
+-- create table
+--     food_rewards(
+--         id serial primary key,
+--         food_id int not null,
+--         coins int not null,
+--         xp int not null
+--     );
 
-create table
-    food_category(
-        id int primary key,
-        name varchar not null
-    );
+CREATE TABLE food (
+    id serial primary key,
+    name varchar not null UNIQUE,
+    name_ph varchar DEFAULT '',
+    name_brand varchar DEFAULT '',
+    date_created date,
+    barcode varchar unique,
+    thumbnail_image_link varchar,
+    food_desc varchar default '', 
+    brand_type_id int not null,
+    category_id int not null,
+    brand_id uuid not null,
+    FOREIGN KEY(brand_type_id) REFERENCES edible_brand_type(id),
+    FOREIGN KEY(category_id) REFERENCES edible_category(id),
+    FOREIGN KEY(brand_id) REFERENCES edible_brand(id)
+);
+CREATE TABLE food_ingredient (
+    id serial primary key,
+    ingredient_mapping_id serial,
+    amount float4 not NULL,
+    amount_unit varchar(4) not NULL,
+    amount_unit_desc varchar(40) not NULL,
+    serving_size float4 default 0,
+    FOREIGN KEY(ingredient_mapping_id) REFERENCES ingredient_mapping(id)
+);
+CREATE TABLE food_image(
+    id serial primary key,
+    food_id int not null,
+    name_file varchar not NULL,
+    amount float4 not NULL,
+    amount_unit varchar(4) not NULL,
+    amount_unit_desc varchar(40) not NULL
+);
+CREATE TABLE edible_category(
+    id int primary key,
+    name varchar not null
+);
 
-create table
-    food_rewards(
-        id serial primary key,
-        food_id int not null,
-        coins int not null,
-        xp int not null
-    );
+CREATE TABLE edible_brand(
+    id uuid primary key,
+    name varchar not null,
+    brand_desc varchar,
+    thumbnail_image_link varchar,
+    cover_image_link varchar,
+    profile_image_link varchar,
+    brand_type_id int not null,
+    FOREIGN KEY(brand_type_id) REFERENCES edible_brand_type(id)
+);
+CREATE TABLE edible_brand_type(
+    id serial primary key,
+    name varchar not null,
+    brand_type_desc varchar
+);
 
-create table
-    food_brand(
-        id uuid primary key,
-        name varchar not null,
-        brand_desc varchar,
-        thumbnail_image_link varchar,
-        cover_image_link varchar,
-        profile_image_link varchar,
-        food_brand_type_id int not null,
-        FOREIGN KEY(food_brand_type_id) REFERENCES food_brand_type(id)
-    );
+CREATE TABLE food_intake(
+    id serial primary key,
+    food_id int NOT NULL,
+    FOREIGN KEY(food_id) REFERENCES food(id)
+);
+CREATE TABLE food_intake_mapping(
+    id serial primary key,
+    food_intake_id int NOT NULL,
+    ingredient_mapping_id int NOT NULL,
+    amount float4 not NULL,
+    amount_unit varchar(4) not NULL,
+    FOREIGN KEY(food_intake_id) REFERENCES food_intake(id),
+    FOREIGN KEY(ingredient_mapping_id) REFERENCES ingredient_mapping(id)
+);
+ 
+CREATE TABLE intake(
+    id serial primary key,
+    account_id uuid not NULL,
+    date_created timestamp,
+    amount float4 not NULL,
+    amount_unit varchar(4) not NULL,
+    amount_unit_desc varchar(40) not NULL,
+    serving_size float4 default 0,
+    food_id int,
+    FOREIGN KEY(food_id) REFERENCES food(id)
+);
 
-create table
-    food_brand_type(
-        id serial primary key,
-        name varchar not null,
-        brand_type_desc varchar
-    );
-
-insert into
-    food_brand_type(name)
+insert into edible_brand_type(name)
 values ('generic'), ('commercial');
 
-insert into
-    food_brand(id, name, food_brand_type_id)
+insert into edible_brand(id, name, edible_brand_type_id)
 values (uuid_generate_v4(), 'iFNRI', 1), (uuid_generate_v4(), 'USDA', 1);
 
 insert into edible_category(id, name)
@@ -517,18 +562,6 @@ create table daily_nutrients(
     FOREIGN KEY(diet_plan_id) REFERENCES diet_plan(id)
 );
 
-create table intake(
-    id serial primary key,
-    account_id uuid not NULL,
-    date_created timestamp,
-    amount float4 not NULL,
-    amount_unit varchar(4) not NULL,
-    amount_unit_desc varchar(40) not NULL,
-    serving_size float4 default 0,
-    food_id int,
-    FOREIGN KEY(food_id) REFERENCES food(id)
-);
-
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 insert into
@@ -610,13 +643,14 @@ FROM account_vitals
 WHERE
     account_vitals.account_id = '898f8e6c-817e-4605-af14-5b437c58bc86';
 
-insert into
-    account_game_stat (account_id, coins, xp)
-values (
-        '898f8e6c-817e-4605-af14-5b437c58bc86',
-        0,
-        0
-    );
+insert into account_game_stat (account_id, coins, xp)
+	values ( '898f8e6c-817e-4605-af14-5b437c58bc86', 0, 0 );
+
+insert into account_type (id, name)
+	values
+		('4c3c69b0-2eae-4b3c-80e1-619f4718d272', 'consumer'),
+		('7d3f6af5-acd7-49e4-b968-692b7301fa6c', 'admin'),
+		('a65ddf3e-9d55-4da9-b695-69d0aaeeedab', 'business');
 
 ALTER TABLE food MODIFY COLUMN name_brand VARCHAR() DEFAULT '';
 
