@@ -54,7 +54,7 @@ CREATE TABLE ingredient_nutrient(
 );
 CREATE TABLE ingredient_image(
     id serial primary key,
-    ingredient_id int not null,
+    ingredient_mapping_id int not null,
     name_file varchar not NULL,
     amount float4 not NULL,
     amount_unit varchar(4) not NULL,
@@ -371,59 +371,6 @@ insert into edible_category(id, name)
         (17, 'miscellaneous'),
         (18, 'branded');
 
-create table
-    recipe(
-        id serial primary key,
-        owner_id uuid not NULL,
-        recipe_nutrient_id int not NULL,
-        name varchar not NULL,
-        main_image_link varchar,
-        thumbnail_image_link varchar,
-        prep_mins int not NULL,
-        servings int not NULL,
-        likes int,
-        date_created timestamp,
-        date_updated timestamp,
-        FOREIGN KEY(owner_id) REFERENCES account(id),
-        FOREIGN KEY(recipe_nutrient_id) REFERENCES recipe_nutrient(id)
-    );
-
-create table
-    recipe_nutrient(
-        id serial primary key,
-        amount float4 not NULL,
-        amount_unit varchar(4) not NULL,
-        amount_unit_desc varchar(40) not NULL,
-        serving_size float4 default 0,
-        calories float4 not NULL,
-        protein float4 not NULL,
-        carbs float4 not NULL,
-        fats float4 not null,
-        trans_fat float4 default 0,
-        saturated_fat float4 default 0,
-        sugars float4 default 0,
-        sodium float4 default 0
-    );
-
-create table
-    recipe_ingredient(
-        id serial primary key,
-        food_id int not NULL,
-        amount float4 not NULL,
-        amount_unit varchar(4) not NULL,
-        amount_unit_desc varchar(40) not NULL,
-        serving_size float4,
-        FOREIGN KEY(food_id) REFERENCES food(id)
-    );
-
-create table
-    recipe_step(
-        id serial primary key,
-        recipe_id int not NULL,
-        step_order int not NULL,
-        step_desc varchar not NULL
-    );
-
 create table account(
     id uuid primary key,
     username varchar unique NOT NULL,
@@ -433,11 +380,9 @@ create table account(
     phone_number varchar,
     date_updated timestamp,
     date_created timestamp,
-    account_type_id uuid NOT NULL,
     account_vitals_id uuid NOT NULL,
     account_profile_id uuid NOT NULL,
     measure_unit_id uuid NOT NULL,
-    FOREIGN KEY(account_type_id) REFERENCES account_type(id),
     FOREIGN KEY(account_vitals_id) REFERENCES account_vitals(id),
     FOREIGN KEY(account_profile_id) REFERENCES account_profile(id),
     FOREIGN KEY(measure_unit_id) REFERENCES measure_unit(id)
@@ -474,7 +419,9 @@ create table account_profile(
     id uuid primary key,
     account_id uuid not null UNIQUE,
     account_image_link varchar,
-    account_title varchar --    FOREIGN KEY(account_id) REFERENCES account(id),
+    account_title varchar,
+    account_type_id uuid NOT NULL,
+    FOREIGN KEY(account_type_id) REFERENCES account_type(id)
 );
 
 create table account_items(
@@ -489,13 +436,13 @@ create table account_game_stat(
     account_id uuid not null UNIQUE,
     coins int,
     xp int
-);
+); 
 
-insert into account_type(id, name, account_type_desc)
-    values
-    (uuid_generate_v4(), 'user', ''),
-    (uuid_generate_v4(), 'dietician', ''),
-    (uuid_generate_v4(), 'brand_owner', '');
+INSERT INTO account_type (id, name)
+	values
+		('4c3c69b0-2eae-4b3c-80e1-619f4718d272', 'consumer'),
+		('7d3f6af5-acd7-49e4-b968-692b7301fa6c', 'admin'),
+		('a65ddf3e-9d55-4da9-b695-69d0aaeeedab', 'business');
 
 create table game_item(
     id serial primary key,
@@ -613,14 +560,14 @@ insert into diet_plan(id, name, calorie_percentage, protein_percentage, fats_per
     (uuid_generate_v4(), 'extreme fat loss (low carb)', 60, 30, 30, 40),
     (uuid_generate_v4(), 'extreme fat loss (low fat)', 60, 30, 15, 55);
 
-insert into activity_lvl(id, name, bmr_multiplier)
+insert into activity_lvl(id, name, bmr_multiplier, activity_lvl_desc)
     values
-    (uuid_generate_v4(), 'inactive', 1.2),
-    (uuid_generate_v4(), 'lightly active', 1.375),
-    (uuid_generate_v4(), 'moderately active', 1.465),
-    (uuid_generate_v4(), 'active', 1.55),
-    (uuid_generate_v4(), 'very active', 1.725),
-    (uuid_generate_v4(), 'extremely active', 1.9);
+    (uuid_generate_v4(), 'inactive', 1.2, 'This is characterized by low levels of physical activity and a lot of sitting or lying down throughout the day.'),
+    (uuid_generate_v4(), 'lightly active', 1.375, 'Increased heart rate and breathing for at least about 15-30 minutes, 1-3 days a week.'),
+    (uuid_generate_v4(), 'moderately active', 1.465, 'Increased heart rate and breathing for at least about 15-30 minutes, 4-5 days a week.'),
+    (uuid_generate_v4(), 'active', 1.55, 'Increased heart rate and breathing for at least about 45-120 minutes, 3-4 days a week.'),
+    (uuid_generate_v4(), 'very active', 1.725, 'Increased heart rate and breathing for at least about 2 hours or more, 6-7 days a week.'),
+    (uuid_generate_v4(), 'extremely active', 1.9, 'Increased heart rate and breathing for at least about 2 hours or more, everyday.');
 
 SELECT
     account_vitals.account_id,
@@ -645,12 +592,6 @@ WHERE
 
 insert into account_game_stat (account_id, coins, xp)
 	values ( '898f8e6c-817e-4605-af14-5b437c58bc86', 0, 0 );
-
-insert into account_type (id, name)
-	values
-		('4c3c69b0-2eae-4b3c-80e1-619f4718d272', 'consumer'),
-		('7d3f6af5-acd7-49e4-b968-692b7301fa6c', 'admin'),
-		('a65ddf3e-9d55-4da9-b695-69d0aaeeedab', 'business');
 
 ALTER TABLE food MODIFY COLUMN name_brand VARCHAR() DEFAULT '';
 
