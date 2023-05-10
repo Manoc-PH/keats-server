@@ -41,7 +41,7 @@ CREATE TABLE ingredient_subvariant(
     name varchar not null UNIQUE, 
     name_ph varchar UNIQUE
 );
-CREATE TABLE ingredient_nutrient(
+CREATE TABLE ingredient_mapping(
     id serial primary key,
     ingredient_id int NOT NULL,
     ingredient_variant_id int NOT NULL,
@@ -267,26 +267,33 @@ CREATE TABLE food (
     id serial primary key,
     name varchar not null UNIQUE,
     name_ph varchar DEFAULT '',
-    name_brand varchar DEFAULT '',
+    name_owner varchar DEFAULT '',
     date_created date,
     barcode varchar unique,
     thumbnail_image_link varchar,
-    food_desc varchar default '', 
-    brand_type_id int not null,
+    food_desc varchar default '',  
     category_id int not null,
-    brand_id uuid not null,
-    FOREIGN KEY(brand_type_id) REFERENCES edible_brand_type(id),
-    FOREIGN KEY(category_id) REFERENCES edible_category(id),
-    FOREIGN KEY(brand_id) REFERENCES edible_brand(id)
+    owner_id uuid not null, 
+    FOREIGN KEY(category_id) REFERENCES edible_category(id)
 );
 CREATE TABLE food_ingredient (
     id serial primary key,
     ingredient_mapping_id serial,
-    amount float4 not NULL,
-    amount_unit varchar(4) not NULL,
-    amount_unit_desc varchar(40) not NULL,
+    amount float4 NOT NULL,
+    amount_unit varchar(4) NOT NULL,
+    amount_unit_desc varchar(40) NOT NULL,
     serving_size float4 default 0,
     FOREIGN KEY(ingredient_mapping_id) REFERENCES ingredient_mapping(id)
+);
+--This table will be used in the case where the food does not have any ingredients
+CREATE TABLE food_nutrient (
+    id serial primary key,
+    amount float4 NOT NULL,
+    amount_unit varchar(4) NOT NULL,
+    amount_unit_desc varchar(40) NOT NULL,
+    serving_size float4 default 0,
+    nutrient_id int NOT NULL, 
+    FOREIGN KEY(nutrient_id) REFERENCES nutrient(id)
 );
 CREATE TABLE food_image(
     id serial primary key,
@@ -301,22 +308,6 @@ CREATE TABLE edible_category(
     name varchar not null
 );
 
-CREATE TABLE edible_brand(
-    id uuid primary key,
-    name varchar not null,
-    brand_desc varchar,
-    thumbnail_image_link varchar,
-    cover_image_link varchar,
-    profile_image_link varchar,
-    brand_type_id int not null,
-    FOREIGN KEY(brand_type_id) REFERENCES edible_brand_type(id)
-);
-CREATE TABLE edible_brand_type(
-    id serial primary key,
-    name varchar not null,
-    brand_type_desc varchar
-);
-
 CREATE TABLE food_intake(
     id serial primary key,
     food_id int NOT NULL,
@@ -324,12 +315,22 @@ CREATE TABLE food_intake(
 );
 CREATE TABLE food_intake_mapping(
     id serial primary key,
+    amount float4 not NULL,
+    amount_unit varchar(4) not NULL, 
     food_intake_id int NOT NULL,
     ingredient_mapping_id int NOT NULL,
-    amount float4 not NULL,
-    amount_unit varchar(4) not NULL,
-    FOREIGN KEY(food_intake_id) REFERENCES food_intake(id),
     FOREIGN KEY(ingredient_mapping_id) REFERENCES ingredient_mapping(id)
+);
+--This table will be used in the case where the food_intake does not have any food_intake_mapping
+CREATE TABLE food_intake_nutrient (
+    id serial primary key,
+    amount float4 NOT NULL,
+    amount_unit varchar(4) NOT NULL,
+    amount_unit_desc varchar(40) NOT NULL,
+    serving_size float4 default 0,
+    food_intake_id int NOT NULL,
+    nutrient_id int NOT NULL, 
+    FOREIGN KEY(nutrient_id) REFERENCES nutrient(id)
 );
  
 CREATE TABLE intake(
@@ -375,25 +376,14 @@ create table account(
     id uuid primary key,
     username varchar unique NOT NULL,
     password varchar NOT NULL,
-    name_first varchar,
-    name_last varchar,
-    phone_number varchar,
-    date_updated timestamp,
-    date_created timestamp,
-    account_vitals_id uuid NOT NULL,
-    account_profile_id uuid NOT NULL,
-    measure_unit_id uuid NOT NULL,
-    FOREIGN KEY(account_vitals_id) REFERENCES account_vitals(id),
-    FOREIGN KEY(account_profile_id) REFERENCES account_profile(id),
-    FOREIGN KEY(measure_unit_id) REFERENCES measure_unit(id)
+    account_type_id uuid NOT null,
+    FOREIGN KEY(account_type_id) REFERENCES account_type(id)
 );
-
 create table account_type(
     id uuid primary key,
     name varchar unique NOT NULL,
     account_type_desc varchar
 );
-
 create table account_vitals(
     id uuid primary key,
     account_id uuid not NULL unique,
@@ -402,41 +392,43 @@ create table account_vitals(
     birthday date NOT NULL,
     sex varchar NOT null,
     activity_lvl_id uuid NOT NULL,
-    diet_plan_id uuid NOT NULL,
-    --    FOREIGN KEY(account_id) REFERENCES account(id),
+    diet_plan_id uuid NOT NULL, 
     FOREIGN KEY(activity_lvl_id) REFERENCES activity_lvl(id),
     FOREIGN KEY(diet_plan_id) REFERENCES diet_plan(id)
 );
-
 create table account_weight_changes(
     id serial primary key,
     account_id uuid not NULL unique,
     weight int2 NOT NULL,
     date_created date
 );
-
-create table account_profile(
+create table consumer_profile(
     id uuid primary key,
     account_id uuid not null UNIQUE,
     account_image_link varchar,
     account_title varchar,
     account_type_id uuid NOT NULL,
-    FOREIGN KEY(account_type_id) REFERENCES account_type(id)
+    name_first varchar,
+    name_last varchar,
+    phone_number varchar,
+    date_updated timestamp,
+    date_created timestamp,
+    account_vitals_id uuid NOT NULL,
+    measure_unit_id uuid NOT NULL,
+    FOREIGN KEY(account_vitals_id) REFERENCES account_vitals(id),
+    FOREIGN KEY(measure_unit_id) REFERENCES measure_unit(id)
 );
-
-create table account_items(
-    id serial primary key,
-    account_id uuid not NULL,
-    game_item_id int not null,
-    FOREIGN KEY(game_item_id) REFERENCES game_item(id)
-);
-
-create table account_game_stat(
-    id serial primary key,
+create table business_profile(
+    id uuid primary key,
     account_id uuid not null UNIQUE,
-    coins int,
-    xp int
-); 
+    account_image_link varchar,
+    account_title varchar,
+    account_type_id uuid NOT NULL,
+    business_name varchar,
+    phone_number varchar,
+    date_updated timestamp,
+    date_created timestamp
+);
 
 INSERT INTO account_type (id, name)
 	values
@@ -444,14 +436,27 @@ INSERT INTO account_type (id, name)
 		('7d3f6af5-acd7-49e4-b968-692b7301fa6c', 'admin'),
 		('a65ddf3e-9d55-4da9-b695-69d0aaeeedab', 'business');
 
-create table game_item(
-    id serial primary key,
-    name varchar,
-    price int,
-    commentary varchar,
-    game_item_desc varchar,
-    game_item_image_link varchar
-);
+--create table account_items(
+--    id serial primary key,
+--    account_id uuid not NULL,
+--    game_item_id int not null,
+--    FOREIGN KEY(game_item_id) REFERENCES game_item(id)
+--);
+--
+--create table account_game_stat(
+--    id serial primary key,
+--    account_id uuid not null UNIQUE,
+--    coins int,
+--    xp int
+--); 
+--create table game_item(
+--    id serial primary key,
+--    name varchar,
+--    price int,
+--    commentary varchar,
+--    game_item_desc varchar,
+--    game_item_image_link varchar
+--);
 
 create table measure_unit(
     id uuid primary key,
