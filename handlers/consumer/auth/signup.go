@@ -42,31 +42,25 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		Activity_Lvl_Id: reqData.Activity_Lvl_Id,
 		Diet_Plan_Id:    reqData.Diet_Plan_Id,
 	}
-	account_profile := models.Account_Profile{
-		ID:         uuid.New(),
-		Account_Id: account_id,
+	account_profile := models.Consumer_Profile{
+		ID:                uuid.New(),
+		Account_Id:        account_id,
+		Date_Updated:      time.Now(),
+		Date_Created:      time.Now(),
+		Account_Vitals_Id: account_vitals.ID,
+		Measure_Unit_Id:   reqData.Measure_Unit_Id,
 	}
 	account := models.Account{
-		ID:                 account_id,
-		Username:           reqData.Username,
-		Password:           password,
-		Date_Updated:       time.Now(),
-		Date_Created:       time.Now(),
-		Account_Vitals_Id:  account_vitals.ID,
-		Account_Type_Id:    account_type_id,
-		Account_profile_Id: account_profile.ID,
-		Measure_Unit_Id:    reqData.Measure_Unit_Id,
+		ID:              account_id,
+		Username:        reqData.Username,
+		Password:        password,
+		Account_Type_Id: account_type_id,
 	}
 
 	// saving account
 	txn, err := db.Begin()
 	if err != nil {
 		log.Fatal(err)
-	}
-	_, err = txn.Exec(`INSERT INTO account_game_stat (account_id,	coins, xp) VALUES ($1, $2, $3)`, account_id, 0, 0)
-	if err != nil {
-		log.Println("Sign_Up | Error: ", err.Error())
-		return c.Status(fiber.StatusInternalServerError).JSON(err)
 	}
 	_, err = txn.Exec(
 		`INSERT INTO account_vitals 
@@ -93,10 +87,20 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(err)
 	}
 	_, err = txn.Exec(
-		`INSERT INTO account_profile (id, account_id)
-		VALUES ($1, $2)`,
+		`INSERT INTO account_profile (
+			id,
+			account_id,
+			date_updated,
+			date_created,
+			account_vitals_id,
+			measure_unit_id)
+		VALUES ($1, $2, $3, $4, $5, $6)`,
 		account_profile.ID,
 		account_profile.Account_Id,
+		account_profile.Date_Updated,
+		account_profile.Date_Created,
+		account_profile.Account_Vitals_Id,
+		account_profile.Measure_Unit_Id,
 	)
 	if err != nil {
 		log.Println("Sign_Up | Error: ", err.Error())
@@ -104,25 +108,12 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 	}
 	_, err = txn.Exec(
 		`INSERT INTO account 
-		( id,
-			username,
-			password,
-			date_updated,
-			date_created,
-			account_vitals_id,
-			account_type_id,
-			account_profile_id,
-			measure_unit_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		(id, username, password, account_type_id)
+		VALUES ($1, $2, $3, $4)`,
 		account.ID,
 		account.Username,
 		account.Password,
-		account.Date_Updated,
-		account.Date_Created,
-		account.Account_Vitals_Id,
 		account.Account_Type_Id,
-		account.Account_profile_Id,
-		account.Measure_Unit_Id,
 	)
 	if err != nil {
 		log.Println("Sign_Up | Error: ", err.Error())

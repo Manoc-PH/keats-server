@@ -20,6 +20,13 @@ type Daily_Nutrients struct {
 	Max_Fats        float32   `json:"max_fats"`
 	Activity_Lvl_Id uuid.UUID `json:"activity_lvl_id"`
 	Diet_Plan_Id    uuid.UUID `json:"diet_plan_id"`
+	Trans_Fat       float32   `json:"trans_fat"`
+	Saturated_Fat   float32   `json:"saturated_fat"`
+	Sugars          float32   `json:"sugars"`
+	Fiber           float32   `json:"fiber"`
+	Sodium          float32   `json:"sodium"`
+	Iron            float32   `json:"iron"`
+	Calcium         float32   `json:"calcium"`
 	// time.Time SHOULD BE IN ISO STRING
 }
 

@@ -15,7 +15,7 @@ type Res_Get_Food_Details struct {
 	ID                   uint      `json:"id"`
 	Name                 string    `json:"name"`
 	Name_Ph              string    `json:"name_ph"`
-	Name_Brand           string    `json:"name_brand"`
+	Name_Owner           string    `json:"name_owner"`
 	Food_Desc            string    `json:"food_desc"`
 	Barcode              string    `json:"barcode"`
 	Thumbnail_Image_Link string    `json:"thumbnail_image_link"`
@@ -24,9 +24,6 @@ type Res_Get_Food_Details struct {
 	Food_Category_Id     uint      `json:"food_category_id"`
 	Food_Brand_Id        uuid.UUID `json:"food_brand_id"`
 	//
-	Food_Nutrients  models.Food_Nutrient   `json:"food_nutrients"`
-	Food_Brand_Type models.Food_Brand_Type `json:"food_brand_type"`
-	Food_Brand      models.Food_Brand      `json:"food_brand"`
-	Food_Category   models.Food_Category   `json:"food_category"`
-	Food_Images     []models.Food_Image    `json:"food_images"`
+	Food_Nutrients models.Food_Nutrient `json:"food_nutrients"`
+	Food_Images    []models.Food_Image  `json:"food_images"`
 }
