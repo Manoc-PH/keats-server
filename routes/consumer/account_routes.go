@@ -1,7 +1,7 @@
 package routes
 
 import (
-	handlers "server/handlers/account"
+	handlers "server/handlers/consumer/account"
 	"server/setup"
 
 	"github.com/gofiber/fiber/v2"

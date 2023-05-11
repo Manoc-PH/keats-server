@@ -271,10 +271,12 @@ CREATE TABLE food (
     date_created date,
     barcode varchar unique,
     thumbnail_image_link varchar,
-    food_desc varchar default '',  
+    food_desc varchar default '',
     category_id int not null,
-    owner_id uuid not null, 
-    FOREIGN KEY(category_id) REFERENCES edible_category(id)
+    food_type_id int not null,
+    owner_id uuid not null,
+    FOREIGN KEY(category_id) REFERENCES edible_category(id),
+    FOREIGN KEY(food_type_id) REFERENCES food_type(id)
 );
 CREATE TABLE food_ingredient (
     id serial primary key,
@@ -288,11 +290,7 @@ CREATE TABLE food_ingredient (
 --This table will be used in the case where the food does not have any ingredients
 CREATE TABLE food_nutrient (
     id serial primary key,
-    amount float4 NOT NULL,
-    amount_unit varchar(4) NOT NULL,
-    amount_unit_desc varchar(40) NOT NULL,
-    serving_size float4 default 0,
-    nutrient_id int NOT NULL, 
+    nutrient_id int NOT null,
     FOREIGN KEY(nutrient_id) REFERENCES nutrient(id)
 );
 CREATE TABLE food_image(
@@ -302,10 +300,6 @@ CREATE TABLE food_image(
     amount float4 not NULL,
     amount_unit varchar(4) not NULL,
     amount_unit_desc varchar(40) not NULL
-);
-CREATE TABLE edible_category(
-    id int primary key,
-    name varchar not null
 );
 
 CREATE TABLE food_intake(
@@ -331,7 +325,19 @@ CREATE TABLE food_intake_nutrient (
     food_intake_id int NOT NULL,
     nutrient_id int NOT NULL, 
     FOREIGN KEY(nutrient_id) REFERENCES nutrient(id)
+); 
+CREATE TABLE food_type(
+    id int primary key,
+    name varchar not null
 );
+insert into food_type(id, name)
+    values 
+        (1, 'processed'),
+        (2, 'restaurant'),
+        (3, 'recipe');
+
+
+
  
 CREATE TABLE intake(
     id serial primary key,
@@ -345,12 +351,12 @@ CREATE TABLE intake(
     FOREIGN KEY(food_id) REFERENCES food(id)
 );
 
-insert into edible_brand_type(name)
-values ('generic'), ('commercial');
 
-insert into edible_brand(id, name, edible_brand_type_id)
-values (uuid_generate_v4(), 'iFNRI', 1), (uuid_generate_v4(), 'USDA', 1);
 
+CREATE TABLE edible_category(
+    id int primary key,
+    name varchar not null
+);
 insert into edible_category(id, name)
     values 
         (1, 'cereals'),
@@ -398,7 +404,7 @@ create table account_vitals(
 );
 create table account_weight_changes(
     id serial primary key,
-    account_id uuid not NULL unique,
+    account_id uuid not NULL,
     weight int2 NOT NULL,
     date_created date
 );
@@ -407,7 +413,6 @@ create table consumer_profile(
     account_id uuid not null UNIQUE,
     account_image_link varchar,
     account_title varchar,
-    account_type_id uuid NOT NULL,
     name_first varchar,
     name_last varchar,
     phone_number varchar,

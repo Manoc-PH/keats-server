@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"os"
-	"server/routes"
+	consumer_routes "server/routes/consumer"
 	"server/setup"
 )
 
@@ -17,10 +17,10 @@ func main() {
 	}
 
 	// Http routes
-	routes.Auth_Routes(app)
-	routes.Account_Routes(app)
-	routes.Tracker_Routes(app)
-	routes.Food_Routes(app)
+	consumer_routes.Auth_Routes(app)
+	consumer_routes.Account_Routes(app)
+	consumer_routes.Tracker_Routes(app)
+	consumer_routes.Food_Routes(app)
 
 	log.Fatal(app.Listen(":" + port))
 }
