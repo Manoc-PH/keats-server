@@ -16,22 +16,27 @@ type Ingredient struct {
 	// time.Time SHOULD BE IN ISO STRING
 }
 type Ingredient_Variant struct {
-	ID            uint   `json:"id"`
-	Name          string `json:"name"`
-	Ingredient_Id uint   `json:"ingredient_id"`
+	ID      uint   `json:"id"`
+	Name    string `json:"name"`
+	Name_Ph string `json:"name_ph"`
 }
-type Ingredient_Cook_Type struct {
-	ID                    uint   `json:"id"`
-	Name                  string `json:"name"`
-	Ingredient_Id         uint   `json:"ingredient_id"`
-	Ingredient_Variant_Id uint   `json:"ingredient_variant_id"`
-	Nutrient_Id           uint   `json:"nutrient_id"`
+type Ingredient_Subvariant struct {
+	ID      uint   `json:"id"`
+	Name    string `json:"name"`
+	Name_Ph string `json:"name_ph"`
+}
+type Ingredient_Mapping struct {
+	ID                       uint `json:"id"`
+	Ingredient_Id            uint `json:"ingredient_id"`
+	Ingredient_Variant_Id    uint `json:"ingredient_variant_id"`
+	Ingredient_Subvariant_Id uint `json:"ingredient_subvariant_id"`
+	Nutrient_Id              uint `json:"nutrient_id"`
 }
 type Ingredient_Image struct {
-	ID               uint    `json:"id"`
-	Food_Id          uint    `json:"food_id"`
-	Name_File        string  `json:"name_file"`
-	Amount           float32 `json:"amount"`
-	Amount_Unit      string  `json:"amount_unit"`
-	Amount_Unit_Desc string  `json:"amount_unit_desc"`
+	ID                    uint    `json:"id"`
+	Ingredient_Mapping_Id uint    `json:"ingredient_mapping_id"`
+	Name_File             string  `json:"name_file"`
+	Amount                float32 `json:"amount"`
+	Amount_Unit           string  `json:"amount_unit"`
+	Amount_Unit_Desc      string  `json:"amount_unit_desc"`
 }

@@ -25,7 +25,6 @@ CREATE TABLE ingredient(
     name_ph varchar DEFAULT '',
     name_brand varchar DEFAULT '',
     date_created date,
-    barcode varchar unique,
     thumbnail_image_link varchar,
     ingredient_desc varchar default '',
     category_id int,
@@ -71,13 +70,13 @@ CREATE TABLE nutrient(
     protein float4 not NULL,
     carbs float4 not NULL,
     fats float4 not null,
-    trans_fat float4,
-    saturated_fat float4,
-    sugars float4,
-    fiber float4,
-    sodium float4,
-    iron float4,
-    calcium float4,
+    trans_fat float4 DEFAULT 0,
+    saturated_fat float4 DEFAULT 0,
+    sugars float4 DEFAULT 0,
+    fiber float4 DEFAULT 0,
+    sodium float4 DEFAULT 0,
+    iron float4 DEFAULT 0,
+    calcium float4 DEFAULT 0,
 );
 
 CREATE TABLE edible_category(
@@ -280,7 +279,7 @@ CREATE TABLE food (
 );
 CREATE TABLE food_ingredient (
     id serial primary key,
-    ingredient_mapping_id serial,
+    ingredient_mapping_id int NOT NULL,
     amount float4 NOT NULL,
     amount_unit varchar(4) NOT NULL,
     amount_unit_desc varchar(40) NOT NULL,
@@ -290,8 +289,10 @@ CREATE TABLE food_ingredient (
 --This table will be used in the case where the food does not have any ingredients
 CREATE TABLE food_nutrient (
     id serial primary key,
-    nutrient_id int NOT null,
-    FOREIGN KEY(nutrient_id) REFERENCES nutrient(id)
+    nutrient_id int NOT NULL,
+    food_id int NOT NULL UNIQUE,
+    FOREIGN KEY(nutrient_id) REFERENCES nutrient(id),
+    FOREIGN KEY(food_id) REFERENCES food(id)
 );
 CREATE TABLE food_image(
     id serial primary key,
@@ -348,6 +349,8 @@ CREATE TABLE intake(
     amount_unit_desc varchar(40) not NULL,
     serving_size float4 default 0,
     food_id int,
+    ingredient_mapping_id int,
+    FOREIGN KEY(ingredient_mapping_id) REFERENCES ingredient_mapping(id),
     FOREIGN KEY(food_id) REFERENCES food(id)
 );
 
@@ -412,7 +415,6 @@ create table consumer_profile(
     id uuid primary key,
     account_id uuid not null UNIQUE,
     account_image_link varchar,
-    account_title varchar,
     name_first varchar,
     name_last varchar,
     phone_number varchar,
@@ -427,9 +429,7 @@ create table business_profile(
     id uuid primary key,
     account_id uuid not null UNIQUE,
     account_image_link varchar,
-    account_title varchar,
-    account_type_id uuid NOT NULL,
-    business_name varchar,
+    name_business varchar,
     phone_number varchar,
     date_updated timestamp,
     date_created timestamp
@@ -480,7 +480,7 @@ create table measure_unit(
     wt_liquid_desc_large varchar(40) NOT null
 );
 
-create table diet_plan(
+CREATE TABLE diet_plan(
     id uuid primary key,
     name varchar UNIQUE,
     main_image_link varchar,
@@ -492,7 +492,7 @@ create table diet_plan(
     carbs_percentage int
 );
 
-create table activity_lvl(
+CREATE TABLE activity_lvl(
     id uuid primary key,
     name varchar,
     main_image_link varchar,
@@ -501,20 +501,27 @@ create table activity_lvl(
     bmr_multiplier float
 );
 
-create table daily_nutrients(
+CREATE TABLE daily_nutrients(
     id serial primary key,
-    account_id uuid not NULL,
-    date_created date not NULL,
-    calories float4 not NULL,
-    protein float4 not NULL,
-    carbs float4 not NULL,
-    fats float4 not NULL,
-    max_calories float4 not NULL,
-    max_protein float4 not NULL,
-    max_carbs float4 not NULL,
-    max_fats float4 not NULL,
+    account_id uuid NOT NULL,
+    date_created date NOT NULL,
+    calories float4 NOT NULL,
+    protein float4 NOT NULL,
+    carbs float4 NOT NULL,
+    fats float4 NOT NULL,
+    max_calories float4 NOT NULL,
+    max_protein float4 NOT NULL,
+    max_carbs float4 NOT NULL,
+    max_fats float4 NOT NULL,
     activity_lvl_id uuid NOT NULL,
     diet_plan_id uuid NOT NULL,
+    trans_fat float4 NOT NULL DEFAULT 0,
+    saturated_fat float4 NOT NULL DEFAULT 0,
+    sugars float4 NOT NULL DEFAULT 0,
+    fiber float4 NOT NULL DEFAULT 0,
+    sodium float4 NOT NULL DEFAULT 0,
+    iron float4 NOT NULL DEFAULT 0,
+    calcium float4 NOT NULL DEFAULT 0,
     FOREIGN KEY(activity_lvl_id) REFERENCES activity_lvl(id),
     FOREIGN KEY(diet_plan_id) REFERENCES diet_plan(id)
 );
