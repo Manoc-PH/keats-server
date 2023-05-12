@@ -70,7 +70,7 @@ func Login(c *fiber.Ctx, db *sql.DB) error {
 
 	c.Cookie(&cookie)
 
-	// TODO RETURN USER DETAILS
+	user.Password = nil
 	log.Println("Successfully logged user in")
 	return c.JSON(user)
 }

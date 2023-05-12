@@ -19,7 +19,7 @@ type Deleted_Daily_Nutrients struct {
 }
 type Res_Delete_Intake struct {
 	Deleted_Daily_Nutrients Deleted_Daily_Nutrients `json:"deleted_macros"`
-	Deleted_Coins_And_XP    Added_Coins_And_XP      `json:"deleted_coins_and_xp"`
-	Intake                  models.Intake           `json:"intake"`
-	Food                    models.Food             `json:"food"`
+	// Deleted_Coins_And_XP    Added_Coins_And_XP      `json:"deleted_coins_and_xp"`
+	Intake models.Intake `json:"intake"`
+	Food   models.Food   `json:"food"`
 }

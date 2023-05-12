@@ -98,7 +98,7 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
 		response_data.Intake = new_intake
-		response_data.Added_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: new_coins, XP: new_xp}
+		// response_data.Added_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: new_coins, XP: new_xp}
 		response_data.Added_Daily_Nutrients = schemas.Added_Daily_Nutrients{
 			Calories: d_nutrients_to_add.Calories,
 			Protein:  d_nutrients_to_add.Protein,
@@ -156,17 +156,8 @@ func scan_intake_food(row *sql.Row, intake *models.Intake, food *models.Food, fo
 			&food.ID,
 			&food.Name,
 			&food.Name_Ph,
-			&food.Name_Brand,
 
 			&food_nutrient.ID,
-			&food_nutrient.Amount,
-			&food_nutrient.Amount_Unit,
-			&food_nutrient.Amount_Unit_Desc,
-			&food_nutrient.Serving_Size,
-			&food_nutrient.Calories,
-			&food_nutrient.Protein,
-			&food_nutrient.Carbs,
-			&food_nutrient.Fats,
 		); err != nil {
 		return err
 	}

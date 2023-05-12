@@ -95,7 +95,7 @@ func scan_food(row *sql.Row, food *schemas.Res_Get_Food_Details) error {
 		&food.ID,
 		&food.Name,
 		&food.Name_Ph,
-		&food.Name_Brand,
+		// &food.Name_Brand,
 		&food.Thumbnail_Image_Link,
 		&food.Food_Desc,
 		&food.Food_Nutrient_Id,
@@ -103,26 +103,26 @@ func scan_food(row *sql.Row, food *schemas.Res_Get_Food_Details) error {
 		&food.Food_Category_Id,
 		&food.Food_Brand_Id,
 		// FOOD NUTRIENT
-		&food.Food_Nutrients.Amount,
-		&food.Food_Nutrients.Amount_Unit,
-		&food.Food_Nutrients.Amount_Unit_Desc,
-		&food.Food_Nutrients.Serving_Size,
-		&food.Food_Nutrients.Calories,
-		&food.Food_Nutrients.Protein,
-		&food.Food_Nutrients.Carbs,
-		&food.Food_Nutrients.Fats,
-		&food.Food_Nutrients.Trans_Fat,
-		&food.Food_Nutrients.Saturated_Fat,
-		&food.Food_Nutrients.Sugars,
-		&food.Food_Nutrients.Sodium,
-		// FOOD BRAND TYPE
-		&food.Food_Brand_Type.Name,
-		&food.Food_Brand_Type.Brand_Type_Desc,
-		// FOOD BRAND
-		&food.Food_Brand.ID,
-		// FOOD CATEGORY
-		&food.Food_Category.ID,
-		&food.Food_Category.Name,
+		// &food.Food_Nutrients.Amount,
+		// &food.Food_Nutrients.Amount_Unit,
+		// &food.Food_Nutrients.Amount_Unit_Desc,
+		// &food.Food_Nutrients.Serving_Size,
+		// &food.Food_Nutrients.Calories,
+		// &food.Food_Nutrients.Protein,
+		// &food.Food_Nutrients.Carbs,
+		// &food.Food_Nutrients.Fats,
+		// &food.Food_Nutrients.Trans_Fat,
+		// &food.Food_Nutrients.Saturated_Fat,
+		// &food.Food_Nutrients.Sugars,
+		// &food.Food_Nutrients.Sodium,
+		// // FOOD BRAND TYPE
+		// &food.Food_Brand_Type.Name,
+		// &food.Food_Brand_Type.Brand_Type_Desc,
+		// // FOOD BRAND
+		// &food.Food_Brand.ID,
+		// // FOOD CATEGORY
+		// &food.Food_Category.ID,
+		// &food.Food_Category.Name,
 	)
 	return err
 }

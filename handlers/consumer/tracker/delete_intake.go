@@ -67,7 +67,7 @@ func Delete_Intake(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Delete_Intake | Error on delete_intake_d_nutrients_and_gamestat: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 	}
-	response_data.Deleted_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: coins * -1, XP: xp * -1}
+	// response_data.Deleted_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: coins * -1, XP: xp * -1}
 	response_data.Deleted_Daily_Nutrients = schemas.Deleted_Daily_Nutrients{
 		Calories: d_nutrients_to_delete.Calories * -1,
 		Protein:  d_nutrients_to_delete.Protein * -1,

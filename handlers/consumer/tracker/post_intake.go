@@ -27,7 +27,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Post_Intake | Error on query validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
-	if reqData.Food_Id != 0 && reqData.Recipe_Id != 0 {
+	if reqData.Food_Id != 0 && reqData.Ingredient_Mapping_Id != 0 {
 		log.Println("Post_Intake | Error: user sending recipe id and food id")
 		return utilities.Send_Error(c, "only one food item id required, received 2", fiber.StatusBadRequest)
 	}
@@ -74,7 +74,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
 		response_data.Intake = new_intake
-		response_data.Added_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: coins, XP: xp}
+		// response_data.Added_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: coins, XP: xp}
 		response_data.Added_Daily_Nutrients = schemas.Added_Daily_Nutrients{
 			Calories: d_nutrients_to_add.Calories,
 			Protein:  d_nutrients_to_add.Protein,
@@ -84,9 +84,9 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 		response_data.Food = food
 	}
 	// TODO ADD SUPPORT FOR RECIPES
-	if reqData.Recipe_Id != 0 {
-		return utilities.Send_Error(c, "recipes not yet supported", fiber.StatusBadRequest)
-	}
+	// if reqData.Recipe_Id != 0 {
+	// 	return utilities.Send_Error(c, "recipes not yet supported", fiber.StatusBadRequest)
+	// }
 	return c.Status(fiber.StatusOK).JSON(response_data)
 }
 
@@ -116,17 +116,8 @@ func scan_food(row *sql.Row, food *models.Food, food_nutrient *models.Food_Nutri
 			&food.ID,
 			&food.Name,
 			&food.Name_Ph,
-			&food.Name_Brand,
 
 			&food_nutrient.ID,
-			&food_nutrient.Amount,
-			&food_nutrient.Amount_Unit,
-			&food_nutrient.Amount_Unit_Desc,
-			&food_nutrient.Serving_Size,
-			&food_nutrient.Calories,
-			&food_nutrient.Protein,
-			&food_nutrient.Carbs,
-			&food_nutrient.Fats,
 		); err != nil {
 		return err
 	}
@@ -138,11 +129,11 @@ func calc_d_nutrients(d_nutrients_to_add *models.Daily_Nutrients, food_nutrient 
 	// if reqData.Amount_Unit != food_nutrient.Amount_Unit {}
 
 	// Servings should be converted to amount in grams in the frontend
-	amount_modifier := amount / food_nutrient.Amount
-	d_nutrients_to_add.Calories = (food_nutrient.Calories * amount_modifier)
-	d_nutrients_to_add.Protein = (food_nutrient.Protein * amount_modifier)
-	d_nutrients_to_add.Carbs = (food_nutrient.Carbs * amount_modifier)
-	d_nutrients_to_add.Fats = (food_nutrient.Fats * amount_modifier)
+	// amount_modifier := amount / food_nutrient.Amount
+	// d_nutrients_to_add.Calories = (food_nutrient.Calories * amount_modifier)
+	// d_nutrients_to_add.Protein = (food_nutrient.Protein * amount_modifier)
+	// d_nutrients_to_add.Carbs = (food_nutrient.Carbs * amount_modifier)
+	// d_nutrients_to_add.Fats = (food_nutrient.Fats * amount_modifier)
 }
 func save_intake_d_nutrients_and_gamestat(db *sql.DB, d_nutrients_to_add *models.Daily_Nutrients, coins int, xp int, intake *models.Intake) error {
 	txn, err := db.Begin()
@@ -174,7 +165,7 @@ func save_intake_d_nutrients_and_gamestat(db *sql.DB, d_nutrients_to_add *models
 		log.Println("save_intake_d_nutrients_and_gamestat (update account_game_stat)| Error: ", err.Error())
 		return err
 	}
-	if intake.Food_Id != 0 && intake.Recipe_Id == 0 {
+	if intake.Food_Id != 0 && intake.Ingredient_Mapping_Id == 0 {
 		row := txn.QueryRow(
 			`INSERT INTO intake (account_id, date_created, food_id, amount,	amount_unit, amount_unit_desc, serving_size)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)  RETURNING id`,
@@ -192,13 +183,12 @@ func save_intake_d_nutrients_and_gamestat(db *sql.DB, d_nutrients_to_add *models
 			return err
 		}
 	}
-	if intake.Food_Id == 0 && intake.Recipe_Id != 0 {
+	if intake.Food_Id == 0 && intake.Ingredient_Mapping_Id != 0 {
 		row := txn.QueryRow(
 			`INSERT INTO intake (account_id, date_created, recipe_id, amount,	amount_unit, amount_unit_desc, serving_size)
 			VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
 			intake.Account_Id,
 			intake.Date_Created,
-			intake.Recipe_Id,
 			intake.Amount,
 			intake.Amount_Unit,
 			intake.Amount_Unit_Desc,
