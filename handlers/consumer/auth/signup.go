@@ -87,7 +87,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(err)
 	}
 	_, err = txn.Exec(
-		`INSERT INTO account_profile (
+		`INSERT INTO consumer_profile (
 			id,
 			account_id,
 			date_updated,
