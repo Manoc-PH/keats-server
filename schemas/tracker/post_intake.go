@@ -4,35 +4,29 @@ import "server/models"
 
 // *REQUESTS
 type Req_Post_Intake struct {
-	Food_Id               uint    `json:"food_id" validate:"required_if=Ingredient_Mapping_Id 0"`
-	Ingredient_Mapping_Id uint    `json:"ingredient_mapping_id" validate:"required_if=Food_Id 0"`
-	Amount                float32 `json:"amount" validate:"required"`
-	Amount_Unit           string  `json:"amount_unit" validate:"oneof='g' 'ml'"`
-	Amount_Unit_Desc      string  `json:"amount_unit_desc" validate:"oneof='gram' 'milliliter'"`
-	Serving_Size          float32 `json:"serving_size"`
-}
-
-type Added_Daily_Nutrients struct {
-	Calories      float32 `json:"calories"`
-	Protein       float32 `json:"protein"`
-	Carbs         float32 `json:"carbs"`
-	Fats          float32 `json:"fats"`
-	Trans_Fat     float32 `json:"trans_fat"`
-	Saturated_Fat float32 `json:"saturated_fat"`
-	Sugars        float32 `json:"sugars"`
-	Sodium        float32 `json:"sodium"`
-	Fiber         float32 `json:"fiber"`
-	Iron          float32 `json:"iron"`
-	Calcium       float32 `json:"calcium"`
+	Food_Id               uint                     `json:"food_id" validate:"required_if=Ingredient_Mapping_Id 0"`
+	Food_Ingredients      []models.Food_Ingredient `json:"food_ingredients" validate:"required_if=Ingredient_Mapping_Id 0"`
+	Ingredient_Mapping_Id uint                     `json:"ingredient_mapping_id" validate:"required_if=Food_Id 0"`
+	Amount                float32                  `json:"amount" validate:"required"`
+	Amount_Unit           string                   `json:"amount_unit" validate:"oneof='g' 'ml'"`
+	Amount_Unit_Desc      string                   `json:"amount_unit_desc" validate:"oneof='gram' 'milliliter'"`
+	Serving_Size          float32                  `json:"serving_size"`
 }
 
 // type Added_Coins_And_XP struct {
 // 	Coins int `json:"coins"`
 // 	XP    int `json:"xp"`
 // }
+type Ingredient_Mapping_Schema struct {
+	Ingredient            models.Ingredient            `json:"ingredient"`
+	Ingredient_Variant    models.Ingredient_Variant    `json:"ingredient_variant"`
+	Ingredient_Subvariant models.Ingredient_Subvariant `json:"ingredient_subvariant"`
+	Nutrient              models.Nutrient              `json:"nutrient"`
+}
 type Res_Post_Intake struct {
-	Added_Daily_Nutrients Added_Daily_Nutrients `json:"added_daily_nutrients"`
+	Added_Daily_Nutrients models.Nutrient `json:"added_daily_nutrients"`
 	// Added_Coins_And_XP    Added_Coins_And_XP    `json:"added_coins_and_xp"`
-	Intake models.Intake `json:"intake"`
-	Food   models.Food   `json:"food"`
+	Intake     models.Intake             `json:"intake"`
+	Ingredient Ingredient_Mapping_Schema `json:"ingredient"`
+	Food       models.Food               `json:"food"`
 }

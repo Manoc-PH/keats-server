@@ -33,11 +33,11 @@ func Delete_Intake(c *fiber.Ctx, db *sql.DB) error {
 	//* data processing
 	intake := models.Intake{}
 	food := models.Food{}
-	food_nutrient := models.Food_Nutrient{}
+	food_nutrient := models.Nutrient{}
 	d_nutrients_curr := models.Daily_Nutrients{}
 	// TODO OPTIMIZATION: USE GO ROUTINES
 	row := query_intake_food(reqData.Intake_ID, db)
-	err = scan_intake_food(row, &intake, &food, &food_nutrient)
+	// err = scan_intake_food(row, &intake, &food, &food_nutrient)
 	if err == sql.ErrNoRows {
 		return utilities.Send_Error(c, "intake not found", fiber.StatusBadRequest)
 	}
@@ -50,14 +50,14 @@ func Delete_Intake(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Delete_Intake | Error: User trying to delete old intake")
 		return utilities.Send_Error(c, "cannot delete intake from more than a day ago", fiber.StatusBadRequest)
 	}
-	row = query_d_nutrients(db, owner_id)
-	err = scan_d_nutrients(row, &d_nutrients_curr)
+	row = query_daily_nutrients(db, owner_id)
+	err = scan_daily_nutrients(row, &d_nutrients_curr)
 	if err != nil {
 		log.Println("Delete_Intake | Error on scanning daily_nutrients: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 	}
-	d_nutrients_to_delete := models.Daily_Nutrients{ID: d_nutrients_curr.ID, Account_Id: owner_id}
-	calc_d_nutrients(&d_nutrients_to_delete, &food_nutrient, intake.Amount)
+	d_nutrients_to_delete := models.Nutrient{ID: d_nutrients_curr.ID}
+	calc_nutrients(&d_nutrients_to_delete, &food_nutrient, intake.Amount)
 	coins, xp, deductions := utilities.Calc_CnXP_On_Intake(float32(d_nutrients_to_delete.Calories), float32(d_nutrients_curr.Calories-d_nutrients_to_delete.Calories), float32(d_nutrients_curr.Max_Calories))
 	coins = coins - deductions
 	xp = xp - deductions
@@ -79,7 +79,7 @@ func Delete_Intake(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(response_data)
 }
 
-func delete_intake_d_nutrients_and_gamestat(db *sql.DB, d_nutrients_to_delete *models.Daily_Nutrients, coins int, xp int, intake *models.Intake) error {
+func delete_intake_d_nutrients_and_gamestat(db *sql.DB, d_nutrients_to_delete *models.Nutrient, coins int, xp int, intake *models.Intake) error {
 	txn, err := db.Begin()
 	if err != nil {
 		log.Fatal(err)
@@ -103,7 +103,7 @@ func delete_intake_d_nutrients_and_gamestat(db *sql.DB, d_nutrients_to_delete *m
 	}
 	_, err = txn.Exec(
 		`UPDATE account_game_stat SET coins = coins - $1, xp = xp - $2 WHERE account_id = $3`,
-		coins, xp, d_nutrients_to_delete.Account_Id,
+		coins, xp, intake.Account_Id,
 	)
 	if err != nil {
 		log.Println("delete_intake_d_nutrients_and_gamestat (update account_game_stat)| Error: ", err.Error())
