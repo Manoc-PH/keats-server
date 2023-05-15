@@ -82,7 +82,8 @@ func query_daily_nutrients(db *sql.DB, user_id uuid.UUID) *sql.Row {
 	row := db.QueryRow(`SELECT
 			id, date_created, calories, protein, carbs, fats,
 			max_calories, max_protein, max_carbs, max_fats,
-			activity_lvl_id, diet_plan_id
+			activity_lvl_id, diet_plan_id,
+			trans_fat, saturated_fat, sugars, fiber, sodium, iron, calcium
 		FROM daily_nutrients WHERE account_id = $1 AND date_created = $2;`,
 		user_id, time.Now().Format(constants.YYYY_MM_DD),
 	// casting timestamp to date
@@ -104,6 +105,14 @@ func scan_daily_nutrients(row *sql.Row, daily_nutrients *models.Daily_Nutrients)
 		&daily_nutrients.Max_Fats,
 		&daily_nutrients.Activity_Lvl_Id,
 		&daily_nutrients.Diet_Plan_Id,
+
+		&daily_nutrients.Trans_Fat,
+		&daily_nutrients.Saturated_Fat,
+		&daily_nutrients.Sugars,
+		&daily_nutrients.Fiber,
+		&daily_nutrients.Sodium,
+		&daily_nutrients.Iron,
+		&daily_nutrients.Calcium,
 	)
 	return err
 }
