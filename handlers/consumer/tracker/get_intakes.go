@@ -41,25 +41,28 @@ func query_and_scan_intakes(db *sql.DB, user_id uuid.UUID) ([]schemas.Res_Get_In
 			intake.id,
 			intake.account_id,
 			intake.date_created,
+			COALESCE(intake.ingredient_mapping_id, 0) as ingredient_mapping_id,
 			COALESCE(intake.food_id, 0) as food_id,
-			COALESCE(intake.recipe_id, 0) as recipe_id,
 			intake.amount,
 			intake.amount_unit,
 			intake.amount_unit_desc,
 			intake.serving_size,
 			COALESCE(food.name, '') as food_name,
 			COALESCE(food.name_ph, '') as food_name_ph,
-			COALESCE(food.name_brand, '') as food_name_brand,
-			COALESCE(food.food_nutrient_id, 0) as food_nutrient_id,
-			COALESCE(food_nutrient.calories, 0) as food_nutrient_calories,
-			COALESCE(food_nutrient.amount, 0) as food_nutrient_amount,
-			COALESCE(food_nutrient.amount_unit, '') as food_nutrient_amount_unit,
-			COALESCE(recipe.name, '') as recipe_name,
-			COALESCE(recipe.name_owner, '') as recipe_name_owner
+			COALESCE(food.name_owner, '') as food_name_owner,
+			COALESCE(ingredient.name, '') as ingredient_name,
+			COALESCE(ingredient.name_ph, '') as ingredient_name_ph,
+			COALESCE(ingredient_variant.name, '') as ingredient_variant_name,
+			COALESCE(ingredient_variant.name_ph, '') as ingredient_variant_name_ph,
+			COALESCE(ingredient_subvariant.name, '') as ingredient_subvariant_name,
+			COALESCE(ingredient_subvariant.name_ph, '') as ingredient_subvariant_name_ph,
+			COALESCE(ingredient.name_brand, '') as ingredient_name_brand
 		FROM intake
 		LEFT JOIN food ON intake.food_id = food.id
-		LEFT JOIN food_nutrient ON food.food_nutrient_id = food_nutrient.id
-		LEFT JOIN recipe ON intake.recipe_id = recipe.id
+		LEFT JOIN ingredient_mapping ON intake.ingredient_mapping_id = ingredient_mapping.id
+		LEFT JOIN ingredient ON ingredient_mapping.ingredient_id = ingredient.id
+		LEFT JOIN ingredient_variant ON ingredient_mapping.ingredient_variant_id = ingredient_variant.id
+		LEFT JOIN ingredient_subvariant ON ingredient_mapping.ingredient_subvariant_id = ingredient_subvariant.id
 		WHERE intake.account_id = $1 AND intake.date_created >= $2
 		ORDER BY intake.date_created DESC`,
 		user_id, time.Now().Format(constants.YYYY_MM_DD),
@@ -78,8 +81,8 @@ func query_and_scan_intakes(db *sql.DB, user_id uuid.UUID) ([]schemas.Res_Get_In
 				&new_intake.ID,
 				&new_intake.Account_Id,
 				&new_intake.Date_Created,
+				&new_intake.Ingredient_Mapping_Id,
 				&new_intake.Food_Id,
-				&new_intake.Recipe_Id,
 
 				&new_intake.Amount,
 				&new_intake.Amount_Unit,
@@ -88,18 +91,20 @@ func query_and_scan_intakes(db *sql.DB, user_id uuid.UUID) ([]schemas.Res_Get_In
 
 				&new_intake.Food_Name,
 				&new_intake.Food_Name_Ph,
-				&new_intake.Food_Name_Brand,
-				&new_intake.Food_Nutrient_Id,
-				&new_intake.Food_Nutrient_Calories,
-				&new_intake.Food_Nutrient_Amount,
-				&new_intake.Food_Nutrient_Amount_Unit,
-				&new_intake.Recipe_Name,
-				&new_intake.Recipe_Name_Owner,
+				&new_intake.Food_Name_Owner,
+
+				&new_intake.Ingredient_Name,
+				&new_intake.Ingredient_Name_Ph,
+				&new_intake.Ingredient_Variant_Name,
+				&new_intake.Ingredient_Variant_Name_Ph,
+				&new_intake.Ingredient_Subvariant_Name,
+				&new_intake.Ingredient_Subvariant_Name_Ph,
+				&new_intake.Ingredient_Name_Brand,
 			); err != nil {
 			log.Println("Get_Intakes | error in scanning intakes: ", err.Error())
 			return nil, err
 		}
-		new_intake.Calories = (new_intake.Food_Nutrient_Calories / new_intake.Food_Nutrient_Amount) * new_intake.Amount
+		// new_intake.Calories = (new_intake.Food_Nutrient_Calories / new_intake.Food_Nutrient_Amount) * new_intake.Amount
 		intakes = append(intakes, new_intake)
 	}
 	return intakes, nil

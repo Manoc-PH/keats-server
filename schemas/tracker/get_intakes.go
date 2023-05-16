@@ -8,26 +8,28 @@ import (
 
 //* RESPONSE
 type Res_Get_Intakes struct {
-	ID               uint      `json:"id"`
-	Account_Id       uuid.UUID `json:"account_id"`
-	Food_Id          uint      `json:"food_id"`
-	Recipe_Id        uint      `json:"recipe_id"`
-	Date_Created     time.Time `json:"date_created"`
-	Calories         float32   `json:"calories"`
-	Amount           float32   `json:"amount"`
-	Amount_Unit      string    `json:"amount_unit"`
-	Amount_Unit_Desc string    `json:"amount_unit_desc"`
-	Serving_Size     float32   `json:"serving_size"`
-	// Food
-	Food_Name                 string  `json:"food_name"`
-	Food_Name_Ph              string  `json:"food_name_ph"`
-	Food_Name_Brand           string  `json:"food_name_brand"`
-	Food_Nutrient_Id          uint    `json:"food_nutrient_id"`
-	Food_Nutrient_Calories    float32 `json:"food_nutrient_calories"`
-	Food_Nutrient_Amount      float32 `json:"food_nutrient_amount"`
-	Food_Nutrient_Amount_Unit string  `json:"food_nutrient_amount_unit"`
+	ID                    uint      `json:"id"`
+	Account_Id            uuid.UUID `json:"account_id"`
+	Ingredient_Mapping_Id uint      `json:"ingredient_mapping_id"`
+	Food_Id               uint      `json:"food_id"`
+	Date_Created          time.Time `json:"date_created"`
+	// Calories              float32   `json:"calories"`
+	Amount           float32 `json:"amount"`
+	Amount_Unit      string  `json:"amount_unit"`
+	Amount_Unit_Desc string  `json:"amount_unit_desc"`
+	Serving_Size     float32 `json:"serving_size"`
 
-	// Recipe
-	Recipe_Name       string `json:"recipe_name"`
-	Recipe_Name_Owner string `json:"recipe_name_owner"`
+	// Ingredient
+	Ingredient_Name               string `json:"ingredient_name"`
+	Ingredient_Name_Ph            string `json:"ingredient_name_ph"`
+	Ingredient_Variant_Name       string `json:"ingredient_variant_name"`
+	Ingredient_Variant_Name_Ph    string `json:"ingredient_variant_name_ph"`
+	Ingredient_Subvariant_Name    string `json:"ingredient_subvariant_name"`
+	Ingredient_Subvariant_Name_Ph string `json:"ingredient_subvariant_name_ph"`
+	Ingredient_Name_Brand         string `json:"ingredient_name_brand"`
+
+	// Food
+	Food_Name       string `json:"food_name"`
+	Food_Name_Ph    string `json:"food_name_ph"`
+	Food_Name_Owner string `json:"food_name_owner"`
 }
