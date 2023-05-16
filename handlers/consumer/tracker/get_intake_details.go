@@ -27,7 +27,6 @@ func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Get_Intake_Details | Error on query validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
-	response := schemas.Res_Get_Intake_Details{}
 	intake := models.Intake{}
 	// querying intake
 	row := query_intake(db, Owner_Id, reqData.Intake_ID)
@@ -41,6 +40,18 @@ func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 	if err != nil && err != sql.ErrNoRows {
 		log.Println("Get_Intake_Details | error in scanning intake: ", err.Error())
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
+	}
+
+	response := schemas.Res_Get_Intake_Details{
+		ID:                    intake.ID,
+		Account_Id:            intake.Account_Id,
+		Food_Id:               intake.Food_Id,
+		Ingredient_Mapping_Id: intake.Ingredient_Mapping_Id,
+		Date_Created:          intake.Date_Created,
+		Amount:                intake.Amount,
+		Amount_Unit:           intake.Amount_Unit,
+		Amount_Unit_Desc:      intake.Amount_Unit_Desc,
+		Serving_Size:          intake.Serving_Size,
 	}
 	// TODO add query for food
 	if intake.Ingredient_Mapping_Id != 0 {
