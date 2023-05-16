@@ -26,7 +26,7 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Put_Intake | Error on query validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
-	if reqData.Food_Id != 0 && reqData.Recipe_Id != 0 {
+	if reqData.Food_Id != 0 && reqData.Ingredient_Mapping_Id != 0 {
 		log.Println("Put_Intake | Error: user sending recipe id and food id")
 		return utilities.Send_Error(c, "only one food item id required, received 2", fiber.StatusBadRequest)
 	}
@@ -35,14 +35,14 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 	response_data := schemas.Res_Put_Intake{}
 
 	//* data processing
-	if reqData.Food_Id != 0 {
+	if reqData.Ingredient_Mapping_Id != 0 {
 		intake := models.Intake{}
-		food := models.Food{}
-		food_nutrient := models.Nutrient{}
-		d_nutrients_curr := models.Daily_Nutrients{}
+		nutrient := models.Nutrient{}
+		daily_nutrients := models.Daily_Nutrients{Account_Id: owner_id}
 		// TODO OPTIMIZATION: USE GO ROUTINES
-		row := query_intake_food(reqData.Intake_ID, db)
-		// err = scan_intake_food(row, &intake, &food, &food_nutrient)
+		// Querrying intake
+		row := query_intake(db, owner_id, reqData.Intake_ID)
+		err = scan_intake(row, &intake)
 		if err == sql.ErrNoRows {
 			return utilities.Send_Error(c, "intake not found", fiber.StatusBadRequest)
 		}
@@ -50,164 +50,153 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 			log.Println("Put_Intake | Error on scanning food: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
+		// Not allowing user to edit intake from past
 		is_intake_today := check_if_date_is_today(intake.Date_Created, time.Now())
 		if !is_intake_today {
 			log.Println("Put_Intake | Error: User trying to edit old intake")
 			return utilities.Send_Error(c, "cannot edit intake from more than a day ago", fiber.StatusBadRequest)
 		}
+		// Querying nutrients of ingredient
+		row = query_ingredient_nutrient(reqData.Ingredient_Mapping_Id, db)
+		err = scan_ingredient_nutrient(row, &nutrient)
+		if err != nil {
+			log.Println("Put_Intake | Error on scanning nutrients: ", err.Error())
+			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+		}
+		// Getting daily nutrients
 		row = query_daily_nutrients(db, owner_id)
-		err = scan_daily_nutrients(row, &d_nutrients_curr)
+		err = scan_daily_nutrients(row, &daily_nutrients)
 		if err != nil {
 			log.Println("Put_Intake | Error on scanning daily_nutrients: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
-		new_coins, new_xp, new_deductions := 0, 0, 0
-		old_intake_d_nutrients := models.Nutrient{ID: d_nutrients_curr.ID}
-		calc_nutrients(&old_intake_d_nutrients, &food_nutrient, intake.Amount)
-		new_intake_d_nutrients := models.Nutrient{ID: d_nutrients_curr.ID}
-		calc_nutrients(&new_intake_d_nutrients, &food_nutrient, reqData.Amount)
-		// ! STILL UNSURE OF THIS CODE BLOCK'S STABILITY (like my emotions)
-		if old_intake_d_nutrients.Calories != new_intake_d_nutrients.Calories {
-			old_coins, old_xp, old_deductions := utilities.Calc_CnXP_On_Intake(
-				float32(old_intake_d_nutrients.Calories),
-				float32(d_nutrients_curr.Calories-old_intake_d_nutrients.Calories),
-				float32(d_nutrients_curr.Max_Calories),
-			)
-			new_coins, new_xp, new_deductions = utilities.Calc_CnXP_On_Intake(
-				float32(new_intake_d_nutrients.Calories),
-				float32(d_nutrients_curr.Calories-old_intake_d_nutrients.Calories),
-				float32(d_nutrients_curr.Max_Calories),
-			)
-			new_deductions = (new_deductions * -1) + old_deductions
-			new_coins = (new_coins - old_coins) + new_deductions
-			new_xp = (new_xp - old_xp) + new_deductions
-		}
+		old_intake_d_nutrients := models.Nutrient{}
+		calc_nutrients(&old_intake_d_nutrients, &nutrient, intake.Amount)
+		new_intake_d_nutrients := models.Nutrient{}
+		calc_nutrients(&new_intake_d_nutrients, &nutrient, reqData.Amount)
+		daily_nutrients_to_add := models.Daily_Nutrients{ID: daily_nutrients.ID}
+		calc_daily_nutrients_update(&old_intake_d_nutrients, &new_intake_d_nutrients, &daily_nutrients_to_add)
 
-		d_nutrients_to_add := models.Nutrient{ID: d_nutrients_curr.ID}
-		calc_d_nutrients_update(&old_intake_d_nutrients, &new_intake_d_nutrients, &d_nutrients_to_add)
-
-		new_intake := models.Intake{}
-		new_intake = intake
+		new_intake := intake
 		new_intake.Amount = reqData.Amount
 		new_intake.Amount_Unit = reqData.Amount_Unit
 		new_intake.Amount_Unit_Desc = reqData.Amount_Unit_Desc
 		new_intake.Serving_Size = reqData.Serving_Size
-		err = update_intake_d_nutrients_and_gamestat(db, &d_nutrients_to_add, new_coins, new_xp, &new_intake)
+		txn, err := db.Begin()
 		if err != nil {
-			log.Println("Put_Intake | Error on update_intake_d_nutrients_and_gamestat: ", err.Error())
+			log.Fatal(err)
+		}
+		// Updating Intake
+		err = update_intake(txn, &new_intake)
+		if err != nil {
+			log.Println("Put_Intake | Error on update_intake: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
-		response_data.Intake = new_intake
-		// response_data.Added_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: new_coins, XP: new_xp}
-		response_data.Added_Daily_Nutrients = models.Nutrient{
-			Calories: d_nutrients_to_add.Calories,
-			Protein:  d_nutrients_to_add.Protein,
-			Carbs:    d_nutrients_to_add.Carbs,
-			Fats:     d_nutrients_to_add.Fats,
+		// Updating Daily Nutrients
+		err = update_daily_nutrients(txn, &daily_nutrients_to_add)
+		if err != nil {
+			log.Println("Put_Intake | Error on update_daily_nutrients: ", err.Error())
+			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
-		response_data.Food = food
+		err = txn.Commit()
+		if err != nil {
+			txn.Rollback()
+			log.Println("update_intake_d_nutrients_and_gamestat (commit) | Error: ", err.Error())
+			return err
+		}
+		response_data.Added_Daily_Nutrients = new_intake_d_nutrients
+		response_data.Added_Daily_Nutrients.Calories = daily_nutrients_to_add.Calories
+		response_data.Added_Daily_Nutrients.Protein = daily_nutrients_to_add.Protein
+		response_data.Added_Daily_Nutrients.Carbs = daily_nutrients_to_add.Carbs
+		response_data.Added_Daily_Nutrients.Fats = daily_nutrients_to_add.Fats
+		response_data.Added_Daily_Nutrients.Trans_Fat = daily_nutrients_to_add.Trans_Fat
+		response_data.Added_Daily_Nutrients.Saturated_Fat = daily_nutrients_to_add.Saturated_Fat
+		response_data.Added_Daily_Nutrients.Sugars = daily_nutrients_to_add.Sugars
+		response_data.Added_Daily_Nutrients.Fiber = daily_nutrients_to_add.Fiber
+		response_data.Added_Daily_Nutrients.Sodium = daily_nutrients_to_add.Sodium
+		response_data.Added_Daily_Nutrients.Iron = daily_nutrients_to_add.Iron
+		response_data.Added_Daily_Nutrients.Calcium = daily_nutrients_to_add.Calcium
+
 	}
-	// TODO ADD SUPPORT FOR RECIPES
-	if reqData.Recipe_Id != 0 {
-		return utilities.Send_Error(c, "recipes not yet supported", fiber.StatusBadRequest)
+	// TODO ADD SUPPORT FOR FOOD
+	if reqData.Food_Id != 0 {
+		return utilities.Send_Error(c, "food not yet supported", fiber.StatusBadRequest)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response_data)
 }
 
-func query_intake_food(intake_id uint, db *sql.DB) *sql.Row {
+func query_ingredient_nutrient(ingredient_mapping_id uint, db *sql.DB) *sql.Row {
 	row := db.QueryRow(`SELECT
-			intake.id,
-			intake.food_id,
-			intake.amount,
-			intake.amount_unit,
-			intake.amount_unit_desc,
-			intake.serving_size,
-			intake.date_created,
-			food.id, food.name, food.name_ph, food.name_brand,
-			food_nutrient.id,
-			food_nutrient.amount,
-			food_nutrient.amount_unit,
-			food_nutrient.amount_unit_desc,
-			food_nutrient.serving_size,
-			food_nutrient.calories,
-			food_nutrient.protein,
-			food_nutrient.carbs,
-			food_nutrient.fats
-		FROM intake
-		JOIN food ON intake.food_id = food.id
-		JOIN food_nutrient ON food.food_nutrient_id = food_nutrient.id
-		WHERE intake.id = $1`,
-		intake_id,
+			nutrient.id,
+			nutrient.amount,
+			nutrient.amount_unit,
+			nutrient.amount_unit_desc,
+			nutrient.serving_size,
+			nutrient.calories,
+			nutrient.protein,
+			nutrient.carbs,
+			nutrient.fats,
+			nutrient.trans_fat,
+			nutrient.saturated_fat,
+			nutrient.sugars,
+			nutrient.fiber,
+			nutrient.sodium,
+			nutrient.iron,
+			nutrient.calcium
+		FROM ingredient_mapping
+		JOIN nutrient ON ingredient_mapping.nutrient_id = nutrient.id
+		WHERE ingredient_mapping.id = $1`,
+		// casting timestamp to date
+		ingredient_mapping_id,
 	)
 	return row
 }
-func scan_intake_food(row *sql.Row, intake *models.Intake, food *models.Food, food_nutrient *models.Food_Nutrient) error {
+func scan_ingredient_nutrient(row *sql.Row, nutrient *models.Nutrient) error {
 	if err := row.
 		Scan(
-			&intake.ID,
-			&intake.Food_Id,
-			&intake.Amount,
-			&intake.Amount_Unit,
-			&intake.Amount_Unit_Desc,
-			&intake.Serving_Size,
-			&intake.Date_Created,
-
-			&food.ID,
-			&food.Name,
-			&food.Name_Ph,
-
-			&food_nutrient.ID,
+			&nutrient.ID,
+			&nutrient.Amount,
+			&nutrient.Amount_Unit,
+			&nutrient.Amount_Unit_Desc,
+			&nutrient.Serving_Size,
+			&nutrient.Calories,
+			&nutrient.Protein,
+			&nutrient.Carbs,
+			&nutrient.Fats,
+			&nutrient.Trans_Fat,
+			&nutrient.Saturated_Fat,
+			&nutrient.Sugars,
+			&nutrient.Fiber,
+			&nutrient.Sodium,
+			&nutrient.Iron,
+			&nutrient.Calcium,
 		); err != nil {
 		return err
 	}
 	return nil
 }
-func calc_d_nutrients_update(old_d_nutrients *models.Nutrient, new_d_nutrients *models.Nutrient, d_nutrients_to_add *models.Nutrient) {
+func calc_daily_nutrients_update(old_d_nutrients *models.Nutrient, new_d_nutrients *models.Nutrient, d_nutrients_to_add *models.Daily_Nutrients) {
 	d_nutrients_to_add.Calories = new_d_nutrients.Calories - old_d_nutrients.Calories
 	d_nutrients_to_add.Protein = new_d_nutrients.Protein - old_d_nutrients.Protein
 	d_nutrients_to_add.Carbs = new_d_nutrients.Carbs - old_d_nutrients.Carbs
 	d_nutrients_to_add.Fats = new_d_nutrients.Fats - old_d_nutrients.Fats
+	d_nutrients_to_add.Trans_Fat = new_d_nutrients.Trans_Fat - old_d_nutrients.Trans_Fat
+	d_nutrients_to_add.Saturated_Fat = new_d_nutrients.Saturated_Fat - old_d_nutrients.Saturated_Fat
+	d_nutrients_to_add.Sugars = new_d_nutrients.Sugars - old_d_nutrients.Sugars
+	d_nutrients_to_add.Fiber = new_d_nutrients.Fiber - old_d_nutrients.Fiber
+	d_nutrients_to_add.Sodium = new_d_nutrients.Sodium - old_d_nutrients.Sodium
+	d_nutrients_to_add.Iron = new_d_nutrients.Iron - old_d_nutrients.Iron
+	d_nutrients_to_add.Calcium = new_d_nutrients.Calcium - old_d_nutrients.Calcium
 }
-func update_intake_d_nutrients_and_gamestat(db *sql.DB, d_nutrients_to_add *models.Nutrient, coins int, xp int, intake *models.Intake) error {
-	txn, err := db.Begin()
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = txn.Exec(
-		`UPDATE daily_nutrients SET
-			calories = calories + $1,
-			protein = protein + $2,
-			carbs = carbs + $3,
-			fats = fats + $4
+func update_intake(txn *sql.Tx, intake *models.Intake) error {
+	_, err := txn.Exec(
+		`UPDATE intake SET 
+			amount = $1,
+			amount_unit = $2,
+			amount_unit_desc = $3,
+			serving_size = $4
 		WHERE id = $5`,
-		d_nutrients_to_add.Calories,
-		d_nutrients_to_add.Protein,
-		d_nutrients_to_add.Carbs,
-		d_nutrients_to_add.Fats,
-		d_nutrients_to_add.ID,
-	)
-	if err != nil {
-		log.Println("update_intake_d_nutrients_and_gamestat (update daily_nutrients) | Error: ", err.Error())
-		return err
-	}
-	_, err = txn.Exec(
-		`UPDATE account_game_stat SET coins = coins + $1, xp = xp + $2 WHERE account_id = $3`,
-		coins, xp, intake.Account_Id,
-	)
-	if err != nil {
-		log.Println("update_intake_d_nutrients_and_gamestat (update account_game_stat)| Error: ", err.Error())
-		return err
-	}
-	_, err = txn.Exec(
-		`UPDATE intake SET
-			date_created = $1,
-			amount = $2,
-			amount_unit = $3,
-			amount_unit_desc = $4,
-			serving_size = $5
-		WHERE id = $6`,
-		time.Now(),
 		intake.Amount,
 		intake.Amount_Unit,
 		intake.Amount_Unit_Desc,
@@ -215,13 +204,41 @@ func update_intake_d_nutrients_and_gamestat(db *sql.DB, d_nutrients_to_add *mode
 		intake.ID,
 	)
 	if err != nil {
-		log.Println("update_intake_d_nutrients_and_gamestat (update intake)| Error: ", err.Error())
+		log.Println("update_intake | Error: ", err.Error())
 		return err
 	}
-	err = txn.Commit()
+	return nil
+}
+func update_daily_nutrients(txn *sql.Tx, daily_nutrients_to_add *models.Daily_Nutrients) error {
+	_, err := txn.Exec(
+		`UPDATE daily_nutrients SET
+			calories = calories + $1,
+			protein = protein + $2,
+			carbs = carbs + $3,
+			fats = fats + $4,
+			trans_fat = trans_fat + $5,
+			saturated_fat = saturated_fat + $6,
+			sugars = sugars + $7,
+			fiber = fiber + $8,
+			sodium = sodium + $9,
+			iron = iron + $10,
+			calcium = calcium + $11
+			WHERE id = $12`,
+		daily_nutrients_to_add.Calories,
+		daily_nutrients_to_add.Protein,
+		daily_nutrients_to_add.Carbs,
+		daily_nutrients_to_add.Fats,
+		daily_nutrients_to_add.Trans_Fat,
+		daily_nutrients_to_add.Saturated_Fat,
+		daily_nutrients_to_add.Sugars,
+		daily_nutrients_to_add.Fiber,
+		daily_nutrients_to_add.Sodium,
+		daily_nutrients_to_add.Iron,
+		daily_nutrients_to_add.Calcium,
+		daily_nutrients_to_add.ID,
+	)
 	if err != nil {
-		txn.Rollback()
-		log.Println("update_intake_d_nutrients_and_gamestat (commit) | Error: ", err.Error())
+		log.Println("update_daily_nutrients | Error: ", err.Error())
 		return err
 	}
 	return nil
@@ -232,3 +249,61 @@ func check_if_date_is_today(a time.Time, b time.Time) bool {
 	}
 	return false
 }
+
+// func update_intake_d_nutrients_and_gamestat(db *sql.DB, d_nutrients_to_add *models.Nutrient, coins int, xp int, intake *models.Intake) error {
+// 	txn, err := db.Begin()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	_, err = txn.Exec(
+// 		`UPDATE daily_nutrients SET
+// 			calories = calories + $1,
+// 			protein = protein + $2,
+// 			carbs = carbs + $3,
+// 			fats = fats + $4
+// 		WHERE id = $5`,
+// 		d_nutrients_to_add.Calories,
+// 		d_nutrients_to_add.Protein,
+// 		d_nutrients_to_add.Carbs,
+// 		d_nutrients_to_add.Fats,
+// 		d_nutrients_to_add.ID,
+// 	)
+// 	if err != nil {
+// 		log.Println("update_intake_d_nutrients_and_gamestat (update daily_nutrients) | Error: ", err.Error())
+// 		return err
+// 	}
+// 	_, err = txn.Exec(
+// 		`UPDATE account_game_stat SET coins = coins + $1, xp = xp + $2 WHERE account_id = $3`,
+// 		coins, xp, intake.Account_Id,
+// 	)
+// 	if err != nil {
+// 		log.Println("update_intake_d_nutrients_and_gamestat (update account_game_stat)| Error: ", err.Error())
+// 		return err
+// 	}
+// 	_, err = txn.Exec(
+// 		`UPDATE intake SET
+// 			date_created = $1,
+// 			amount = $2,
+// 			amount_unit = $3,
+// 			amount_unit_desc = $4,
+// 			serving_size = $5
+// 		WHERE id = $6`,
+// 		time.Now(),
+// 		intake.Amount,
+// 		intake.Amount_Unit,
+// 		intake.Amount_Unit_Desc,
+// 		intake.Serving_Size,
+// 		intake.ID,
+// 	)
+// 	if err != nil {
+// 		log.Println("update_intake_d_nutrients_and_gamestat (update intake)| Error: ", err.Error())
+// 		return err
+// 	}
+// 	err = txn.Commit()
+// 	if err != nil {
+// 		txn.Rollback()
+// 		log.Println("update_intake_d_nutrients_and_gamestat (commit) | Error: ", err.Error())
+// 		return err
+// 	}
+// 	return nil
+// }

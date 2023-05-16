@@ -36,7 +36,7 @@ func Delete_Intake(c *fiber.Ctx, db *sql.DB) error {
 	food_nutrient := models.Nutrient{}
 	d_nutrients_curr := models.Daily_Nutrients{}
 	// TODO OPTIMIZATION: USE GO ROUTINES
-	row := query_intake_food(reqData.Intake_ID, db)
+	row := query_intake(db, owner_id, reqData.Intake_ID)
 	// err = scan_intake_food(row, &intake, &food, &food_nutrient)
 	if err == sql.ErrNoRows {
 		return utilities.Send_Error(c, "intake not found", fiber.StatusBadRequest)

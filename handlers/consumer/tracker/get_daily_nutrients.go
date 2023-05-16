@@ -24,9 +24,7 @@ func Get_Daily_Nutrients(c *fiber.Ctx, db *sql.DB) error {
 	daily_nutrients := models.Daily_Nutrients{Account_Id: Owner_Id}
 	// querying Daily_Nutrients
 	row := query_daily_nutrients(db, Owner_Id)
-	// scanning and returning error
 	err = scan_daily_nutrients(row, &daily_nutrients)
-	// Daily_Nutrients doesnt exist yet
 	if err != nil && err == sql.ErrNoRows {
 		err = generate_daily_nutrients(db, Owner_Id, &daily_nutrients)
 		if err != nil {
