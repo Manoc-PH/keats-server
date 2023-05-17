@@ -21,6 +21,7 @@ func main() {
 	consumer_routes.Account_Routes(app)
 	consumer_routes.Tracker_Routes(app)
 	consumer_routes.Food_Routes(app)
+	consumer_routes.Ingredient_Routes(app)
 
 	log.Fatal(app.Listen(":" + port))
 }
