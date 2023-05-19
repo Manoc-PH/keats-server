@@ -140,8 +140,8 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 		Ingredient_Id              uint   `json:"ingredient_id"`
 		Ingredient_Name            string `json:"ingredient_name"`
 		Ingredient_Name_Owner      string `json:"ingredient_name_owner"`
-		Ingredient_Variant_Id      uint   `json:"ingredient_iariant_id"`
-		Ingredient_Variant_Name    string `json:"ingredient_iariant_Name"`
+		Ingredient_Variant_Id      uint   `json:"ingredient_variant_id"`
+		Ingredient_Variant_Name    string `json:"ingredient_variant_Name"`
 		Ingredient_Subvariant_Id   uint   `json:"ingredient_subvariant_id"`
 		Ingredient_Subvariant_Name string `json:"ingredient_subvariant_Name"`
 	}
