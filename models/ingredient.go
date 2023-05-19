@@ -8,7 +8,7 @@ type Ingredient struct {
 	ID                   uint      `json:"id"`
 	Name                 string    `json:"name"`
 	Name_Ph              string    `json:"name_ph"`
-	Name_Brand           string    `json:"name_brand"`
+	Name_Owner           string    `json:"name_owner"`
 	Date_Created         time.Time `json:"date_created"`
 	Thumbnail_Image_Link string    `json:"thumbnail_image_link"`
 	Ingredient_Desc      string    `json:"ingredient_desc"`

@@ -23,7 +23,7 @@ CREATE TABLE ingredient(
     id serial primary key,
     name varchar not null UNIQUE,
     name_ph varchar DEFAULT '',
-    name_brand varchar DEFAULT '',
+    name_owner varchar DEFAULT '',
     date_created date,
     thumbnail_image_link varchar,
     ingredient_desc varchar default '',

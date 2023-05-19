@@ -31,7 +31,7 @@
 
 
 # Our builder image used to build the Go binary
-FROM golang:alpine as builder
+FROM golang:1.18 as builder
 RUN mkdir /app
 ADD . /app
 WORKDIR /app

@@ -5,7 +5,7 @@ import (
 	"log"
 	constants "server/constants/formats"
 	"server/middlewares"
-	schemas "server/schemas/tracker"
+	schemas "server/schemas/consumer/tracker"
 	"server/utilities"
 	"time"
 

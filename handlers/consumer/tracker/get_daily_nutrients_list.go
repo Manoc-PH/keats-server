@@ -7,7 +7,7 @@ import (
 	constants "server/constants/formats"
 	"server/middlewares"
 	"server/models"
-	schemas "server/schemas/tracker"
+	schemas "server/schemas/consumer/tracker"
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"

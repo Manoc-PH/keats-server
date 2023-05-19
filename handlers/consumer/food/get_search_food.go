@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"server/middlewares"
-	schemas "server/schemas/food"
+	schemas "server/schemas/consumer/food"
 	"server/utilities"
 	"strings"
 

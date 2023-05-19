@@ -5,7 +5,7 @@ import (
 	"log"
 	"server/middlewares"
 	"server/models"
-	schemas "server/schemas/food"
+	schemas "server/schemas/consumer/food"
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"

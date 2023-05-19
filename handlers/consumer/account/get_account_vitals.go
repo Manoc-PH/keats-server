@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"server/middlewares"
-	schemas "server/schemas/account"
+	schemas "server/schemas/consumer/account"
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"

@@ -4,15 +4,19 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"server/models"
 	"server/utilities"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"
+	"github.com/meilisearch/meilisearch-go"
 )
 
 var DB *sql.DB
+var DB_Search *meilisearch.Client
 var SecretKey string
 var FiberConfig = fiber.Config{
 	ErrorHandler: func(ctx *fiber.Ctx, err error) error {
@@ -67,30 +71,154 @@ func ConnectDB() {
 	if pingErr != nil {
 		log.Fatal(pingErr)
 	}
-	log.Println("Connected!")
+	log.Println("Connected to Postgres!")
 	DB = db
-	// SetupDB(db)
+
+	db_search_api_key := utilities.GoDotEnvVariable("MEILISEARCH_ADMIN_KEY")
+	client := meilisearch.NewClient(meilisearch.ClientConfig{
+		Host:   "http://localhost:7700",
+		APIKey: db_search_api_key,
+	})
+	if client != nil {
+		log.Println("Connected to Meilisearch!")
+	}
+	DB_Search = client
+	setupMeili(db, DB_Search)
 }
 
-func SetupDB(db *sql.DB) error {
-	_, err := db.Exec(`
-		CREATE TABLE IF NOT EXISTS food(
-			id 									SERIAL PRIMARY KEY,
-			name 								varchar UNIQUE NOT NULL,
-			name_ph 						varchar UNIQUE NOT NULL,
-			brand_name					varchar,
-			barcode							varchar,
-			amount 							float4  NOT NULL,
-			amount_unit 				varchar(4)  NOT NULL,
-			amount_unit_desc 		varchar(40)  NOT NULL,
-			serving_size 				float4,
-			calories 						float4 NOT NULL,
-			protein 						float4 NOT NULL,
-			carbs 							float4 NOT NULL,
-			fats 								float4 NOT NULL); 
-		); `)
+// func SetupDB(db *sql.DB) error {
+// 	_, err := db.Exec(`
+// 		CREATE TABLE IF NOT EXISTS food(
+// 			id 									SERIAL PRIMARY KEY,
+// 			name 								varchar UNIQUE NOT NULL,
+// 			name_ph 						varchar UNIQUE NOT NULL,
+// 			brand_name					varchar,
+// 			barcode							varchar,
+// 			amount 							float4  NOT NULL,
+// 			amount_unit 				varchar(4)  NOT NULL,
+// 			amount_unit_desc 		varchar(40)  NOT NULL,
+// 			serving_size 				float4,
+// 			calories 						float4 NOT NULL,
+// 			protein 						float4 NOT NULL,
+// 			carbs 							float4 NOT NULL,
+// 			fats 								float4 NOT NULL);
+// 		); `)
+// 	if err != nil {
+// 		log.Fatalf("an error '%s' was not expected when setting up the db tables", err)
+// 	}
+// 	return nil
+// }
+
+func setupMeili(db *sql.DB, db_search *meilisearch.Client) error {
+	numOfRows := 0
+	row := db.QueryRow(`SELECT COUNT(name) FROM ingredient`)
+	row.Scan(&numOfRows)
+	meili_stats, err := db_search.GetStats()
 	if err != nil {
-		log.Fatalf("an error '%s' was not expected when setting up the db tables", err)
+		log.Panicln("Could not get stats of meili db")
+	}
+	if meili_stats.Indexes["edibles"].NumberOfDocuments != int64(numOfRows) {
+		db_search.Index("edibles").DeleteAllDocuments()
+		_, err = db_search.CreateIndex(&meilisearch.IndexConfig{
+			Uid:        "edibles",
+			PrimaryKey: "id",
+		})
+		filterableAttributes := []string{
+			"name",
+			"edible_type",
+		}
+		db_search.Index("edibles").UpdateFilterableAttributes(&filterableAttributes)
+		if err != nil {
+			log.Panicln("Could not create index for edibles in meili db")
+		}
+		insert_ingredients(db, db_search)
 	}
 	return nil
+}
+func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
+	type ingredient struct {
+		Ingredient_Mapping_Id      uint   `json:"ingredient_mapping_id"`
+		Ingredient_Id              uint   `json:"ingredient_id"`
+		Ingredient_Name            string `json:"ingredient_name"`
+		Ingredient_Name_Owner      string `json:"ingredient_name_owner"`
+		Ingredient_Variant_Id      uint   `json:"ingredient_iariant_id"`
+		Ingredient_Variant_Name    string `json:"ingredient_iariant_Name"`
+		Ingredient_Subvariant_Id   uint   `json:"ingredient_subvariant_id"`
+		Ingredient_Subvariant_Name string `json:"ingredient_subvariant_Name"`
+	}
+	// *This structure works for meilisearch
+	// Using showMatchesPosition parameter when searching we can find the match
+	// inside the array of ingredients. More information here:
+	// https://www.meilisearch.com/docs/reference/api/search#show-matches-position
+	type edible struct {
+		Id           uuid.UUID    `json:"id"`
+		Name         string       `json:"name"`
+		Name_Owner   string       `json:"name_owner"`
+		Edible_Type  string       `json:"edible_type"`
+		Ingredients  []ingredient `json:"ingredients"`
+		Food_Details models.Food  `json:"food_details"`
+	}
+	docs := map[string]edible{}
+	rows, err := db.Query(`
+	SELECT 
+		ingredient_mapping.id as ingredient_mapping_id,
+		ingredient.id AS ingredient_id,
+		ingredient.name AS ingredient_name,
+		ingredient.name_owner AS ingredient_name_owner,
+		coalesce(ingredient_variant.id, 0) as ingredient_variant_id,
+		coalesce(ingredient_variant.name, '') as ingredient_variant_name,
+		coalesce(ingredient_subvariant.id, 0) as ingredient_subvariant_id,
+		coalesce(ingredient_subvariant.name, '') as ingredient_subvariant_name
+	FROM ingredient_mapping
+	JOIN ingredient on ingredient_mapping.ingredient_id = ingredient.id
+	JOIN ingredient_variant on ingredient_mapping.ingredient_variant_id = ingredient_variant.id
+	JOIN ingredient_subvariant on ingredient_mapping.ingredient_subvariant_id = ingredient_subvariant.id`)
+	if err != nil {
+		log.Println("Error querying ingredient: ", err.Error())
+	}
+	for rows.Next() {
+		var new_ing = ingredient{}
+		if err := rows.
+			Scan(
+				&new_ing.Ingredient_Mapping_Id,
+				&new_ing.Ingredient_Id,
+				&new_ing.Ingredient_Name,
+				&new_ing.Ingredient_Name_Owner,
+				&new_ing.Ingredient_Variant_Id,
+				&new_ing.Ingredient_Variant_Name,
+				&new_ing.Ingredient_Subvariant_Id,
+				&new_ing.Ingredient_Subvariant_Name,
+			); err != nil {
+			log.Println("Error scanning ingredient: ", err.Error())
+		}
+		if entry, ok := docs[new_ing.Ingredient_Name]; ok {
+			entry.Ingredients = append(entry.Ingredients, new_ing)
+			docs[new_ing.Ingredient_Name] = entry
+		} else {
+			new_edible := edible{
+				Id:          uuid.New(),
+				Name:        new_ing.Ingredient_Name,
+				Name_Owner:  new_ing.Ingredient_Name_Owner,
+				Edible_Type: "ingredient",
+			}
+			new_edible.Ingredients = append(new_edible.Ingredients, new_ing)
+			docs[new_ing.Ingredient_Name] = new_edible
+		}
+	}
+	formatted_doc := []map[string]interface{}{}
+	for _, item := range docs {
+		new_item := []map[string]interface{}{{
+			"id":           item.Id,
+			"name":         item.Name,
+			"name_owner":   item.Name_Owner,
+			"edible_type":  item.Edible_Type,
+			"ingredients":  item.Ingredients,
+			"food_details": nil,
+		}}
+		formatted_doc = append(formatted_doc, new_item[0])
+	}
+	_, err = db_search.Index("edibles").AddDocuments(formatted_doc)
+	if err == nil {
+		log.Println("Successfully added ingredients to Meilisearch")
+	}
 }

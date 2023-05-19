@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"server/middlewares"
-	schemas "server/schemas/ingredient"
+	schemas "server/schemas/consumer/ingredient"
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
@@ -49,7 +49,7 @@ func Get_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
 
 func query_ingredient(ingredient_mapping_id uint, db *sql.DB) *sql.Row {
 	row := db.QueryRow(`SELECT
-			ingredient.id, ingredient.name, coalesce(ingredient.name_ph, ''), ingredient.name_brand,
+			ingredient.id, ingredient.name, coalesce(ingredient.name_ph, ''), ingredient.name_owner,
 			ingredient_variant.id, ingredient_variant.name, coalesce(ingredient_variant.name_ph, ''), 
 			ingredient_subvariant.id, ingredient_subvariant.name, coalesce(ingredient_subvariant.name_ph, ''), 
 			nutrient.id,
@@ -85,7 +85,7 @@ func scan_ingredient(row *sql.Row, ingredient_mapping *schemas.Res_Get_Ingredien
 			&ingredient_mapping.Ingredient.ID,
 			&ingredient_mapping.Ingredient.Name,
 			&ingredient_mapping.Ingredient.Name_Ph,
-			&ingredient_mapping.Ingredient.Name_Brand,
+			&ingredient_mapping.Ingredient.Name_Owner,
 
 			&ingredient_mapping.Ingredient_Variant.ID,
 			&ingredient_mapping.Ingredient_Variant.Name,

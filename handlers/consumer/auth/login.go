@@ -6,7 +6,7 @@ import (
 	"server/constants"
 	"server/middlewares"
 	"server/models"
-	schemas "server/schemas/auth"
+	schemas "server/schemas/consumer/auth"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
