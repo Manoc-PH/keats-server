@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"server/models"
 	"server/utilities"
 	"time"
 
@@ -117,26 +116,26 @@ func setupMeili(db *sql.DB, db_search *meilisearch.Client) error {
 	if err != nil {
 		log.Panicln("Could not get stats of meili db")
 	}
-	if meili_stats.Indexes["edibles"].NumberOfDocuments != int64(numOfRows) {
-		db_search.Index("edibles").DeleteAllDocuments()
+	if meili_stats.Indexes["ingredients"].NumberOfDocuments != int64(numOfRows) {
+		db_search.Index("ingredients").DeleteAllDocuments()
 		_, err = db_search.CreateIndex(&meilisearch.IndexConfig{
-			Uid:        "edibles",
+			Uid:        "ingredients",
 			PrimaryKey: "id",
 		})
 		filterableAttributes := []string{
 			"name",
 			"edible_type",
 		}
-		db_search.Index("edibles").UpdateFilterableAttributes(&filterableAttributes)
+		db_search.Index("ingredients").UpdateFilterableAttributes(&filterableAttributes)
 		if err != nil {
-			log.Panicln("Could not create index for edibles in meili db")
+			log.Panicln("Could not create index for ingredient in meili db")
 		}
 		insert_ingredients(db, db_search)
 	}
 	return nil
 }
 func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
-	type ingredient struct {
+	type ingredient_mapping struct {
 		Ingredient_Mapping_Id      uint   `json:"ingredient_mapping_id"`
 		Ingredient_Id              uint   `json:"ingredient_id"`
 		Ingredient_Name            string `json:"ingredient_name"`
@@ -151,12 +150,10 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 	// inside the array of ingredients. More information here:
 	// https://www.meilisearch.com/docs/reference/api/search#show-matches-position
 	type edible struct {
-		Id           uuid.UUID    `json:"id"`
-		Name         string       `json:"name"`
-		Name_Owner   string       `json:"name_owner"`
-		Edible_Type  string       `json:"edible_type"`
-		Ingredients  []ingredient `json:"ingredients"`
-		Food_Details models.Food  `json:"food_details"`
+		Id                 uuid.UUID            `json:"id"`
+		Name               string               `json:"name"`
+		Name_Owner         string               `json:"name_owner"`
+		Ingredient_Mapping []ingredient_mapping `json:"ingredient_mapping"`
 	}
 	docs := map[string]edible{}
 	rows, err := db.Query(`
@@ -177,7 +174,7 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 		log.Println("Error querying ingredient: ", err.Error())
 	}
 	for rows.Next() {
-		var new_ing = ingredient{}
+		var new_ing = ingredient_mapping{}
 		if err := rows.
 			Scan(
 				&new_ing.Ingredient_Mapping_Id,
@@ -192,32 +189,29 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 			log.Println("Error scanning ingredient: ", err.Error())
 		}
 		if entry, ok := docs[new_ing.Ingredient_Name]; ok {
-			entry.Ingredients = append(entry.Ingredients, new_ing)
+			entry.Ingredient_Mapping = append(entry.Ingredient_Mapping, new_ing)
 			docs[new_ing.Ingredient_Name] = entry
 		} else {
 			new_edible := edible{
-				Id:          uuid.New(),
-				Name:        new_ing.Ingredient_Name,
-				Name_Owner:  new_ing.Ingredient_Name_Owner,
-				Edible_Type: "ingredient",
+				Id:         uuid.New(),
+				Name:       new_ing.Ingredient_Name,
+				Name_Owner: new_ing.Ingredient_Name_Owner,
 			}
-			new_edible.Ingredients = append(new_edible.Ingredients, new_ing)
+			new_edible.Ingredient_Mapping = append(new_edible.Ingredient_Mapping, new_ing)
 			docs[new_ing.Ingredient_Name] = new_edible
 		}
 	}
 	formatted_doc := []map[string]interface{}{}
 	for _, item := range docs {
 		new_item := []map[string]interface{}{{
-			"id":           item.Id,
-			"name":         item.Name,
-			"name_owner":   item.Name_Owner,
-			"edible_type":  item.Edible_Type,
-			"ingredients":  item.Ingredients,
-			"food_details": nil,
+			"id":                 item.Id,
+			"name":               item.Name,
+			"name_owner":         item.Name_Owner,
+			"ingredient_mapping": item.Ingredient_Mapping,
 		}}
 		formatted_doc = append(formatted_doc, new_item[0])
 	}
-	_, err = db_search.Index("edibles").AddDocuments(formatted_doc)
+	_, err = db_search.Index("ingredients").AddDocuments(formatted_doc)
 	if err == nil {
 		log.Println("Successfully added ingredients to Meilisearch")
 	}
