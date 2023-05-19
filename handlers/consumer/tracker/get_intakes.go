@@ -56,7 +56,7 @@ func query_and_scan_intakes(db *sql.DB, user_id uuid.UUID) ([]schemas.Res_Get_In
 			COALESCE(ingredient_variant.name_ph, '') as ingredient_variant_name_ph,
 			COALESCE(ingredient_subvariant.name, '') as ingredient_subvariant_name,
 			COALESCE(ingredient_subvariant.name_ph, '') as ingredient_subvariant_name_ph,
-			COALESCE(ingredient.name_brand, '') as ingredient_name_brand
+			COALESCE(ingredient.name_owner, '') as ingredient_name_owner
 		FROM intake
 		LEFT JOIN food ON intake.food_id = food.id
 		LEFT JOIN ingredient_mapping ON intake.ingredient_mapping_id = ingredient_mapping.id
@@ -99,7 +99,7 @@ func query_and_scan_intakes(db *sql.DB, user_id uuid.UUID) ([]schemas.Res_Get_In
 				&new_intake.Ingredient_Variant_Name_Ph,
 				&new_intake.Ingredient_Subvariant_Name,
 				&new_intake.Ingredient_Subvariant_Name_Ph,
-				&new_intake.Ingredient_Name_Brand,
+				&new_intake.Ingredient_Name_Owner,
 			); err != nil {
 			log.Println("Get_Intakes | error in scanning intakes: ", err.Error())
 			return nil, err
