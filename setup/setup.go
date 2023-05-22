@@ -9,7 +9,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/meilisearch/meilisearch-go"
 )
@@ -109,6 +108,7 @@ func ConnectDB() {
 // }
 
 func setupMeili(db *sql.DB, db_search *meilisearch.Client) error {
+	db_search.Index("ingredients").DeleteAllDocuments()
 	numOfRows := 0
 	row := db.QueryRow(`SELECT COUNT(name) FROM ingredient`)
 	row.Scan(&numOfRows)
@@ -124,7 +124,6 @@ func setupMeili(db *sql.DB, db_search *meilisearch.Client) error {
 		})
 		filterableAttributes := []string{
 			"name",
-			"edible_type",
 		}
 		db_search.Index("ingredients").UpdateFilterableAttributes(&filterableAttributes)
 		if err != nil {
@@ -137,23 +136,31 @@ func setupMeili(db *sql.DB, db_search *meilisearch.Client) error {
 func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 	type ingredient_mapping struct {
 		Ingredient_Mapping_Id      uint   `json:"ingredient_mapping_id"`
+		Thumbnail_Image_Link       string `json:"thumbnail_image_link"`
 		Ingredient_Id              uint   `json:"ingredient_id"`
 		Ingredient_Name            string `json:"ingredient_name"`
 		Ingredient_Name_Owner      string `json:"ingredient_name_owner"`
 		Ingredient_Variant_Id      uint   `json:"ingredient_variant_id"`
-		Ingredient_Variant_Name    string `json:"ingredient_variant_Name"`
+		Ingredient_Variant_Name    string `json:"ingredient_variant_name"`
 		Ingredient_Subvariant_Id   uint   `json:"ingredient_subvariant_id"`
-		Ingredient_Subvariant_Name string `json:"ingredient_subvariant_Name"`
+		Ingredient_Subvariant_Name string `json:"ingredient_subvariant_name"`
+	}
+	type ingredient_details struct {
+		Ingredient_Mapping_Id      uint   `json:"ingredient_mapping_id"`
+		Ingredient_Variant_Name    string `json:"ingredient_variant_name"`
+		Ingredient_Subvariant_Name string `json:"ingredient_subvariant_name"`
 	}
 	// *This structure works for meilisearch
 	// Using showMatchesPosition parameter when searching we can find the match
 	// inside the array of ingredients. More information here:
 	// https://www.meilisearch.com/docs/reference/api/search#show-matches-position
+	// TODO ADD NAME_PH
 	type edible struct {
-		Id                 uuid.UUID            `json:"id"`
-		Name               string               `json:"name"`
-		Name_Owner         string               `json:"name_owner"`
-		Ingredient_Mapping []ingredient_mapping `json:"ingredient_mapping"`
+		Id                   uint                 `json:"ingredient_id"`
+		Name                 string               `json:"name"`
+		Name_Owner           string               `json:"name_owner"`
+		Thumbnail_Image_Link string               `json:"thumbnail_image_link"`
+		Ingredient_Details   []ingredient_details `json:"ingredient_details"`
 	}
 	docs := map[string]edible{}
 	rows, err := db.Query(`
@@ -162,6 +169,7 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 		ingredient.id AS ingredient_id,
 		ingredient.name AS ingredient_name,
 		ingredient.name_owner AS ingredient_name_owner,
+		ingredient.thumbnail_image_link AS thumbnail_image_link,
 		coalesce(ingredient_variant.id, 0) as ingredient_variant_id,
 		coalesce(ingredient_variant.name, '') as ingredient_variant_name,
 		coalesce(ingredient_subvariant.id, 0) as ingredient_subvariant_id,
@@ -181,6 +189,7 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 				&new_ing.Ingredient_Id,
 				&new_ing.Ingredient_Name,
 				&new_ing.Ingredient_Name_Owner,
+				&new_ing.Thumbnail_Image_Link,
 				&new_ing.Ingredient_Variant_Id,
 				&new_ing.Ingredient_Variant_Name,
 				&new_ing.Ingredient_Subvariant_Id,
@@ -188,26 +197,33 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 			); err != nil {
 			log.Println("Error scanning ingredient: ", err.Error())
 		}
+		var new_ing_details = ingredient_details{
+			Ingredient_Mapping_Id:      new_ing.Ingredient_Mapping_Id,
+			Ingredient_Variant_Name:    new_ing.Ingredient_Variant_Name,
+			Ingredient_Subvariant_Name: new_ing.Ingredient_Subvariant_Name,
+		}
 		if entry, ok := docs[new_ing.Ingredient_Name]; ok {
-			entry.Ingredient_Mapping = append(entry.Ingredient_Mapping, new_ing)
+			entry.Ingredient_Details = append(entry.Ingredient_Details, new_ing_details)
 			docs[new_ing.Ingredient_Name] = entry
 		} else {
 			new_edible := edible{
-				Id:         uuid.New(),
-				Name:       new_ing.Ingredient_Name,
-				Name_Owner: new_ing.Ingredient_Name_Owner,
+				Id:                   new_ing.Ingredient_Id,
+				Name:                 new_ing.Ingredient_Name,
+				Name_Owner:           new_ing.Ingredient_Name_Owner,
+				Thumbnail_Image_Link: new_ing.Thumbnail_Image_Link,
 			}
-			new_edible.Ingredient_Mapping = append(new_edible.Ingredient_Mapping, new_ing)
+			new_edible.Ingredient_Details = append(new_edible.Ingredient_Details, new_ing_details)
 			docs[new_ing.Ingredient_Name] = new_edible
 		}
 	}
 	formatted_doc := []map[string]interface{}{}
 	for _, item := range docs {
 		new_item := []map[string]interface{}{{
-			"id":                 item.Id,
-			"name":               item.Name,
-			"name_owner":         item.Name_Owner,
-			"ingredient_mapping": item.Ingredient_Mapping,
+			"id":                   item.Id,
+			"name":                 item.Name,
+			"name_owner":           item.Name_Owner,
+			"thumbnail_image_link": item.Thumbnail_Image_Link,
+			"ingredient_details":   item.Ingredient_Details,
 		}}
 		formatted_doc = append(formatted_doc, new_item[0])
 	}

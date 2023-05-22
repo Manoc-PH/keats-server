@@ -27,21 +27,16 @@ func Get_Search_Ingredient(c *fiber.Ctx, db_search *meilisearch.Client) error {
 
 	formatted_term := strings.Join(strings.Fields(strings.TrimSpace(reqData.Search_Term)), " ")
 	log.Println(formatted_term)
-	search_ingredient(db_search, formatted_term)
-	return nil
-	// querying ingredient
-	// response, err := search_and_scan_ingredient(db, Owner_Id, formatted_term)
-	// Server Error
-	// if err != nil && err != sql.ErrNoRows {
-	// 	return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
-	// }
-	// return c.Status(fiber.StatusOK).JSON(response)
+	res := search_ingredient(db_search, formatted_term)
+	return c.Status(fiber.StatusOK).JSON(res)
 }
 
-func search_ingredient(db_search *meilisearch.Client, search_term string) error {
+func search_ingredient(db_search *meilisearch.Client, search_term string) []interface{} {
 	res, _ := db_search.Index("ingredients").Search(search_term, &meilisearch.SearchRequest{
-		ShowMatchesPosition: true,
+		AttributesToRetrieve: []string{"id", "name", "name_owner", "thumbnail_image_link"},
+		// TODO RETURN HITS ON WHAT SPECIFIC FIELD
+		// ShowMatchesPosition: true,
+		MatchingStrategy: "last",
 	})
-	log.Println(res)
-	return nil
+	return res.Hits
 }
