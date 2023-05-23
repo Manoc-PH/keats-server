@@ -108,7 +108,6 @@ func ConnectDB() {
 // }
 
 func setupMeili(db *sql.DB, db_search *meilisearch.Client) error {
-	db_search.Index("ingredients").DeleteAllDocuments()
 	numOfRows := 0
 	row := db.QueryRow(`SELECT COUNT(name) FROM ingredient`)
 	row.Scan(&numOfRows)
@@ -139,6 +138,7 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 		Thumbnail_Image_Link       string `json:"thumbnail_image_link"`
 		Ingredient_Id              uint   `json:"ingredient_id"`
 		Ingredient_Name            string `json:"ingredient_name"`
+		Ingredient_Name_Ph         string `json:"ingredient_name_ph"`
 		Ingredient_Name_Owner      string `json:"ingredient_name_owner"`
 		Ingredient_Variant_Id      uint   `json:"ingredient_variant_id"`
 		Ingredient_Variant_Name    string `json:"ingredient_variant_name"`
@@ -158,6 +158,7 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 	type edible struct {
 		Id                   uint                 `json:"ingredient_id"`
 		Name                 string               `json:"name"`
+		Name_Ph              string               `json:"name_ph"`
 		Name_Owner           string               `json:"name_owner"`
 		Thumbnail_Image_Link string               `json:"thumbnail_image_link"`
 		Ingredient_Details   []ingredient_details `json:"ingredient_details"`
@@ -165,15 +166,16 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 	docs := map[string]edible{}
 	rows, err := db.Query(`
 	SELECT 
-		ingredient_mapping.id as ingredient_mapping_id,
-		ingredient.id AS ingredient_id,
-		ingredient.name AS ingredient_name,
-		ingredient.name_owner AS ingredient_name_owner,
-		ingredient.thumbnail_image_link AS thumbnail_image_link,
-		coalesce(ingredient_variant.id, 0) as ingredient_variant_id,
-		coalesce(ingredient_variant.name, '') as ingredient_variant_name,
-		coalesce(ingredient_subvariant.id, 0) as ingredient_subvariant_id,
-		coalesce(ingredient_subvariant.name, '') as ingredient_subvariant_name
+		ingredient_mapping.id,
+		ingredient.id,
+		ingredient.name,
+		ingredient.name_ph,
+		ingredient.name_owner,
+		ingredient.thumbnail_image_link,
+		coalesce(ingredient_variant.id, 0),
+		coalesce(ingredient_variant.name, ''),
+		coalesce(ingredient_subvariant.id, 0),
+		coalesce(ingredient_subvariant.name, '')
 	FROM ingredient_mapping
 	JOIN ingredient on ingredient_mapping.ingredient_id = ingredient.id
 	JOIN ingredient_variant on ingredient_mapping.ingredient_variant_id = ingredient_variant.id
@@ -188,6 +190,7 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 				&new_ing.Ingredient_Mapping_Id,
 				&new_ing.Ingredient_Id,
 				&new_ing.Ingredient_Name,
+				&new_ing.Ingredient_Name_Ph,
 				&new_ing.Ingredient_Name_Owner,
 				&new_ing.Thumbnail_Image_Link,
 				&new_ing.Ingredient_Variant_Id,
@@ -209,6 +212,7 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 			new_edible := edible{
 				Id:                   new_ing.Ingredient_Id,
 				Name:                 new_ing.Ingredient_Name,
+				Name_Ph:              new_ing.Ingredient_Name_Ph,
 				Name_Owner:           new_ing.Ingredient_Name_Owner,
 				Thumbnail_Image_Link: new_ing.Thumbnail_Image_Link,
 			}
@@ -221,6 +225,7 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 		new_item := []map[string]interface{}{{
 			"id":                   item.Id,
 			"name":                 item.Name,
+			"name_ph":              item.Name_Ph,
 			"name_owner":           item.Name_Owner,
 			"thumbnail_image_link": item.Thumbnail_Image_Link,
 			"ingredient_details":   item.Ingredient_Details,
