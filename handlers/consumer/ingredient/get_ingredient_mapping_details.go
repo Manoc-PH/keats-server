@@ -4,13 +4,14 @@ import (
 	"database/sql"
 	"log"
 	"server/middlewares"
+	"server/models"
 	schemas "server/schemas/consumer/ingredient"
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func Get_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
+func Get_Ingredient_Mapping_Details(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
 	_, _, err := middlewares.AuthMiddleware(c)
 	if err != nil {
@@ -26,7 +27,7 @@ func Get_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
 
 	response := schemas.Res_Get_Ingredient_Details{}
 	// querying ingredient
-	row := query_ingredient(reqData.Ingredient_Mapping_ID, db)
+	row := query_ingredient(db, reqData.Ingredient_Mapping_ID)
 	err = scan_ingredient(row, &response)
 	if err != nil && err == sql.ErrNoRows {
 		log.Println("Get_Ingredient_Details | error in scanning food: ", err.Error())
@@ -37,17 +38,16 @@ func Get_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Get_Ingredient_Details | error in scanning food: ", err.Error())
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
-	// TODO Query images of ingredient
 	// querying ingredient images
-	// images, err := query_and_scan_food_images(db, reqData.Food_ID)
-	// if err != nil {
-	// 	return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
-	// }
-	// response.Food_Images = images
+	images, err := query_and_scan_food_images(db, reqData.Ingredient_Mapping_ID)
+	if err != nil {
+		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+	}
+	response.Ingredient_Images = images
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func query_ingredient(ingredient_mapping_id uint, db *sql.DB) *sql.Row {
+func query_ingredient(db *sql.DB, ingredient_mapping_id uint) *sql.Row {
 	row := db.QueryRow(`SELECT
 			ingredient.id, ingredient.name, coalesce(ingredient.name_ph, ''), ingredient.name_owner,
 			ingredient_variant.id, ingredient_variant.name, coalesce(ingredient_variant.name_ph, ''), 
@@ -74,7 +74,6 @@ func query_ingredient(ingredient_mapping_id uint, db *sql.DB) *sql.Row {
 		JOIN ingredient_subvariant ON ingredient_mapping.ingredient_subvariant_id = ingredient_subvariant.id
 		JOIN nutrient ON ingredient_mapping.nutrient_id = nutrient.id
 		WHERE ingredient_mapping.id = $1`,
-		// casting timestamp to date
 		ingredient_mapping_id,
 	)
 	return row
@@ -115,4 +114,40 @@ func scan_ingredient(row *sql.Row, ingredient_mapping *schemas.Res_Get_Ingredien
 		return err
 	}
 	return nil
+}
+func query_and_scan_food_images(db *sql.DB, ingredient_mapping_id uint) ([]models.Ingredient_Image, error) {
+	rows, err := db.Query(`SELECT
+			id,
+			ingredient_mapping_id,
+			name_file,
+			amount,
+			amount_unit,
+			amount_unit_desc
+		FROM ingredient_image
+		WHERE ingredient_mapping_id = $1`,
+		ingredient_mapping_id,
+	)
+	if err != nil {
+		log.Println("error in querying query_and_scan_food_images: ", err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+	ingredient_images := make([]models.Ingredient_Image, 0, 10)
+	for rows.Next() {
+		var ingredient_img = models.Ingredient_Image{}
+		if err := rows.
+			Scan(
+				&ingredient_img.ID,
+				&ingredient_img.Ingredient_Mapping_Id,
+				&ingredient_img.Name_File,
+				&ingredient_img.Amount,
+				&ingredient_img.Amount_Unit,
+				&ingredient_img.Amount_Unit_Desc,
+			); err != nil {
+			log.Println("Get_Daily_Nutrients_List | error in scanning Daily_Nutrients: ", err.Error())
+			return nil, err
+		}
+		ingredient_images = append(ingredient_images, ingredient_img)
+	}
+	return ingredient_images, nil
 }
