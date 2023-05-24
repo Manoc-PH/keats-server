@@ -15,27 +15,27 @@ func Get_Ingredient_Mapping_Details(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
 	_, _, err := middlewares.AuthMiddleware(c)
 	if err != nil {
-		log.Println("Get_Ingredient_Details | Error on auth middleware: ", err.Error())
+		log.Println("Get_Ingredient_Mapping_Details | Error on auth middleware: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusUnauthorized)
 	}
 	//* data validation
-	reqData := new(schemas.Req_Get_Ingredient_Details)
+	reqData := new(schemas.Req_Get_Ingredient_Mapping_Details)
 	if err_data, err := middlewares.Query_Validation(reqData, c); err != nil {
-		log.Println("Get_Ingredient_Details | Error on query validation: ", err.Error())
+		log.Println("Get_Ingredient_Mapping_Details | Error on query validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
 
-	response := schemas.Res_Get_Ingredient_Details{}
-	// querying ingredient
-	row := query_ingredient(db, reqData.Ingredient_Mapping_ID)
-	err = scan_ingredient(row, &response)
+	response := schemas.Res_Get_Ingredient_Mapping_Details{}
+	// querying ingredient mapping
+	row := query_ingredient_mapping(db, reqData.Ingredient_Mapping_ID)
+	err = scan_ingredient_mapping(row, &response)
 	if err != nil && err == sql.ErrNoRows {
-		log.Println("Get_Ingredient_Details | error in scanning food: ", err.Error())
+		log.Println("Get_Ingredient_Mapping_Details | error in scanning ingredient: ", err.Error())
 		return utilities.Send_Error(c, "Food does not exist", fiber.StatusBadRequest)
 	}
 	// Server Error
 	if err != nil && err != sql.ErrNoRows {
-		log.Println("Get_Ingredient_Details | error in scanning food: ", err.Error())
+		log.Println("Get_Ingredient_Mapping_Details | error in scanning ingredient: ", err.Error())
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
 	// querying ingredient images
@@ -47,7 +47,7 @@ func Get_Ingredient_Mapping_Details(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func query_ingredient(db *sql.DB, ingredient_mapping_id uint) *sql.Row {
+func query_ingredient_mapping(db *sql.DB, ingredient_mapping_id uint) *sql.Row {
 	row := db.QueryRow(`SELECT
 			ingredient.id, ingredient.name, coalesce(ingredient.name_ph, ''), ingredient.name_owner,
 			ingredient_variant.id, ingredient_variant.name, coalesce(ingredient_variant.name_ph, ''), 
@@ -78,7 +78,7 @@ func query_ingredient(db *sql.DB, ingredient_mapping_id uint) *sql.Row {
 	)
 	return row
 }
-func scan_ingredient(row *sql.Row, ingredient_mapping *schemas.Res_Get_Ingredient_Details) error {
+func scan_ingredient_mapping(row *sql.Row, ingredient_mapping *schemas.Res_Get_Ingredient_Mapping_Details) error {
 	if err := row.
 		Scan(
 			&ingredient_mapping.Ingredient.ID,
