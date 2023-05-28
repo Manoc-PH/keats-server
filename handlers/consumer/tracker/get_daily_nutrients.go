@@ -21,6 +21,11 @@ func Get_Daily_Nutrients(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Get_Daily_Nutrients | Error on auth middleware: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusUnauthorized)
 	}
+	account_exists := check_account_exists(db, Owner_Id)
+	if account_exists == false {
+		log.Println("Get_Daily_Nutrients | error account does not exist")
+		return utilities.Send_Error(c, "Account does not exist", fiber.StatusUnauthorized)
+	}
 	daily_nutrients := models.Daily_Nutrients{Account_Id: Owner_Id}
 	// querying Daily_Nutrients
 	row := query_daily_nutrients(db, Owner_Id)
@@ -38,6 +43,18 @@ func Get_Daily_Nutrients(c *fiber.Ctx, db *sql.DB) error {
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
 	return c.Status(fiber.StatusOK).JSON(daily_nutrients)
+}
+func check_account_exists(db *sql.DB, Owner_Id uuid.UUID) bool {
+	row := db.QueryRow(`SELECT coalesce(id, null) FROM account WHERE id = $1;`,
+		Owner_Id,
+	)
+	exiting_account := models.Account{}
+	err := row.Scan(&exiting_account.ID)
+	if err != nil {
+		log.Println("check_account_exists | error in scanning exiting_account: ", err.Error())
+		return false
+	}
+	return false
 }
 func generate_daily_nutrients(db *sql.DB, Owner_Id uuid.UUID, daily_nutrients *models.Daily_Nutrients) error {
 	account_vitals := models.Account_Vitals{}
