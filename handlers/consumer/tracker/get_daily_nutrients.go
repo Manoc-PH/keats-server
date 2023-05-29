@@ -54,7 +54,7 @@ func check_account_exists(db *sql.DB, Owner_Id uuid.UUID) bool {
 		log.Println("check_account_exists | error in scanning exiting_account: ", err.Error())
 		return false
 	}
-	return false
+	return true
 }
 func generate_daily_nutrients(db *sql.DB, Owner_Id uuid.UUID, daily_nutrients *models.Daily_Nutrients) error {
 	account_vitals := models.Account_Vitals{}

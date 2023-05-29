@@ -27,10 +27,10 @@ func Login(c *fiber.Ctx, db *sql.DB) error {
 	// checking if user exists
 	row := db.
 		QueryRow(`SELECT 
-		username, id, password 
+			id, username, password, account_type_id
 		FROM account WHERE username = $1`, reqData.Username)
 	// scanning and returning error
-	if err := row.Scan(&user.Username, &user.ID, &user.Password); err != nil {
+	if err := row.Scan(&user.ID, &user.Username, &user.Password, &user.Account_Type_Id); err != nil {
 		log.Println("Login | Error in scanning row: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "user does not exist",
