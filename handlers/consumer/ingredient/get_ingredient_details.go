@@ -89,7 +89,8 @@ func query_ingredient_mappings(db *sql.DB, ingredient_id uint) (*sql.Rows, error
 		FROM ingredient_mapping
 		JOIN ingredient_variant ON ingredient_mapping.ingredient_variant_id = ingredient_variant.id
 		JOIN ingredient_subvariant ON ingredient_mapping.ingredient_subvariant_id = ingredient_subvariant.id
-		WHERE ingredient_mapping.ingredient_id = $1`,
+		WHERE ingredient_mapping.ingredient_id = $1
+		ORDER BY ingredient_variant.name ASC, ingredient_subvariant.name ASC`,
 		ingredient_id,
 	)
 	return rows, err
