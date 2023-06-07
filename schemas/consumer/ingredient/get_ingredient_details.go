@@ -6,7 +6,7 @@ import (
 
 // *REQUESTS
 type Req_Get_Ingredient_Details struct {
-	Ingredient_ID uint `json:"ingredient_mapping_id" validate:"required"`
+	Ingredient_ID uint `json:"ingredient_id" validate:"required"`
 }
 type Ingredient_Mapping_With_Name struct {
 	ID                         uint   `json:"id"`
