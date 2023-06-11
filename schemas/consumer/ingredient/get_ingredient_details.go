@@ -22,6 +22,7 @@ type Res_Get_Ingredient_Details struct {
 	Ingredient_Variant    models.Ingredient_Variant      `json:"ingredient_variant"`
 	Ingredient_Subvariant models.Ingredient_Subvariant   `json:"ingredient_subvariant"`
 	Nutrient              models.Nutrient                `json:"nutrient"`
+	Ingredient_Mapping_ID uint                           `json:"ingredient_mapping_id"`
 	Ingredient_Images     []models.Ingredient_Image      `json:"ingredient_images"`
 	Ingredient_Mappings   []Ingredient_Mapping_With_Name `json:"ingredient_mappings"`
 }

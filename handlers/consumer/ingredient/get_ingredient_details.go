@@ -38,7 +38,7 @@ func Get_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = scan_ingredient(rows, &ingredient_mappings)
+		err = scan_ingredient_mappings(rows, &ingredient_mappings)
 		if err != nil && err == sql.ErrNoRows {
 			log.Println("Get_Ingredient_Details | error in scanning ingredient mapping: ", err.Error())
 			return utilities.Send_Error(c, "Ingredient does not exist", fiber.StatusInternalServerError)
@@ -66,7 +66,8 @@ func Get_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
 		if err != nil {
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
-		response.Ingredient_Images = images
+		temp_res.Ingredient_Images = images
+		response.Ingredient_Mapping_ID = response.Ingredient_Mappings[0].ID
 	}
 	response.Ingredient = temp_res.Ingredient
 	response.Ingredient_Variant = temp_res.Ingredient_Variant
@@ -95,7 +96,7 @@ func query_ingredient_mappings(db *sql.DB, ingredient_id uint) (*sql.Rows, error
 	)
 	return rows, err
 }
-func scan_ingredient(row *sql.Rows, ingredient_mappings *[]schemas.Ingredient_Mapping_With_Name) error {
+func scan_ingredient_mappings(row *sql.Rows, ingredient_mappings *[]schemas.Ingredient_Mapping_With_Name) error {
 	var ingredient_mapping = schemas.Ingredient_Mapping_With_Name{}
 	if err := row.
 		Scan(

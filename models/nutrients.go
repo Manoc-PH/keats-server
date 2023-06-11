@@ -31,17 +31,15 @@ type Daily_Nutrients struct {
 }
 
 type Nutrient struct {
-	ID                    uint    `json:"id"`
-	Food_Id               uint    `json:"food_id"`
-	Ingredient_Mapping_Id uint    `json:"ingredient_mapping_id"`
-	Amount                float32 `json:"amount"`
-	Amount_Unit           string  `json:"amount_unit"`
-	Amount_Unit_Desc      string  `json:"amount_unit_desc"`
-	Serving_Size          float32 `json:"serving_size"`
-	Calories              float32 `json:"calories"`
-	Protein               float32 `json:"protein"`
-	Carbs                 float32 `json:"carbs"`
-	Fats                  float32 `json:"fats"`
+	ID               uint    `json:"id"`
+	Amount           float32 `json:"amount"`
+	Amount_Unit      string  `json:"amount_unit"`
+	Amount_Unit_Desc string  `json:"amount_unit_desc"`
+	Serving_Size     float32 `json:"serving_size"`
+	Calories         float32 `json:"calories"`
+	Protein          float32 `json:"protein"`
+	Carbs            float32 `json:"carbs"`
+	Fats             float32 `json:"fats"`
 	//
 	Trans_Fat     float32 `json:"trans_fat"`
 	Saturated_Fat float32 `json:"saturated_fat"`
