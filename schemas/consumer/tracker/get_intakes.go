@@ -20,6 +20,7 @@ type Res_Get_Intakes struct {
 	Serving_Size     float32 `json:"serving_size"`
 
 	// Ingredient
+	Ingredient_Id                 uint   `json:"ingredient_id"`
 	Ingredient_Name               string `json:"ingredient_name"`
 	Ingredient_Name_Ph            string `json:"ingredient_name_ph"`
 	Ingredient_Variant_Name       string `json:"ingredient_variant_name"`

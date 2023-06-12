@@ -35,7 +35,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - ./pg_data:/var/lib/postgresql/data
     networks:
       - keats 
 
@@ -43,8 +43,6 @@ services:
     container_name: meilisearch
     image: getmeili/meilisearch:v1.1.1
     environment:
-      - http_proxy
-      - https_proxy
       - MEILI_MASTER_KEY=${MEILI_MASTER_KEY:-masterKey}
       - MEILI_NO_ANALYTICS=${MEILI_NO_ANALYTICS:-true}
       - MEILI_ENV=${MEILI_ENV:-development}

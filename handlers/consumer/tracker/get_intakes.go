@@ -50,6 +50,7 @@ func query_and_scan_intakes(db *sql.DB, user_id uuid.UUID) ([]schemas.Res_Get_In
 			COALESCE(food.name, '') as food_name,
 			COALESCE(food.name_ph, '') as food_name_ph,
 			COALESCE(food.name_owner, '') as food_name_owner,
+			COALESCE(ingredient.id, 0) as ingredient_id,
 			COALESCE(ingredient.name, '') as ingredient_name,
 			COALESCE(ingredient.name_ph, '') as ingredient_name_ph,
 			COALESCE(ingredient_variant.name, '') as ingredient_variant_name,
@@ -93,6 +94,7 @@ func query_and_scan_intakes(db *sql.DB, user_id uuid.UUID) ([]schemas.Res_Get_In
 				&new_intake.Food_Name_Ph,
 				&new_intake.Food_Name_Owner,
 
+				&new_intake.Ingredient_Id,
 				&new_intake.Ingredient_Name,
 				&new_intake.Ingredient_Name_Ph,
 				&new_intake.Ingredient_Variant_Name,
