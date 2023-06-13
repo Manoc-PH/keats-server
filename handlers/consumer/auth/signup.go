@@ -32,7 +32,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Sign_Up | Error: ", err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(err)
 	}
-	account_vitals := models.Consumer_Vitals{
+	consumer_vitals := models.Consumer_Vitals{
 		ID:              uuid.New(),
 		Account_Id:      account_id,
 		Weight:          reqData.Weight,
@@ -43,12 +43,12 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		Diet_Plan_Id:    reqData.Diet_Plan_Id,
 	}
 	account_profile := models.Consumer_Profile{
-		ID:                uuid.New(),
-		Account_Id:        account_id,
-		Date_Updated:      time.Now(),
-		Date_Created:      time.Now(),
-		Account_Vitals_Id: account_vitals.ID,
-		Measure_Unit_Id:   reqData.Measure_Unit_Id,
+		ID:                 uuid.New(),
+		Account_Id:         account_id,
+		Date_Updated:       time.Now(),
+		Date_Created:       time.Now(),
+		Consumer_Vitals_Id: consumer_vitals.ID,
+		Measure_Unit_Id:    reqData.Measure_Unit_Id,
 	}
 	account := models.Account{
 		ID:              account_id,
@@ -63,7 +63,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		log.Fatal(err)
 	}
 	_, err = txn.Exec(
-		`INSERT INTO account_vitals 
+		`INSERT INTO consumer_vitals 
 		( id,
 			account_id,
 			weight,
@@ -73,14 +73,14 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 			activity_lvl_id,
 			diet_plan_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-		account_vitals.ID,
-		account_vitals.Account_Id,
-		account_vitals.Weight,
-		account_vitals.Height,
-		account_vitals.Birthday,
-		account_vitals.Sex,
-		account_vitals.Activity_Lvl_Id,
-		account_vitals.Diet_Plan_Id,
+		consumer_vitals.ID,
+		consumer_vitals.Account_Id,
+		consumer_vitals.Weight,
+		consumer_vitals.Height,
+		consumer_vitals.Birthday,
+		consumer_vitals.Sex,
+		consumer_vitals.Activity_Lvl_Id,
+		consumer_vitals.Diet_Plan_Id,
 	)
 	if err != nil {
 		log.Println("Sign_Up | Error: ", err.Error())
@@ -92,14 +92,14 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 			account_id,
 			date_updated,
 			date_created,
-			account_vitals_id,
+			consumer_vitals_id,
 			measure_unit_id)
 		VALUES ($1, $2, $3, $4, $5, $6)`,
 		account_profile.ID,
 		account_profile.Account_Id,
 		account_profile.Date_Updated,
 		account_profile.Date_Created,
-		account_profile.Account_Vitals_Id,
+		account_profile.Consumer_Vitals_Id,
 		account_profile.Measure_Unit_Id,
 	)
 	if err != nil {
