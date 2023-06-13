@@ -57,7 +57,7 @@ func check_account_exists(db *sql.DB, Owner_Id uuid.UUID) bool {
 	return true
 }
 func generate_daily_nutrients(db *sql.DB, Owner_Id uuid.UUID, daily_nutrients *models.Daily_Nutrients) error {
-	account_vitals := models.Account_Vitals{}
+	account_vitals := models.Consumer_Vitals{}
 	activity_lvl := models.Activity_Lvl{}
 	diet_plan := models.Diet_Plan{}
 	err := query_and_scan_account_details(db, Owner_Id, &account_vitals, &activity_lvl, &diet_plan)
@@ -133,7 +133,7 @@ func scan_daily_nutrients(row *sql.Row, daily_nutrients *models.Daily_Nutrients)
 }
 func query_and_scan_account_details(
 	db *sql.DB, user_id uuid.UUID,
-	account_vitals *models.Account_Vitals,
+	account_vitals *models.Consumer_Vitals,
 	activity_lvl *models.Activity_Lvl,
 	diet_plan *models.Diet_Plan) error {
 	row := db.QueryRow(`SELECT
@@ -177,7 +177,7 @@ func query_and_scan_account_details(
 	)
 	return err
 }
-func insert_d_nutrients(db *sql.DB, daily_nutrients *models.Daily_Nutrients, account_vitals *models.Account_Vitals) error {
+func insert_d_nutrients(db *sql.DB, daily_nutrients *models.Daily_Nutrients, account_vitals *models.Consumer_Vitals) error {
 	row := db.
 		QueryRow(`INSERT INTO daily_nutrients (
 			account_id,

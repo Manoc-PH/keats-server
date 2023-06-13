@@ -10,9 +10,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func Update_Account_Vitals(c *fiber.Ctx, db *sql.DB) error {
+func Update_Consumer_Vitals(c *fiber.Ctx, db *sql.DB) error {
 	// data validation
-	reqData := new(schemas.Req_Update_Account_Vitals)
+	reqData := new(schemas.Req_Update_Consumer_Vitals)
 	if err_data, err := middlewares.Body_Validation(reqData, c); err != nil {
 		log.Println("Update_Vitals | Error on query validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
@@ -25,7 +25,7 @@ func Update_Account_Vitals(c *fiber.Ctx, db *sql.DB) error {
 		log.Fatal(err)
 	}
 	_, err = txn.Exec(
-		`UPDATE account_vitals
+		`UPDATE consumer_vitals
 			weight = $1,
 			height = $2,
 			birthday = $3,
@@ -55,6 +55,6 @@ func Update_Account_Vitals(c *fiber.Ctx, db *sql.DB) error {
 		return err
 	}
 
-	log.Println("Successfully updated user")
+	log.Println("Successfully updated user's vitals")
 	return c.JSON(reqData)
 }

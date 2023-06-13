@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Res_Get_Account_Vitals struct {
+type Res_Get_Consumer_Vitals struct {
 	Account_ID         uuid.UUID `json:"account_id"`
 	Weight             uint      `json:"weight"`
 	Height             uint      `json:"height"`

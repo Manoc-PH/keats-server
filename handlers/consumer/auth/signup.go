@@ -32,7 +32,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Sign_Up | Error: ", err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(err)
 	}
-	account_vitals := models.Account_Vitals{
+	account_vitals := models.Consumer_Vitals{
 		ID:              uuid.New(),
 		Account_Id:      account_id,
 		Weight:          reqData.Weight,
