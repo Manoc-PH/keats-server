@@ -110,7 +110,10 @@ func ConnectDB() {
 func setupMeili(db *sql.DB, db_search *meilisearch.Client) error {
 	numOfRows := 0
 	row := db.QueryRow(`SELECT COUNT(name) FROM ingredient`)
-	row.Scan(&numOfRows)
+	err := row.Scan(&numOfRows)
+	if err != nil {
+		return nil
+	}
 	meili_stats, err := db_search.GetStats()
 	if err != nil {
 		log.Panicln("Could not get stats of meili db")

@@ -24,7 +24,7 @@ services:
       - keats 
 
   postgresdb:
-    image: postgres:latest
+    image: postgres:14.3
     container_name: postgres_container
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
