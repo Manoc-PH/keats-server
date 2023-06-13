@@ -82,6 +82,7 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 		new_intake.Amount_Unit = reqData.Amount_Unit
 		new_intake.Amount_Unit_Desc = reqData.Amount_Unit_Desc
 		new_intake.Serving_Size = reqData.Serving_Size
+		new_intake.Ingredient_Mapping_Id = reqData.Ingredient_Mapping_Id
 		txn, err := db.Begin()
 		if err != nil {
 			log.Fatal(err)
@@ -116,6 +117,18 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 		response_data.Added_Daily_Nutrients.Sodium = daily_nutrients_to_add.Sodium
 		response_data.Added_Daily_Nutrients.Iron = daily_nutrients_to_add.Iron
 		response_data.Added_Daily_Nutrients.Calcium = daily_nutrients_to_add.Calcium
+
+		ingredient_mapping := schemas.Ingredient_Mapping_Schema{}
+		// Getting ingredient data
+		row = query_ingredient(reqData.Ingredient_Mapping_Id, db)
+		err = scan_ingredient(row, &ingredient_mapping)
+		if err != nil {
+			log.Println("Post_Intake | Error on scanning ingredient: ", err.Error())
+			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+		}
+
+		response_data.Ingredient = ingredient_mapping
+		response_data.Intake = new_intake
 
 	}
 	// TODO ADD SUPPORT FOR FOOD
@@ -195,12 +208,14 @@ func update_intake(txn *sql.Tx, intake *models.Intake) error {
 			amount = $1,
 			amount_unit = $2,
 			amount_unit_desc = $3,
-			serving_size = $4
-		WHERE id = $5`,
+			serving_size = $4,
+			ingredient_mapping_id = $5
+		WHERE id = $6`,
 		intake.Amount,
 		intake.Amount_Unit,
 		intake.Amount_Unit_Desc,
 		intake.Serving_Size,
+		intake.Ingredient_Mapping_Id,
 		intake.ID,
 	)
 	if err != nil {

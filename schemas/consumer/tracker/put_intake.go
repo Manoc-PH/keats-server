@@ -19,4 +19,7 @@ type Req_Put_Intake struct {
 type Res_Put_Intake struct {
 	Added_Daily_Nutrients models.Nutrient `json:"added_daily_nutrients"`
 	// Added_Coins_And_XP    Added_Coins_And_XP    `json:"added_coins_and_xp"`
+	Intake     models.Intake             `json:"intake"`
+	Ingredient Ingredient_Mapping_Schema `json:"ingredient"`
+	Food       models.Food               `json:"food"`
 }
