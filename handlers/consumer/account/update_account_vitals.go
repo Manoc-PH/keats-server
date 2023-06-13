@@ -10,11 +10,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func Update_Account_Profile(c *fiber.Ctx, db *sql.DB) error {
+func Update_Account_Vitals(c *fiber.Ctx, db *sql.DB) error {
 	// data validation
-	reqData := new(schemas.Req_Update_Account_Profile)
+	reqData := new(schemas.Req_Update_Account_Vitals)
 	if err_data, err := middlewares.Body_Validation(reqData, c); err != nil {
-		log.Println("Update_Profile | Error on query validation: ", err.Error())
+		log.Println("Update_Vitals | Error on query validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
 	// TODO Query Activity level and Diet Plan tables to verify if both ids sent are valid
@@ -25,27 +25,22 @@ func Update_Account_Profile(c *fiber.Ctx, db *sql.DB) error {
 		log.Fatal(err)
 	}
 	_, err = txn.Exec(
-		`UPDATE users
-			updated= $1, 
-			profile_image_link= $2,
-			profile_title= $3,
-			weight= $4,
-			height= $5,
-			age= $6,
-			sex= $7,
-			activity_Lvl_Id= $8,
-			diet_plan_id= $9
-		WHERE id = $10`,
+		`UPDATE account_vitals
+			weight = $1,
+			height = $2,
+			birthday = $3,
+			sex = $4,
+			activity_lvl_id = $5,
+			diet_plan_id = $6
+		WHERE account_id = $7`,
 		time.Now().Format("YYYY-MM-DD"),
-		reqData.Profile_Image_Link,
-		reqData.Profile_Title,
 		reqData.Weight,
 		reqData.Height,
-		reqData.Age,
+		reqData.Birthday,
 		reqData.Sex,
 		reqData.Activity_Lvl_Id,
 		reqData.Diet_Plan_Id,
-		reqData.ID,
+		reqData.Account_ID,
 	)
 
 	if err != nil {
