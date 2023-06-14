@@ -26,7 +26,6 @@ func Get_Search_Ingredient(c *fiber.Ctx, db_search *meilisearch.Client) error {
 	}
 
 	formatted_term := strings.Join(strings.Fields(strings.TrimSpace(reqData.Search_Term)), " ")
-	log.Println(formatted_term)
 	res := search_ingredient(db_search, formatted_term)
 	return c.Status(fiber.StatusOK).JSON(res)
 }
