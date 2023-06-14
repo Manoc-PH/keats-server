@@ -1,7 +1,9 @@
 package utilities
 
 import (
+	// "log"
 	"os"
+	// "github.com/joho/godotenv"
 )
 
 func GoDotEnvVariable(key string) string {
