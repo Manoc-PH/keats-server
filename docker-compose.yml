@@ -9,6 +9,8 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_DB=${DB_DB}
       - DB_HOST=postgresdb
+      - VIRTUAL_HOST=api.keats.app
+      - LETSENCRYPT_HOST=api.keats.app
     tty: true
     build: .
     ports:
