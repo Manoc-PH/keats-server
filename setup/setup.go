@@ -74,10 +74,9 @@ func ConnectDB() {
 
 	db_search_api_key := utilities.GoDotEnvVariable("MEILISEARCH_ADMIN_KEY")
 	client := meilisearch.NewClient(meilisearch.ClientConfig{
-		Host:   "http://0.0.0.0:7700",
+		Host:   "http://localhost:7700",
 		APIKey: db_search_api_key,
 	})
-	log.Println(client)
 	if client != nil {
 		log.Println("Connected to Meilisearch!")
 	}
@@ -118,24 +117,27 @@ func setupMeili(db *sql.DB, db_search *meilisearch.Client) error {
 	meili_stats, err := db_search.GetStats()
 	if err != nil {
 		log.Println(err)
-		log.Panicln("Could not get stats of meili db")
+		log.Println("Could not get stats of meili db")
 	}
 	if meili_stats.Indexes["ingredients"].NumberOfDocuments != int64(numOfRows) {
-		db_search.Index("ingredients").DeleteAllDocuments()
-		_, err = db_search.CreateIndex(&meilisearch.IndexConfig{
-			Uid:        "ingredients",
-			PrimaryKey: "id",
-		})
-		filterableAttributes := []string{
-			"name",
-		}
-		db_search.Index("ingredients").UpdateFilterableAttributes(&filterableAttributes)
-		if err != nil {
-			log.Panicln("Could not create index for ingredient in meili db")
-		}
-		insert_ingredients(db, db_search)
+		resetMeiliDb(db_search, db)
 	}
 	return nil
+}
+func resetMeiliDb(db_search *meilisearch.Client, db *sql.DB) {
+	db_search.Index("ingredients").DeleteAllDocuments()
+	_, err := db_search.CreateIndex(&meilisearch.IndexConfig{
+		Uid:        "ingredients",
+		PrimaryKey: "id",
+	})
+	filterableAttributes := []string{
+		"name",
+	}
+	db_search.Index("ingredients").UpdateFilterableAttributes(&filterableAttributes)
+	if err != nil {
+		log.Panicln("Could not create index for ingredient in meili db")
+	}
+	insert_ingredients(db, db_search)
 }
 func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 	type ingredient_mapping struct {
