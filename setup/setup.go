@@ -74,7 +74,7 @@ func ConnectDB() {
 
 	db_search_api_key := utilities.GoDotEnvVariable("MEILISEARCH_ADMIN_KEY")
 	client := meilisearch.NewClient(meilisearch.ClientConfig{
-		Host:   "http://0.0.0.0:7700",
+		Host:   "http://meilisearch:7700",
 		APIKey: db_search_api_key,
 	})
 	if client != nil {
@@ -83,21 +83,6 @@ func ConnectDB() {
 	DB_Search = client
 	res, err := client.GetIndex("ingredients")
 	log.Println(res, err)
-	if res == nil {
-		_, err = client.CreateIndex(&meilisearch.IndexConfig{
-			Uid:        "ingredients",
-			PrimaryKey: "id",
-		})
-		filterableAttributes := []string{
-			"name",
-		}
-		client.Index("ingredients").UpdateFilterableAttributes(&filterableAttributes)
-		if err != nil {
-			log.Panicln("Could not create index for ingredient in meili db")
-		}
-		insert_ingredients(db, client)
-		return
-	}
 	setupMeili(db, client)
 }
 
