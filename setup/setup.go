@@ -82,7 +82,22 @@ func ConnectDB() {
 	}
 	DB_Search = client
 	res, err := client.GetIndex("ingredients")
-	log.Println(res)
+	log.Println(res, err)
+	if res == nil {
+		_, err = client.CreateIndex(&meilisearch.IndexConfig{
+			Uid:        "ingredients",
+			PrimaryKey: "id",
+		})
+		filterableAttributes := []string{
+			"name",
+		}
+		client.Index("ingredients").UpdateFilterableAttributes(&filterableAttributes)
+		if err != nil {
+			log.Panicln("Could not create index for ingredient in meili db")
+		}
+		insert_ingredients(db, client)
+		return
+	}
 	setupMeili(db, client)
 }
 
