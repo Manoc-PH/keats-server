@@ -116,6 +116,7 @@ func setupMeili(db *sql.DB, db_search *meilisearch.Client) error {
 	}
 	meili_stats, err := db_search.GetStats()
 	if err != nil {
+		log.Println(err)
 		log.Panicln("Could not get stats of meili db")
 	}
 	if meili_stats.Indexes["ingredients"].NumberOfDocuments != int64(numOfRows) {
