@@ -51,5 +51,5 @@ ENV GOPATH /go
 ENV PATH /go/bin:$PATH
 
 RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin
-EXPOSE 8080
+EXPOSE 80
 CMD ["./main"]
