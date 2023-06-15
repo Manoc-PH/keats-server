@@ -81,7 +81,7 @@ func ConnectDB() {
 		log.Println("Connected to Meilisearch!")
 	}
 	DB_Search = client
-	res, err := client.GetIndex("ingredients")
+	res, err := client.GetKeys(nil)
 	log.Println(res, err)
 	setupMeili(db, client)
 }
