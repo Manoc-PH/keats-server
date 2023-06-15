@@ -81,7 +81,9 @@ func ConnectDB() {
 		log.Println("Connected to Meilisearch!")
 	}
 	DB_Search = client
-	setupMeili(db, DB_Search)
+	res, err := client.GetIndex("ingredients")
+	log.Println(res)
+	setupMeili(db, client)
 }
 
 // func SetupDB(db *sql.DB) error {
