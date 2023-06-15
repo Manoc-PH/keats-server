@@ -74,9 +74,10 @@ func ConnectDB() {
 
 	db_search_api_key := utilities.GoDotEnvVariable("MEILISEARCH_ADMIN_KEY")
 	client := meilisearch.NewClient(meilisearch.ClientConfig{
-		Host:   "http://localhost:7700",
+		Host:   "http://0.0.0.0:7700",
 		APIKey: db_search_api_key,
 	})
+	log.Println(client)
 	if client != nil {
 		log.Println("Connected to Meilisearch!")
 	}
