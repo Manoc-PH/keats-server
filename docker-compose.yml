@@ -1,5 +1,30 @@
 version: '3.9'
 services:
+  nginx-proxy:
+    restart: always
+    image: jwilder/nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - "TRUST_DOWNSTREAM_PROXY=true"
+    networks:
+      - keats 
+    volumes:
+      - "/etc/nginx/vhost.d"
+      - "/usr/share/nginx/html"
+      - "/var/run/docker.sock:/tmp/docker.sock:ro"
+      - "/etc/nginx/certs"
+
+  nginx-proxy-encrypt:
+    restart: always
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    volumes_from:
+      - "nginx-proxy"
+    networks:
+      - keats 
   app:
     container_name: go
     environment:
@@ -55,6 +80,7 @@ services:
     volumes:
       - ./data.ms:/data.ms
     restart: unless-stopped
+
 
 volumes:
   pg_data:
