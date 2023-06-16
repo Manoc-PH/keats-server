@@ -56,7 +56,6 @@ func ConnectDB() {
 	dbpass := utilities.GoDotEnvVariable("DB_PASSWORD")
 	dbname := utilities.GoDotEnvVariable("DB_DB")
 	dbhost := utilities.GoDotEnvVariable("DB_HOST")
-	log.Println(dbuser)
 	var err error
 	psqlInfo := fmt.Sprintf(`host=%s port=%d user=%v password=%v dbname=%v sslmode=disable`,
 		dbhost, 5432, dbuser, dbpass, dbname)
