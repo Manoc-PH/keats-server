@@ -37,7 +37,8 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 	//* data processing
 	if reqData.Ingredient_Mapping_Id != 0 {
 		intake := models.Intake{}
-		nutrient := models.Nutrient{}
+		new_nutrient := models.Nutrient{}
+		old_nutrient := models.Nutrient{}
 		daily_nutrients := models.Daily_Nutrients{Account_Id: owner_id}
 		// TODO OPTIMIZATION: USE GO ROUTINES
 		// Querrying intake
@@ -56,9 +57,16 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 			log.Println("Put_Intake | Error: User trying to edit old intake")
 			return utilities.Send_Error(c, "cannot edit intake from more than a day ago", fiber.StatusBadRequest)
 		}
-		// Querying nutrients of ingredient
+		// Querying old nutrients of ingredient
+		row = query_ingredient_nutrient(intake.Ingredient_Mapping_Id, db)
+		err = scan_ingredient_nutrient(row, &old_nutrient)
+		if err != nil {
+			log.Println("Put_Intake | Error on scanning nutrients: ", err.Error())
+			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+		}
+		// Querying new nutrients of ingredient
 		row = query_ingredient_nutrient(reqData.Ingredient_Mapping_Id, db)
-		err = scan_ingredient_nutrient(row, &nutrient)
+		err = scan_ingredient_nutrient(row, &new_nutrient)
 		if err != nil {
 			log.Println("Put_Intake | Error on scanning nutrients: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
@@ -71,9 +79,9 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
 		old_intake_d_nutrients := models.Nutrient{}
-		calc_nutrients(&old_intake_d_nutrients, &nutrient, intake.Amount)
+		calc_nutrients(&old_intake_d_nutrients, &old_nutrient, intake.Amount)
 		new_intake_d_nutrients := models.Nutrient{}
-		calc_nutrients(&new_intake_d_nutrients, &nutrient, reqData.Amount)
+		calc_nutrients(&new_intake_d_nutrients, &new_nutrient, reqData.Amount)
 		daily_nutrients_to_add := models.Daily_Nutrients{ID: daily_nutrients.ID}
 		calc_daily_nutrients_update(&old_intake_d_nutrients, &new_intake_d_nutrients, &daily_nutrients_to_add)
 
