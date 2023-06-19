@@ -49,14 +49,13 @@ func Get_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
 		}
 	}
 	response.Ingredient_Mappings = ingredient_mappings
-	temp_res := schemas.Res_Get_Ingredient_Mapping_Details{}
 	if len(response.Ingredient_Mappings) < 1 {
 		log.Println("Get_Ingredient_Details | ingredient does not exist")
 		return utilities.Send_Error(c, "Ingredient does not exist", fiber.StatusBadRequest)
 	}
 	if len(response.Ingredient_Mappings) > 0 {
 		row := query_ingredient_mapping(db, response.Ingredient_Mappings[0].ID)
-		err = scan_ingredient_mapping(row, &temp_res)
+		err = scan_ingredient_mapping(row, &response)
 		if err != nil && err == sql.ErrNoRows {
 			log.Println("Get_Ingredient_Mapping_Details | error in scanning ingredient: ", err.Error())
 			return utilities.Send_Error(c, "Ingredient does not exist", fiber.StatusBadRequest)
@@ -66,14 +65,9 @@ func Get_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
 		if err != nil {
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
-		temp_res.Ingredient_Images = images
+		response.Ingredient_Images = images
 		response.Ingredient_Mapping_ID = response.Ingredient_Mappings[0].ID
 	}
-	response.Ingredient = temp_res.Ingredient
-	response.Ingredient_Variant = temp_res.Ingredient_Variant
-	response.Ingredient_Subvariant = temp_res.Ingredient_Subvariant
-	response.Nutrient = temp_res.Nutrient
-	response.Ingredient_Images = temp_res.Ingredient_Images
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 

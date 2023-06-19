@@ -7,6 +7,7 @@ import (
 // *REQUESTS
 type Req_Get_Ingredient_Mapping_Details struct {
 	Ingredient_Mapping_ID uint `json:"ingredient_mapping_id" validate:"required"`
+	Return_Mappings       bool `json:"return_mappings"`
 }
 
 type Res_Get_Ingredient_Mapping_Details struct {

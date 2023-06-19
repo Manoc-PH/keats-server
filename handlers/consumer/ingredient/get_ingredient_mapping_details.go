@@ -24,8 +24,9 @@ func Get_Ingredient_Mapping_Details(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Get_Ingredient_Mapping_Details | Error on query validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
+	log.Println(reqData)
 
-	response := schemas.Res_Get_Ingredient_Mapping_Details{}
+	response := schemas.Res_Get_Ingredient_Details{Ingredient_Mapping_ID: reqData.Ingredient_Mapping_ID}
 	// querying ingredient mapping
 	row := query_ingredient_mapping(db, reqData.Ingredient_Mapping_ID)
 	err = scan_ingredient_mapping(row, &response)
@@ -44,6 +45,32 @@ func Get_Ingredient_Mapping_Details(c *fiber.Ctx, db *sql.DB) error {
 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 	}
 	response.Ingredient_Images = images
+	if reqData.Return_Mappings == true {
+		// querying ingredient
+		ingredient_mappings := []schemas.Ingredient_Mapping_With_Name{}
+		rows, err := query_ingredient_mappings(db, response.Ingredient.ID)
+		if err != nil && err == sql.ErrNoRows {
+			log.Println("Get_Ingredient_Details | ingredient does not exist: ", err.Error())
+			return utilities.Send_Error(c, "Ingredient does not exist", fiber.StatusBadRequest)
+		}
+		if err != nil {
+			log.Println("error in querying query_ingredient_mappings: ", err.Error())
+			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+		}
+		defer rows.Close()
+		for rows.Next() {
+			err = scan_ingredient_mappings(rows, &ingredient_mappings)
+			if err != nil && err == sql.ErrNoRows {
+				log.Println("Get_Ingredient_Details | error in scanning ingredient mapping: ", err.Error())
+				return utilities.Send_Error(c, "Ingredient does not exist", fiber.StatusInternalServerError)
+			}
+			if err != nil {
+				log.Println("Get_Ingredient_Details | error in scanning ingredient mapping: ", err.Error())
+				return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+			}
+		}
+		response.Ingredient_Mappings = ingredient_mappings
+	}
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
@@ -78,7 +105,7 @@ func query_ingredient_mapping(db *sql.DB, ingredient_mapping_id uint) *sql.Row {
 	)
 	return row
 }
-func scan_ingredient_mapping(row *sql.Row, ingredient_mapping *schemas.Res_Get_Ingredient_Mapping_Details) error {
+func scan_ingredient_mapping(row *sql.Row, ingredient_mapping *schemas.Res_Get_Ingredient_Details) error {
 	if err := row.
 		Scan(
 			&ingredient_mapping.Ingredient.ID,
