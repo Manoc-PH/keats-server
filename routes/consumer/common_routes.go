@@ -12,4 +12,5 @@ func Common_Routes(app *fiber.App) {
 
 	r.Get("/activity_levels", func(c *fiber.Ctx) error { return handlers.Get_Activity_Levels(c, setup.DB) })
 	r.Get("/diet_plans", func(c *fiber.Ctx) error { return handlers.Get_Diet_Plans(c, setup.DB) })
+	r.Get("/name_availability", func(c *fiber.Ctx) error { return handlers.Get_Name_Availability(c, setup.DB) })
 }
