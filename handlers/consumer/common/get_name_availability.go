@@ -25,15 +25,15 @@ func Get_Name_Availability(c *fiber.Ctx, db *sql.DB) error {
 
 func fetch_name(db *sql.DB, username string) bool {
 	user := models.Account{}
-	taken := true
+	available := false
 	row := db.QueryRow(`SELECT username FROM account WHERE username = $1`, username)
 	err := row.Scan(&user.Username)
 	if err != nil {
 		log.Println("Get_Name_Availability | error in querying Account: ", err.Error())
-		return false
+		return true
 	}
 	if user.Username != "" {
-		taken = true
+		available = false
 	}
-	return taken
+	return available
 }
