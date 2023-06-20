@@ -26,7 +26,8 @@ func scan_and_query_diet_plans(db *sql.DB) ([]models.Diet_Plan, error) {
 		coalesce(main_image_link, ''),
 		coalesce(background_color, ''),
 		coalesce(diet_plan_desc, '')
-	FROM diet_plan`,
+	FROM diet_plan
+	ORDER BY calorie_percentage DESC`,
 	)
 	if err != nil {
 		log.Println("Get_Diet_Plans | error in querying Diet_Plan: ", err.Error())
