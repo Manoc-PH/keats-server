@@ -48,7 +48,6 @@ type Consumer_Profile struct {
 	Date_Updated       time.Time `json:"date_updated"`
 	Date_Created       time.Time `json:"date_created"`
 	Consumer_Vitals_Id uuid.UUID `json:"consumer_vitals_id"`
-	Measure_Unit_Id    uuid.UUID `json:"measure_unit_id"`
 	// time.Time SHOULD BE IN ISO STRING
 }
 type Business_Profile struct {
