@@ -73,9 +73,10 @@ func ConnectDB() {
 	DB = db
 
 	db_search_api_key := utilities.GoDotEnvVariable("MEILISEARCH_ADMIN_KEY")
+	meilisearch_host := utilities.GoDotEnvVariable("MEILISEARCH_HOST")
 	// !WHEN RUNNING ON DOCKER CHANGE THE HOST TO THE CONTAINER NAME
 	client := meilisearch.NewClient(meilisearch.ClientConfig{
-		Host:   "http://meilisearch:7700",
+		Host:   meilisearch_host,
 		APIKey: db_search_api_key,
 	})
 	if client != nil {

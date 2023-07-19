@@ -2,19 +2,26 @@ package utilities
 
 import (
 	// "log"
+	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 	// "github.com/joho/godotenv"
 )
 
+var prod = false
+
 func GoDotEnvVariable(key string) string {
 
-	// TODO RESTORE THIS WHEN RUNNING LOCALLY
 	// load .env file
-	// err := godotenv.Load(".env")
+	if prod == false {
+		err := godotenv.Load(".env")
 
-	// if err != nil {
-	// 	log.Fatalln("Error loading .env file in helper")
-	// }
+		if err != nil {
+			log.Println("Error loading .env file in helper")
+			prod = true
+		}
+	}
 
 	return os.Getenv(key)
 }

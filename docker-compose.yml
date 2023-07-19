@@ -89,3 +89,6 @@ volumes:
 networks:
   keats:
     driver: bridge
+
+# Command for rebuilding compose file:
+# docker-compose -f docker-compose.yml up -d --build
