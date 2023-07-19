@@ -242,31 +242,29 @@ func calc_nutrients(nutrients_to_add *models.Nutrient, nutrient *models.Nutrient
 func query_food(food_id uint, db *sql.DB) *sql.Row {
 	row := db.QueryRow(`SELECT
 			food.id, food.name, food.name_ph, food.name_owner,
-			food_nutrient.id,
-			food_nutrient.amount,
-			food_nutrient.amount_unit,
-			food_nutrient.amount_unit_desc,
-			food_nutrient.serving_size,
-			food_nutrient.calories,
-			food_nutrient.protein,
-			food_nutrient.carbs,
-			food_nutrient.fats
+			nutrient.id,
+			nutrient.amount,
+			nutrient.amount_unit,
+			nutrient.amount_unit_desc,
+			nutrient.serving_size,
+			nutrient.calories,
+			nutrient.protein,
+			nutrient.carbs,
+			nutrient.fats
 		FROM food
-		JOIN food_nutrient ON food.food_nutrient_id = food_nutrient.id
+		JOIN nutrient ON food.nutrient_id = nutrient.id
 		WHERE food.id = $1`,
-		// casting timestamp to date
 		food_id,
 	)
 	return row
 }
-func scan_food(row *sql.Row, food *models.Food, food_nutrient *models.Food_Nutrient) error {
+func scan_food(row *sql.Row, food *models.Food) error {
 	if err := row.
 		Scan(
 			&food.ID,
 			&food.Name,
 			&food.Name_Ph,
-
-			&food_nutrient.ID,
+			&food.Nutrient_Id,
 		); err != nil {
 		return err
 	}

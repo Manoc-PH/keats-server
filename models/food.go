@@ -15,9 +15,10 @@ type Food struct {
 	Barcode              string    `json:"barcode"`
 	Thumbnail_Image_Link string    `json:"thumbnail_image_link"`
 	Food_Desc            string    `json:"food_desc"`
+	Owner_Id             uuid.UUID `json:"owner_id"`
 	Category_Id          uint      `json:"category_id"`
 	Food_Type_Id         uint      `json:"food_type_id"`
-	Owner_Id             uuid.UUID `json:"owner_id"`
+	Nutrient_Id          uint      `json:"nutrient_id"`
 	// time.Time SHOULD BE IN ISO STRING
 }
 
@@ -37,14 +38,6 @@ type Food_Ingredient struct {
 	Amount_Unit           string  `json:"amount_unit"`
 	Amount_Unit_Desc      string  `json:"amount_unit_desc"`
 	Serving_Size          float32 `json:"serving_size"`
-}
-
-// This table will be used in the case where the food does not have any ingredients.
-// Only one food_nutrient exists per food
-type Food_Nutrient struct {
-	ID          uint `json:"id"`
-	Nutrient_Id uint `json:"nutrient_id"`
-	Food_Id     uint `json:"food_id"`
 }
 
 type Edible_Category struct {
