@@ -83,7 +83,7 @@ func ConnectDB() {
 		log.Println("Connected to Meilisearch!")
 	}
 	DB_Search = client
-	setupMeili(db, client)
+	setupMeiliIngredients(db, client)
 }
 
 // func SetupDB(db *sql.DB) error {
@@ -109,7 +109,7 @@ func ConnectDB() {
 // 	return nil
 // }
 
-func setupMeili(db *sql.DB, db_search *meilisearch.Client) error {
+func setupMeiliIngredients(db *sql.DB, db_search *meilisearch.Client) error {
 	numOfRows := 0
 	row := db.QueryRow(`SELECT COUNT(name) FROM ingredient`)
 	err := row.Scan(&numOfRows)

@@ -100,53 +100,68 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	// *Food
-	// if reqData.Food_Id != 0 {
-	// 	food := models.Food{}
-	// 	food_nutrient := models.Food_Nutrient{}
-	// 	d_nutrients_curr := models.Daily_Nutrients{}
-	// 	// TODO OPTIMIZATION: USE GO ROUTINES
-	// 	row := query_food(reqData.Food_Id, db)
-	// 	err = scan_food(row, &food, &food_nutrient)
-	// 	if err != nil {
-	// 		log.Println("Post_Intake | Error on scanning food: ", err.Error())
-	// 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
-	// 	}
-	// 	row = query_d_nutrients(db, owner_id)
-	// 	err = scan_d_nutrients(row, &d_nutrients_curr)
-	// 	if err != nil {
-	// 		log.Println("Post_Intake | Error on scanning d_nutrients: ", err.Error())
-	// 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
-	// 	}
-	// 	//! d_nutrients to add doesnt return the total d_nutrients
-	// 	d_nutrients_to_add := models.Daily_Nutrients{ID: d_nutrients_curr.ID, Account_Id: owner_id}
-	// 	new_intake := models.Intake{
-	// 		Account_Id:       owner_id,
-	// 		Date_Created:     time.Now(),
-	// 		Food_Id:          food.ID,
-	// 		Amount:           reqData.Amount,
-	// 		Amount_Unit:      reqData.Amount_Unit,
-	// 		Amount_Unit_Desc: reqData.Amount_Unit_Desc,
-	// 		Serving_Size:     reqData.Serving_Size,
-	// 	}
-	// 	calc_d_nutrients(&d_nutrients_to_add, &food_nutrient, reqData.Amount)
-	// 	coins, xp, deductions := utilities.Calc_CnXP_On_Intake(float32(d_nutrients_to_add.Calories), float32(d_nutrients_curr.Calories), float32(d_nutrients_curr.Max_Calories))
-	// 	coins = coins - deductions
-	// 	xp = xp - deductions
-	// 	err = save_intake_d_nutrients_and_gamestat(db, &d_nutrients_to_add, coins, xp, &new_intake)
-	// 	if err != nil {
-	// 		log.Println("Post_Intake | Error on save_intake_d_nutrients_and_gamestat: ", err.Error())
-	// 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
-	// 	}
-	// 	response_data.Intake = new_intake
-	// 	// response_data.Added_Coins_And_XP = schemas.Added_Coins_And_XP{Coins: coins, XP: xp}
-	// 	response_data.Added_Daily_Nutrients = schemas.Added_Daily_Nutrients{
-	// 		Calories: d_nutrients_to_add.Calories,
-	// 		Protein:  d_nutrients_to_add.Protein,
-	// 		Carbs:    d_nutrients_to_add.Carbs,
-	// 		Fats:     d_nutrients_to_add.Fats,
-	// 	}
-	// 	response_data.Food = food
-	// }
+	if reqData.Food_Id != 0 && len(reqData.Food_Ingredients) < 1 {
+		food := models.Food{}
+		food_nutrients := models.Nutrient{}
+		daily_nutrients := models.Daily_Nutrients{Account_Id: owner_id}
+		nutrients_to_add := models.Nutrient{}
+		// Getting ingredient data
+		row := query_food_and_nutrient(reqData.Ingredient_Mapping_Id, db)
+		err = scan_food_and_nutrient(row, &food, &food_nutrients)
+		if err != nil {
+			log.Println("Post_Intake | Error on scanning ingredient: ", err.Error())
+			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+		}
+		// Getting daily nutrients
+		row = query_daily_nutrients(db, owner_id)
+		err = scan_daily_nutrients(row, &daily_nutrients)
+		if err != nil {
+			log.Println("Post_Intake | Error on scanning daily nutrients: ", err.Error())
+			if err.Error() == sql.ErrNoRows.Error() {
+				err = generate_daily_nutrients(db, owner_id, &daily_nutrients)
+				if err != nil {
+					log.Println("Post_Intake | error in generate_daily_nutrients: ", err.Error())
+					return utilities.Send_Error(c, "An error occured in getting daily nutrients", fiber.StatusInternalServerError)
+				}
+			} else {
+				return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+			}
+		}
+		// Calculating nutrients and saving to daily nutrients
+		calc_nutrients(&nutrients_to_add, &food_nutrients, reqData.Amount)
+		nutrients_to_add.ID = daily_nutrients.ID
+		new_intake := models.Intake{
+			Account_Id:       owner_id,
+			Date_Created:     time.Now(),
+			Food_Id:          reqData.Food_Id,
+			Amount:           reqData.Amount,
+			Amount_Unit:      reqData.Amount_Unit,
+			Amount_Unit_Desc: reqData.Amount_Unit_Desc,
+			Serving_Size:     reqData.Serving_Size,
+		}
+		// Saving acutal intake
+		txn, err := db.Begin()
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = save_daily_nutrients(txn, &nutrients_to_add)
+		if err != nil {
+			return utilities.Send_Error(c, "An error occured in saving daily nutrients", fiber.StatusInternalServerError)
+		}
+		err = save_intake_ingredient(txn, &new_intake)
+		if err != nil {
+			return utilities.Send_Error(c, "An error occured in saving intake", fiber.StatusInternalServerError)
+		}
+		err = txn.Commit()
+		if err != nil {
+			txn.Rollback()
+			log.Println("save_intake_d_nutrients_and_gamestat (commit) | Error: ", err.Error())
+			return err
+		}
+		response_data.Added_Daily_Nutrients = nutrients_to_add
+		response_data.Food = food
+		response_data.Intake = new_intake
+	}
 
 	return c.Status(fiber.StatusOK).JSON(response_data)
 }
@@ -239,7 +254,7 @@ func calc_nutrients(nutrients_to_add *models.Nutrient, nutrient *models.Nutrient
 	nutrients_to_add.Iron = (nutrient.Iron * amount_modifier)
 	nutrients_to_add.Calcium = (nutrient.Calcium * amount_modifier)
 }
-func query_food(food_id uint, db *sql.DB) *sql.Row {
+func query_food_and_nutrient(food_id uint, db *sql.DB) *sql.Row {
 	row := db.QueryRow(`SELECT
 			food.id, food.name, food.name_ph, food.name_owner,
 			nutrient.id,
@@ -250,7 +265,14 @@ func query_food(food_id uint, db *sql.DB) *sql.Row {
 			nutrient.calories,
 			nutrient.protein,
 			nutrient.carbs,
-			nutrient.fats
+			nutrient.fats,
+			nutrient.trans_fat,
+			nutrient.saturated_fat,
+			nutrient.sugars,
+			nutrient.fiber,
+			nutrient.sodium,
+			nutrient.iron,
+			nutrient.calcium
 		FROM food
 		JOIN nutrient ON food.nutrient_id = nutrient.id
 		WHERE food.id = $1`,
@@ -258,13 +280,29 @@ func query_food(food_id uint, db *sql.DB) *sql.Row {
 	)
 	return row
 }
-func scan_food(row *sql.Row, food *models.Food) error {
+func scan_food_and_nutrient(row *sql.Row, food *models.Food, nutrient *models.Nutrient) error {
 	if err := row.
 		Scan(
 			&food.ID,
 			&food.Name,
 			&food.Name_Ph,
 			&food.Nutrient_Id,
+			&nutrient.ID,
+			&nutrient.Amount,
+			&nutrient.Amount_Unit,
+			&nutrient.Amount_Unit_Desc,
+			&nutrient.Serving_Size,
+			&nutrient.Calories,
+			&nutrient.Protein,
+			&nutrient.Carbs,
+			&nutrient.Fats,
+			&nutrient.Trans_Fat,
+			&nutrient.Saturated_Fat,
+			&nutrient.Sugars,
+			&nutrient.Fiber,
+			&nutrient.Sodium,
+			&nutrient.Iron,
+			&nutrient.Calcium,
 		); err != nil {
 		return err
 	}
