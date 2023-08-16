@@ -23,6 +23,10 @@ type Ingredient_Mapping_Schema struct {
 	Ingredient_Subvariant models.Ingredient_Subvariant `json:"ingredient_subvariant"`
 	Nutrient              models.Nutrient              `json:"nutrient"`
 }
+type Food_Mapping_Schema struct {
+	Food     models.Food     `json:"food"`
+	Nutrient models.Nutrient `json:"nutrient"`
+}
 type Res_Post_Intake struct {
 	Added_Daily_Nutrients models.Nutrient `json:"added_daily_nutrients"`
 	// Added_Coins_And_XP    Added_Coins_And_XP    `json:"added_coins_and_xp"`
