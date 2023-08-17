@@ -91,7 +91,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 		err = txn.Commit()
 		if err != nil {
 			txn.Rollback()
-			log.Println("save_intake_d_nutrients_and_gamestat (commit) | Error: ", err.Error())
+			log.Println(" (commit) | Error: ", err.Error())
 			return err
 		}
 		response_data.Added_Daily_Nutrients = nutrients_to_add
@@ -106,10 +106,10 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 		daily_nutrients := models.Daily_Nutrients{Account_Id: owner_id}
 		nutrients_to_add := models.Nutrient{}
 		// Getting ingredient data
-		row := query_food_and_nutrient(reqData.Ingredient_Mapping_Id, db)
+		row := query_food_and_nutrient(reqData.Food_Id, db)
 		err = scan_food_and_nutrient(row, &food, &food_nutrients)
 		if err != nil {
-			log.Println("Post_Intake | Error on scanning ingredient: ", err.Error())
+			log.Println("Post_Intake | Error on scanning food: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
 		// Getting daily nutrients
@@ -148,14 +148,14 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 		if err != nil {
 			return utilities.Send_Error(c, "An error occured in saving daily nutrients", fiber.StatusInternalServerError)
 		}
-		err = save_intake_ingredient(txn, &new_intake)
+		err = save_intake_food(txn, &new_intake)
 		if err != nil {
 			return utilities.Send_Error(c, "An error occured in saving intake", fiber.StatusInternalServerError)
 		}
 		err = txn.Commit()
 		if err != nil {
 			txn.Rollback()
-			log.Println("save_intake_d_nutrients_and_gamestat (commit) | Error: ", err.Error())
+			log.Println(" (commit) | Error: ", err.Error())
 			return err
 		}
 		response_data.Added_Daily_Nutrients = nutrients_to_add
@@ -259,8 +259,8 @@ func query_food_and_nutrient(food_id uint, db *sql.DB) *sql.Row {
 			food.id, food.name, food.name_ph, food.name_owner,
 			nutrient.id,
 			nutrient.amount,
-			nutrient.amount_unit,
-			nutrient.amount_unit_desc,
+			coalesce(nutrient.amount_unit, ''),
+			coalesce(nutrient.amount_unit_desc, ''),
 			nutrient.serving_size,
 			nutrient.calories,
 			nutrient.protein,
@@ -286,7 +286,7 @@ func scan_food_and_nutrient(row *sql.Row, food *models.Food, nutrient *models.Nu
 			&food.ID,
 			&food.Name,
 			&food.Name_Ph,
-			&food.Nutrient_Id,
+			&food.Name_Owner,
 			&nutrient.ID,
 			&nutrient.Amount,
 			&nutrient.Amount_Unit,
@@ -348,7 +348,7 @@ func save_intake_ingredient(txn *sql.Tx, intake *models.Intake) error {
 	// 	coins, xp, d_nutrients_to_add.Account_Id,
 	// )
 	// if err != nil {
-	// 	log.Println("save_intake_d_nutrients_and_gamestat (update account_game_stat)| Error: ", err.Error())
+	// 	log.Println("save_intake_ingredient (update account_game_stat)| Error: ", err.Error())
 	// 	return err
 	// }
 	row := txn.QueryRow(
@@ -364,82 +364,27 @@ func save_intake_ingredient(txn *sql.Tx, intake *models.Intake) error {
 	)
 	err := row.Scan(&intake.ID)
 	if err != nil {
-		log.Println("save_intake_d_nutrients_and_gamestat (insert intake)| Error: ", err.Error())
+		log.Println("save_intake_ingredient (insert intake)| Error: ", err.Error())
 		return err
 	}
 	return nil
 }
-
-// func save_intake_d_nutrients_and_gamestat(db *sql.DB, d_nutrients_to_add *models.Daily_Nutrients, coins int, xp int, intake *models.Intake) error {
-// 	txn, err := db.Begin()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	_, err = txn.Exec(
-// 		`UPDATE daily_nutrients SET
-// 			calories = calories + $1,
-// 			protein = protein + $2,
-// 			carbs = carbs + $3,
-// 			fats = fats + $4
-// 		WHERE id = $5`,
-// 		d_nutrients_to_add.Calories,
-// 		d_nutrients_to_add.Protein,
-// 		d_nutrients_to_add.Carbs,
-// 		d_nutrients_to_add.Fats,
-// 		d_nutrients_to_add.ID,
-// 	)
-// 	if err != nil {
-// 		log.Println("save_intake_d_nutrients_and_gamestat (update d_nutrients) | Error: ", err.Error())
-// 		return err
-// 	}
-// 	_, err = txn.Exec(
-// 		`UPDATE account_game_stat SET coins = coins + $1, xp = xp + $2 WHERE account_id = $3`,
-// 		coins, xp, d_nutrients_to_add.Account_Id,
-// 	)
-// 	if err != nil {
-// 		log.Println("save_intake_d_nutrients_and_gamestat (update account_game_stat)| Error: ", err.Error())
-// 		return err
-// 	}
-// 	if intake.Food_Id != 0 && intake.Ingredient_Mapping_Id == 0 {
-// 		row := txn.QueryRow(
-// 			`INSERT INTO intake (account_id, date_created, food_id, amount,	amount_unit, amount_unit_desc, serving_size)
-// 			VALUES ($1, $2, $3, $4, $5, $6, $7)  RETURNING id`,
-// 			intake.Account_Id,
-// 			intake.Date_Created,
-// 			intake.Food_Id,
-// 			intake.Amount,
-// 			intake.Amount_Unit,
-// 			intake.Amount_Unit_Desc,
-// 			intake.Serving_Size,
-// 		)
-// 		err := row.Scan(&intake.ID)
-// 		if err != nil {
-// 			log.Println("save_intake_d_nutrients_and_gamestat (insert intake)| Error: ", err.Error())
-// 			return err
-// 		}
-// 	}
-// 	if intake.Food_Id == 0 && intake.Ingredient_Mapping_Id != 0 {
-// 		row := txn.QueryRow(
-// 			`INSERT INTO intake (account_id, date_created, recipe_id, amount,	amount_unit, amount_unit_desc, serving_size)
-// 			VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-// 			intake.Account_Id,
-// 			intake.Date_Created,
-// 			intake.Amount,
-// 			intake.Amount_Unit,
-// 			intake.Amount_Unit_Desc,
-// 			intake.Serving_Size,
-// 		)
-// 		err := row.Scan(&intake.ID)
-// 		if err != nil {
-// 			log.Println("save_intake_d_nutrients_and_gamestat (insert intake)| Error: ", err.Error())
-// 			return err
-// 		}
-// 	}
-// 	err = txn.Commit()
-// 	if err != nil {
-// 		txn.Rollback()
-// 		log.Println("save_intake_d_nutrients_and_gamestat (commit) | Error: ", err.Error())
-// 		return err
-// 	}
-// 	return nil
-// }
+func save_intake_food(txn *sql.Tx, intake *models.Intake) error {
+	row := txn.QueryRow(
+		`INSERT INTO intake (account_id, date_created, food_id, amount,	amount_unit, amount_unit_desc, serving_size)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)  RETURNING id`,
+		intake.Account_Id,
+		intake.Date_Created,
+		intake.Food_Id,
+		intake.Amount,
+		intake.Amount_Unit,
+		intake.Amount_Unit_Desc,
+		intake.Serving_Size,
+	)
+	err := row.Scan(&intake.ID)
+	if err != nil {
+		log.Println("save_intake_food (insert intake)| Error: ", err.Error())
+		return err
+	}
+	return nil
+}
