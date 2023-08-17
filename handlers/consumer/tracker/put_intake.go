@@ -114,7 +114,6 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 			log.Println("update_intake_d_nutrients_and_gamestat (commit) | Error: ", err.Error())
 			return err
 		}
-		response_data.Added_Daily_Nutrients = new_intake_d_nutrients
 		response_data.Added_Daily_Nutrients.Calories = daily_nutrients_to_add.Calories
 		response_data.Added_Daily_Nutrients.Protein = daily_nutrients_to_add.Protein
 		response_data.Added_Daily_Nutrients.Carbs = daily_nutrients_to_add.Carbs
@@ -146,7 +145,6 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 		new_nutrient := models.Nutrient{}
 		old_nutrient := models.Nutrient{}
 		daily_nutrients := models.Daily_Nutrients{Account_Id: owner_id}
-		// TODO OPTIMIZATION: USE GO ROUTINES
 		// Querrying intake
 		row := query_intake(db, owner_id, reqData.Intake_ID)
 		err = scan_intake(row, &intake)
@@ -163,6 +161,7 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 			log.Println("Put_Intake | Error: User trying to edit old intake")
 			return utilities.Send_Error(c, "cannot edit intake from more than a day ago", fiber.StatusBadRequest)
 		}
+		// TODO Optimize this area, I dont think it needs to be called twice
 		// Querying old nutrients of ingredient
 		row = query_food_nutrient(intake.Food_Id, db)
 		err = scan_nutrient(row, &old_nutrient)
@@ -219,7 +218,6 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 			log.Println("update_intake_d_nutrients_and_gamestat (commit) | Error: ", err.Error())
 			return err
 		}
-		response_data.Added_Daily_Nutrients = new_intake_d_nutrients
 		response_data.Added_Daily_Nutrients.Calories = daily_nutrients_to_add.Calories
 		response_data.Added_Daily_Nutrients.Protein = daily_nutrients_to_add.Protein
 		response_data.Added_Daily_Nutrients.Carbs = daily_nutrients_to_add.Carbs
@@ -233,11 +231,11 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 		response_data.Added_Daily_Nutrients.Calcium = daily_nutrients_to_add.Calcium
 
 		food_mapping := schemas.Food_Mapping_Schema{}
-		// Getting ingredient data
-		row = query_food_and_nutrient(reqData.Ingredient_Mapping_Id, db)
+		// Getting food data
+		row = query_food_and_nutrient(reqData.Food_Id, db)
 		err = scan_food_and_nutrient(row, &food_mapping.Food, &food_mapping.Nutrient)
 		if err != nil {
-			log.Println("Post_Intake | Error on scanning ingredient: ", err.Error())
+			log.Println("Post_Intake | Error on scanning food: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
 
@@ -252,8 +250,8 @@ func query_ingredient_nutrient(ingredient_mapping_id uint, db *sql.DB) *sql.Row 
 	row := db.QueryRow(`SELECT
 			nutrient.id,
 			nutrient.amount,
-			nutrient.amount_unit,
-			nutrient.amount_unit_desc,
+			coalesce(nutrient.amount_unit, ''),
+			coalesce(nutrient.amount_unit_desc, ''),
 			nutrient.serving_size,
 			nutrient.calories,
 			nutrient.protein,
@@ -278,8 +276,8 @@ func query_food_nutrient(food_id uint, db *sql.DB) *sql.Row {
 	row := db.QueryRow(`SELECT
 			nutrient.id,
 			nutrient.amount,
-			nutrient.amount_unit,
-			nutrient.amount_unit_desc,
+			coalesce(nutrient.amount_unit, ''),
+			coalesce(nutrient.amount_unit_desc, ''),
 			nutrient.serving_size,
 			nutrient.calories,
 			nutrient.protein,
@@ -338,26 +336,47 @@ func calc_daily_nutrients_update(old_d_nutrients *models.Nutrient, new_d_nutrien
 	d_nutrients_to_add.Calcium = new_d_nutrients.Calcium - old_d_nutrients.Calcium
 }
 func update_intake(txn *sql.Tx, intake *models.Intake) error {
-	_, err := txn.Exec(
-		`UPDATE intake SET 
-			amount = $1,
-			amount_unit = $2,
-			amount_unit_desc = $3,
-			serving_size = $4,
-			ingredient_mapping_id = $5,
-			food_id = $6
-		WHERE id = $7`,
-		intake.Amount,
-		intake.Amount_Unit,
-		intake.Amount_Unit_Desc,
-		intake.Serving_Size,
-		intake.Ingredient_Mapping_Id,
-		intake.Food_Id,
-		intake.ID,
-	)
-	if err != nil {
-		log.Println("update_intake | Error: ", err.Error())
-		return err
+	if intake.Ingredient_Mapping_Id != 0 {
+		_, err := txn.Exec(
+			`UPDATE intake SET 
+				amount = $1,
+				amount_unit = $2,
+				amount_unit_desc = $3,
+				serving_size = $4,
+				ingredient_mapping_id = $5
+			WHERE id = $6`,
+			intake.Amount,
+			intake.Amount_Unit,
+			intake.Amount_Unit_Desc,
+			intake.Serving_Size,
+			intake.Ingredient_Mapping_Id,
+			intake.ID,
+		)
+		if err != nil {
+			log.Println("update_intake | Error: ", err.Error())
+			return err
+		}
+	}
+	if intake.Food_Id != 0 {
+		_, err := txn.Exec(
+			`UPDATE intake SET 
+				amount = $1,
+				amount_unit = $2,
+				amount_unit_desc = $3,
+				serving_size = $4, 
+				food_id = $5
+			WHERE id = $6`,
+			intake.Amount,
+			intake.Amount_Unit,
+			intake.Amount_Unit_Desc,
+			intake.Serving_Size,
+			intake.Food_Id,
+			intake.ID,
+		)
+		if err != nil {
+			log.Println("update_intake | Error: ", err.Error())
+			return err
+		}
 	}
 	return nil
 }
