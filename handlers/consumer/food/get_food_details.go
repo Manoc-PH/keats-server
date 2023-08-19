@@ -26,10 +26,12 @@ func Get_Food_Details(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	response := schemas.Res_Get_Food_Details{}
+	food := models.Food{}
+	nutrient := models.Nutrient{}
 	// querying food
-	row := query_food(db, reqData.Food_ID)
+	row := query_food_and_nutrient(reqData.Food_ID, db)
 	// scanning food
-	err = scan_food(row, &response)
+	err = scan_food_and_nutrient(row, &food, &nutrient)
 	if err != nil && err == sql.ErrNoRows {
 		log.Println("Get_Food_Details | error in scanning food: ", err.Error())
 		return utilities.Send_Error(c, "Food does not exist", fiber.StatusBadRequest)
@@ -45,88 +47,78 @@ func Get_Food_Details(c *fiber.Ctx, db *sql.DB) error {
 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 	}
 	response.Food_Images = images
+	response.Food = food
+	response.Nutrient = nutrient
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func query_food(db *sql.DB, food_id uint) *sql.Row {
+func query_food_and_nutrient(food_id uint, db *sql.DB) *sql.Row {
 	row := db.QueryRow(`SELECT
-			food.id, 
+			food.id,
 			food.name,
-			coalesce(food.name_ph, ''),
-			coalesce(food.name_brand, ''),
+			food.name_ph,
+			food.name_owner,
 			coalesce(food.thumbnail_image_link, ''),
-			food.food_desc,
-			food.food_nutrient_id,
-			food.food_brand_type_id,
-			food.food_category_id,
-			food.food_brand_id,
-			--	FOOD NUTRIENT
-			food_nutrient.amount,
-			food_nutrient.amount_unit,
-			food_nutrient.amount_unit_desc,
-			food_nutrient.serving_size,
-			food_nutrient.calories,
-			food_nutrient.protein,
-			food_nutrient.carbs,
-			food_nutrient.fats,
-			food_nutrient.trans_fat,
-			food_nutrient.saturated_fat,
-			food_nutrient.sugars,
-			food_nutrient.sodium,
-			-- FOOD BRAND TYPE
-			food_brand_type.name,
-			coalesce(food_brand_type.brand_type_desc, ''), 
-			-- FOOD BRAND
-			food_brand.id,
-			-- FOOD CATEGORY
-			food_category.id,
-			food_category.name
+			coalesce(food.food_desc, ''),
+			coalesce(food.category_id, 0),
+			food.food_type_id,
+			food.owner_id,
+			nutrient.id,
+			nutrient.amount,
+			coalesce(nutrient.amount_unit, ''),
+			coalesce(nutrient.amount_unit_desc, ''),
+			nutrient.serving_size,
+			nutrient.calories,
+			nutrient.protein,
+			nutrient.carbs,
+			nutrient.fats,
+			nutrient.trans_fat,
+			nutrient.saturated_fat,
+			nutrient.sugars,
+			nutrient.fiber,
+			nutrient.sodium,
+			nutrient.iron,
+			nutrient.calcium
 		FROM food
-		LEFT JOIN food_nutrient ON food.food_nutrient_id = food_nutrient.id
-		LEFT JOIN food_brand_type ON food.food_brand_type_id = food_brand_type.id
-		LEFT JOIN food_brand ON food.food_brand_id = food_brand.id
-		LEFT JOIN food_category ON food.food_category_id = food_category.id
-		WHERE food.id = $1`, food_id,
+		JOIN nutrient ON food.nutrient_id = nutrient.id
+		WHERE food.id = $1`,
+		food_id,
 	)
 	return row
 }
-func scan_food(row *sql.Row, food *schemas.Res_Get_Food_Details) error {
-	err := row.Scan(
-		&food.ID,
-		&food.Name,
-		&food.Name_Ph,
-		// &food.Name_Brand,
-		&food.Thumbnail_Image_Link,
-		&food.Food_Desc,
-		&food.Food_Nutrient_Id,
-		&food.Food_Brand_Type_Id,
-		&food.Food_Category_Id,
-		&food.Food_Brand_Id,
-		// FOOD NUTRIENT
-		// &food.Food_Nutrients.Amount,
-		// &food.Food_Nutrients.Amount_Unit,
-		// &food.Food_Nutrients.Amount_Unit_Desc,
-		// &food.Food_Nutrients.Serving_Size,
-		// &food.Food_Nutrients.Calories,
-		// &food.Food_Nutrients.Protein,
-		// &food.Food_Nutrients.Carbs,
-		// &food.Food_Nutrients.Fats,
-		// &food.Food_Nutrients.Trans_Fat,
-		// &food.Food_Nutrients.Saturated_Fat,
-		// &food.Food_Nutrients.Sugars,
-		// &food.Food_Nutrients.Sodium,
-		// // FOOD BRAND TYPE
-		// &food.Food_Brand_Type.Name,
-		// &food.Food_Brand_Type.Brand_Type_Desc,
-		// // FOOD BRAND
-		// &food.Food_Brand.ID,
-		// // FOOD CATEGORY
-		// &food.Food_Category.ID,
-		// &food.Food_Category.Name,
-	)
-	return err
+func scan_food_and_nutrient(row *sql.Row, food *models.Food, nutrient *models.Nutrient) error {
+	if err := row.
+		Scan(
+			&food.ID,
+			&food.Name,
+			&food.Name_Ph,
+			&food.Name_Owner,
+			&food.Thumbnail_Image_Link,
+			&food.Food_Desc,
+			&food.Category_Id,
+			&food.Food_Type_Id,
+			&food.Owner_Id,
+			&nutrient.ID,
+			&nutrient.Amount,
+			&nutrient.Amount_Unit,
+			&nutrient.Amount_Unit_Desc,
+			&nutrient.Serving_Size,
+			&nutrient.Calories,
+			&nutrient.Protein,
+			&nutrient.Carbs,
+			&nutrient.Fats,
+			&nutrient.Trans_Fat,
+			&nutrient.Saturated_Fat,
+			&nutrient.Sugars,
+			&nutrient.Fiber,
+			&nutrient.Sodium,
+			&nutrient.Iron,
+			&nutrient.Calcium,
+		); err != nil {
+		return err
+	}
+	return nil
 }
-
 func query_and_scan_food_images(db *sql.DB, food_id uint) ([]models.Food_Image, error) {
 	rows, err := db.Query(`SELECT
 			id,
