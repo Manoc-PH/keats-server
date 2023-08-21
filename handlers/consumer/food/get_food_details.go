@@ -29,8 +29,12 @@ func Get_Food_Details(c *fiber.Ctx, db *sql.DB) error {
 	food := models.Food{}
 	nutrient := models.Nutrient{}
 	// querying food
-	row := query_food_and_nutrient(reqData.Food_ID, db)
+	row := query_food_and_nutrient(reqData.Food_ID, reqData.Barcode, db)
 	// scanning food
+	if row == nil {
+		log.Println("Get_Food_Details | Error on query validation: Food_ID and Barcode empty ")
+		return utilities.Send_Error(c, "Invalid data sent", fiber.StatusBadRequest)
+	}
 	err = scan_food_and_nutrient(row, &food, &nutrient)
 	if err != nil && err == sql.ErrNoRows {
 		log.Println("Get_Food_Details | error in scanning food: ", err.Error())
@@ -52,40 +56,78 @@ func Get_Food_Details(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func query_food_and_nutrient(food_id uint, db *sql.DB) *sql.Row {
-	row := db.QueryRow(`SELECT
-			food.id,
-			food.name,
-			food.name_ph,
-			food.name_owner,
-			food.barcode,
-			coalesce(food.thumbnail_image_link, ''),
-			coalesce(food.food_desc, ''),
-			coalesce(food.category_id, 0),
-			food.food_type_id,
-			food.owner_id,
-			nutrient.id,
-			nutrient.amount,
-			coalesce(nutrient.amount_unit, ''),
-			coalesce(nutrient.amount_unit_desc, ''),
-			nutrient.serving_size,
-			nutrient.calories,
-			nutrient.protein,
-			nutrient.carbs,
-			nutrient.fats,
-			nutrient.trans_fat,
-			nutrient.saturated_fat,
-			nutrient.sugars,
-			nutrient.fiber,
-			nutrient.sodium,
-			nutrient.iron,
-			nutrient.calcium
-		FROM food
-		JOIN nutrient ON food.nutrient_id = nutrient.id
-		WHERE food.id = $1`,
-		food_id,
-	)
-	return row
+func query_food_and_nutrient(food_id uint, barcode string, db *sql.DB) *sql.Row {
+	if food_id != 0 {
+		row := db.QueryRow(`SELECT
+				food.id,
+				food.name,
+				food.name_ph,
+				food.name_owner,
+				food.barcode,
+				coalesce(food.thumbnail_image_link, ''),
+				coalesce(food.food_desc, ''),
+				coalesce(food.category_id, 0),
+				food.food_type_id,
+				food.owner_id,
+				nutrient.id,
+				nutrient.amount,
+				coalesce(nutrient.amount_unit, ''),
+				coalesce(nutrient.amount_unit_desc, ''),
+				nutrient.serving_size,
+				nutrient.calories,
+				nutrient.protein,
+				nutrient.carbs,
+				nutrient.fats,
+				nutrient.trans_fat,
+				nutrient.saturated_fat,
+				nutrient.sugars,
+				nutrient.fiber,
+				nutrient.sodium,
+				nutrient.iron,
+				nutrient.calcium
+			FROM food
+			JOIN nutrient ON food.nutrient_id = nutrient.id
+			WHERE food.id = $1`,
+			food_id,
+		)
+		return row
+	}
+	if barcode != "" {
+		row := db.QueryRow(`SELECT
+				food.id,
+				food.name,
+				food.name_ph,
+				food.name_owner,
+				food.barcode,
+				coalesce(food.thumbnail_image_link, ''),
+				coalesce(food.food_desc, ''),
+				coalesce(food.category_id, 0),
+				food.food_type_id,
+				food.owner_id,
+				nutrient.id,
+				nutrient.amount,
+				coalesce(nutrient.amount_unit, ''),
+				coalesce(nutrient.amount_unit_desc, ''),
+				nutrient.serving_size,
+				nutrient.calories,
+				nutrient.protein,
+				nutrient.carbs,
+				nutrient.fats,
+				nutrient.trans_fat,
+				nutrient.saturated_fat,
+				nutrient.sugars,
+				nutrient.fiber,
+				nutrient.sodium,
+				nutrient.iron,
+				nutrient.calcium
+			FROM food
+			JOIN nutrient ON food.nutrient_id = nutrient.id
+			WHERE food.barcode = $1`,
+			barcode,
+		)
+		return row
+	}
+	return nil
 }
 func scan_food_and_nutrient(row *sql.Row, food *models.Food, nutrient *models.Nutrient) error {
 	if err := row.
