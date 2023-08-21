@@ -62,13 +62,19 @@ func Delete_Intake(c *fiber.Ctx, db *sql.DB) error {
 	// Querying nutrient of intake
 	if intake.Ingredient_Mapping_Id != 0 {
 		row = query_ingredient_nutrient(intake.Ingredient_Mapping_Id, db)
-		err = scan_ingredient_nutrient(row, &nutrient)
+		err = scan_nutrient(row, &nutrient)
 		if err != nil {
 			log.Println("Delete_Intake | Error on scanning ingredient nutrients: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
 	}
 	if intake.Food_Id != 0 {
+		row = query_food_nutrient(intake.Food_Id, db)
+		err = scan_nutrient(row, &nutrient)
+		if err != nil {
+			log.Println("Delete_Intake | Error on scanning food nutrients: ", err.Error())
+			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+		}
 	}
 	// Calculate nutrients to be deleted
 	nutrients_to_delete := models.Nutrient{}

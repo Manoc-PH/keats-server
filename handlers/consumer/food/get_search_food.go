@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"log"
 	"server/middlewares"
 	schemas "server/schemas/consumer/food"
@@ -9,12 +8,12 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
+	"github.com/meilisearch/meilisearch-go"
 )
 
-func Get_Search_Food(c *fiber.Ctx, db *sql.DB) error {
+func Get_Search_Food(c *fiber.Ctx, db_search *meilisearch.Client) error {
 	// auth validation
-	_, Owner_Id, err := middlewares.AuthMiddleware(c)
+	_, _, err := middlewares.AuthMiddleware(c)
 	if err != nil {
 		log.Println("Get_Search_Food | Error on auth middleware: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusUnauthorized)
@@ -27,57 +26,14 @@ func Get_Search_Food(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	formatted_term := strings.Join(strings.Fields(strings.TrimSpace(reqData.Search_Term)), " ")
-	formatted_term = strings.Join(strings.Split(formatted_term, "&"), "")
-	formatted_term = strings.Join(strings.Split(formatted_term, ":"), "")
-	formatted_term = strings.Join(strings.Split(formatted_term, "*"), "")
-	formatted_term = strings.Join(strings.Split(formatted_term, " "), ":* & ") + ":*"
-	// querying food
-	response, err := search_and_scan_food(db, Owner_Id, formatted_term)
-	// Server Error
-	if err != nil && err != sql.ErrNoRows {
-		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
-	}
-	return c.Status(fiber.StatusOK).JSON(response)
+	res := search_food(db_search, formatted_term)
+	return c.Status(fiber.StatusOK).JSON(res)
 }
 
-func search_and_scan_food(db *sql.DB, user_id uuid.UUID, search_term string) ([]schemas.Res_Get_Search_Food, error) {
-	rows, err := db.Query(`
-		SELECT
-			id,
-			name,
-			coalesce(name_ph, ''),
-			coalesce(name_brand, ''),
-			coalesce(thumbnail_image_link, ''),
-			food_nutrient_id, ts_rank_cd(search_food, to_tsquery('english', $1)) AS ranking
-		FROM food
-		WHERE search_food @@ to_tsquery('english', $2)
-		ORDER BY ranking desc LIMIT 10;`,
-		search_term,
-		search_term,
-	)
-	if err != nil {
-		log.Println("Get_Search_Food | error in querying food: ", err.Error())
-		return nil, err
-	}
-	defer rows.Close()
-
-	food_list := make([]schemas.Res_Get_Search_Food, 0, 10)
-	for rows.Next() {
-		var new_food = schemas.Res_Get_Search_Food{}
-		if err := rows.
-			Scan(
-				&new_food.ID,
-				&new_food.Name,
-				&new_food.Name_Ph,
-				&new_food.Name_Brand,
-				&new_food.Thumbnail_Image_Link,
-				&new_food.Food_Nutrient_Id,
-				&new_food.Ranking,
-			); err != nil {
-			log.Println("Get_Search_Food | error in scanning food: ", err.Error())
-			return nil, err
-		}
-		food_list = append(food_list, new_food)
-	}
-	return food_list, err
+func search_food(db_search *meilisearch.Client, search_term string) []interface{} {
+	res, _ := db_search.Index("food").Search(search_term, &meilisearch.SearchRequest{
+		AttributesToRetrieve: []string{"id", "name", "name_ph", "name_owner", "barcode", "thumbnail_image_link"},
+		MatchingStrategy:     "last",
+	})
+	return res.Hits
 }

@@ -73,16 +73,17 @@ func ConnectDB() {
 	DB = db
 
 	db_search_api_key := utilities.GoDotEnvVariable("MEILISEARCH_ADMIN_KEY")
+	meilisearch_host := utilities.GoDotEnvVariable("MEILISEARCH_HOST")
 	// !WHEN RUNNING ON DOCKER CHANGE THE HOST TO THE CONTAINER NAME
 	client := meilisearch.NewClient(meilisearch.ClientConfig{
-		Host:   "http://meilisearch:7700",
+		Host:   meilisearch_host,
 		APIKey: db_search_api_key,
 	})
 	if client != nil {
 		log.Println("Connected to Meilisearch!")
 	}
 	DB_Search = client
-	setupMeili(db, client)
+	setupMeiliIngredients(db, client)
 }
 
 // func SetupDB(db *sql.DB) error {
@@ -108,7 +109,7 @@ func ConnectDB() {
 // 	return nil
 // }
 
-func setupMeili(db *sql.DB, db_search *meilisearch.Client) error {
+func setupMeiliIngredients(db *sql.DB, db_search *meilisearch.Client) error {
 	numOfRows := 0
 	row := db.QueryRow(`SELECT COUNT(name) FROM ingredient`)
 	err := row.Scan(&numOfRows)

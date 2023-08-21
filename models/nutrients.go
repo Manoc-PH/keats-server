@@ -36,6 +36,7 @@ type Nutrient struct {
 	Amount_Unit      string  `json:"amount_unit"`
 	Amount_Unit_Desc string  `json:"amount_unit_desc"`
 	Serving_Size     float32 `json:"serving_size"`
+	Serving_Total    float32 `json:"serving_total"`
 	Calories         float32 `json:"calories"`
 	Protein          float32 `json:"protein"`
 	Carbs            float32 `json:"carbs"`
