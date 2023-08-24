@@ -14,6 +14,7 @@ import (
 )
 
 var DB *sql.DB
+var Admin_DB *sql.DB
 var DB_Search *meilisearch.Client
 var SecretKey string
 var FiberConfig = fiber.Config{
@@ -84,6 +85,27 @@ func ConnectDB() {
 	}
 	DB_Search = client
 	setupMeiliIngredients(db, client)
+}
+func ConnectAdminDB() {
+	dbuser := utilities.GoDotEnvVariable("ADMIN_DB_USER")
+	dbpass := utilities.GoDotEnvVariable("ADMIN_DB_PASSWORD")
+	dbname := utilities.GoDotEnvVariable("ADMIN_DB_DB")
+	dbhost := utilities.GoDotEnvVariable("ADMIN_DB_HOST")
+	var err error
+	psqlInfo := fmt.Sprintf(`host=%s port=%d user=%v password=%v dbname=%v sslmode=disable`,
+		dbhost, 5432, dbuser, dbpass, dbname)
+	db, err := sql.Open("postgres", psqlInfo)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	db.SetConnMaxIdleTime(time.Minute * 2)
+	pingErr := db.Ping()
+	if pingErr != nil {
+		log.Fatal(pingErr)
+	}
+	log.Println("Connected to Admin Postgres!")
+	Admin_DB = db
 }
 
 // func SetupDB(db *sql.DB) error {
