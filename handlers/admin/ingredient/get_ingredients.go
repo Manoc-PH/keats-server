@@ -4,7 +4,8 @@ import (
 	"database/sql"
 	"log"
 	"server/middlewares"
-	schemas "server/schemas/consumer/ingredient"
+	"server/models"
+	schemas "server/schemas/admin/ingredient"
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,82 +21,62 @@ func Get_Indredients(c *fiber.Ctx, db *sql.DB) error {
 	// admin validation
 	isAdmin := middlewares.IsAdmin(owner_id, db)
 	if isAdmin != true {
-		log.Println("Get_Indredients | Error on auth middleware (Not Admin): ", err.Error())
-		return utilities.Send_Error(c, err.Error(), fiber.StatusUnauthorized)
+		log.Println("Get_Indredients | Error on auth middleware (Not Admin): ")
+		return utilities.Send_Error(c, "Only admin users are allowed to access this endpoint", fiber.StatusUnauthorized)
 	}
-
 	//* data validation
-	reqData := new(schemas.Req_Get_Ingredient_Details)
+	reqData := new(schemas.Req_Get_Ingredients)
 	if err_data, err := middlewares.Query_Validation(reqData, c); err != nil {
 		log.Println("Get_Indredients | Error on query validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
 
-	response := schemas.Res_Get_Ingredient_Details{}
 	// querying ingredient
-	ingredient_mappings := []schemas.Ingredient_Mapping_With_Name{}
-	rows, err := query_ingredient_mappings(db, reqData.Ingredient_ID)
+	ingredients := []models.Ingredient{}
+	rows, err := query_ingredients(db, reqData.Index, reqData.Size)
 	if err != nil && err == sql.ErrNoRows {
 		log.Println("Get_Indredients | ingredient does not exist: ", err.Error())
 		return utilities.Send_Error(c, "Ingredient does not exist", fiber.StatusBadRequest)
 	}
 	if err != nil {
-		log.Println("error in querying query_ingredient_mappings: ", err.Error())
+		log.Println("error in querying query_ingredients: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = scan_ingredient_mappings(rows, &ingredient_mappings)
+		err = scan_ingredients(rows, &ingredients)
 		if err != nil && err == sql.ErrNoRows {
-			log.Println("Get_Indredients | error in scanning ingredient mapping: ", err.Error())
+			log.Println("Get_Indredients | error in scanning ingredient: ", err.Error())
 			return utilities.Send_Error(c, "Ingredient does not exist", fiber.StatusInternalServerError)
 		}
 		if err != nil {
-			log.Println("Get_Indredients | error in scanning ingredient mapping: ", err.Error())
+			log.Println("Get_Indredients | error in scanning ingredient: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
 	}
-	response.Ingredient_Mappings = ingredient_mappings
-	if len(response.Ingredient_Mappings) < 1 {
-		log.Println("Get_Indredients | ingredient does not exist")
-		return utilities.Send_Error(c, "Ingredient does not exist", fiber.StatusBadRequest)
-	}
-	return c.Status(fiber.StatusOK).JSON(response)
+	return c.Status(fiber.StatusOK).JSON(ingredients)
 }
 
-func query_ingredient_mappings(db *sql.DB, ingredient_id uint) (*sql.Rows, error) {
+func query_ingredients(db *sql.DB, index uint, size uint) (*sql.Rows, error) {
 	rows, err := db.Query(`
-		SELECT 
-			ingredient_mapping.id,
-			ingredient_mapping.ingredient_id,
-			ingredient_mapping.ingredient_variant_id,
-			ingredient_mapping.ingredient_subvariant_id,
-			ingredient_mapping.nutrient_id,
-			ingredient_variant.name,
-			ingredient_subvariant.name
-		FROM ingredient_mapping
-		JOIN ingredient_variant ON ingredient_mapping.ingredient_variant_id = ingredient_variant.id
-		JOIN ingredient_subvariant ON ingredient_mapping.ingredient_subvariant_id = ingredient_subvariant.id
-		WHERE ingredient_mapping.ingredient_id = $1
-		ORDER BY ingredient_variant.name ASC, ingredient_subvariant.name ASC`,
-		ingredient_id,
+		SELECT id, name, name_ph, name_owner, thumbnail_image_link
+		FROM ingredient ORDER BY name ASC LIMIT $1 OFFSET $2`,
+		size, (size * index),
 	)
 	return rows, err
 }
-func scan_ingredient_mappings(row *sql.Rows, ingredient_mappings *[]schemas.Ingredient_Mapping_With_Name) error {
-	var ingredient_mapping = schemas.Ingredient_Mapping_With_Name{}
+func scan_ingredients(row *sql.Rows, ingredients *[]models.Ingredient) error {
+	var ingredient = models.Ingredient{}
 	if err := row.
 		Scan(
-			&ingredient_mapping.ID,
-			&ingredient_mapping.Ingredient_Id,
-			&ingredient_mapping.Ingredient_Variant_Id,
-			&ingredient_mapping.Ingredient_Subvariant_Id,
-			&ingredient_mapping.Nutrient_Id,
-			&ingredient_mapping.Ingredient_Variant_Name,
-			&ingredient_mapping.Ingredient_Subvariant_Name,
+			&ingredient.ID,
+			&ingredient.Name,
+			&ingredient.Name_Ph,
+			&ingredient.Name_Owner,
+			&ingredient.Thumbnail_Image_Link,
 		); err != nil {
 		return err
 	}
-	*ingredient_mappings = append(*ingredient_mappings, ingredient_mapping)
+	*ingredients = append(*ingredients, ingredient)
 	return nil
 }
