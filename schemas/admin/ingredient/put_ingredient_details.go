@@ -11,6 +11,6 @@ type Ingredient_Details struct {
 }
 
 type Req_Put_Ingredient_Details struct {
-	Ingredient_Mapping_ID uint               `json:"Ingredient_Mapping_ID" validate:"requried"`
+	Ingredient_Mapping_ID uint               `json:"ingredient_mapping_id" validate:"required"`
 	Ingredient_Details    Ingredient_Details `json:"ingredient_details"`
 }

@@ -11,4 +11,5 @@ func Ingredient_Routes(app *fiber.App) {
 	r := app.Group("/api/admin/ingredient")
 
 	r.Get("/", func(c *fiber.Ctx) error { return handlers.Get_Indredients(c, setup.Admin_DB) })
+	r.Put("/details", func(c *fiber.Ctx) error { return handlers.Put_Ingredient_Details(c, setup.Admin_DB) })
 }

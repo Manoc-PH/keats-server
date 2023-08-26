@@ -25,7 +25,7 @@ func Put_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
 	}
 	//* data validation
 	reqData := new(schemas.Req_Put_Ingredient_Details)
-	if err_data, err := middlewares.Query_Validation(reqData, c); err != nil {
+	if err_data, err := middlewares.Body_Validation(reqData, c); err != nil {
 		log.Println("Put_Ingredient_Details | Error on query validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
@@ -40,17 +40,37 @@ func Put_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
 
 	// updating ingredient
 	update_ingredient_details(&old_ingredient_details, &reqData.Ingredient_Details)
+	// saving ingredient
+	if err = save_ingredient_details(db, old_ingredient_details); err != nil {
+		log.Println("Put_Ingredient_Details | Error on saving ingredient: ", err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON("Could not save ingredient: " + err.Error())
+	}
 
-	// TODO FINISH THIS ENDPOINT
 	return c.Status(fiber.StatusOK).JSON(old_ingredient_details)
 }
 
 func query_ingredient_mapping(db *sql.DB, ingredient_mapping_id uint) *sql.Row {
 	row := db.QueryRow(`SELECT
-			ingredient.id, ingredient.name, coalesce(ingredient.name_ph, ''), ingredient.name_owner, coalesce(ingredient.ingredient_desc, ''), category_id,
-			ingredient_variant.id, ingredient_variant.name, coalesce(ingredient_variant.name_ph, ''), 
-			ingredient_subvariant.id, ingredient_subvariant.name, coalesce(ingredient_subvariant.name_ph, ''),
-			nutrient.amount_unit, nutrient.amount_unit_desc, nutrient.serving_size, nutrient.serving_total
+			ingredient.id,
+			ingredient.name,
+			coalesce(ingredient.name_ph, ''),
+			ingredient.name_owner,
+			coalesce(ingredient.ingredient_desc, ''),
+			category_id,
+
+			ingredient_variant.id,
+			ingredient_variant.name,
+			coalesce(ingredient_variant.name_ph, ''), 
+
+			ingredient_subvariant.id,
+			ingredient_subvariant.name,
+			coalesce(ingredient_subvariant.name_ph, ''),
+			
+			nutrient.id,
+			coalesce(nutrient.amount_unit, ''),
+			coalesce(nutrient.amount_unit_desc, ''),
+			coalesce(nutrient.serving_size, 0),
+			coalesce(nutrient.serving_total, 0)
 		FROM ingredient_mapping
 		JOIN ingredient ON ingredient_mapping.ingredient_id = ingredient.id
 		JOIN ingredient_variant ON ingredient_mapping.ingredient_variant_id = ingredient_variant.id
@@ -79,6 +99,7 @@ func scan_ingredient_mapping(row *sql.Row, ingredient_mapping *schemas.Ingredien
 			&ingredient_mapping.Ingredient_Subvariant.Name,
 			&ingredient_mapping.Ingredient_Subvariant.Name_Ph,
 
+			&ingredient_mapping.Nutrient.ID,
 			&ingredient_mapping.Nutrient.Amount_Unit,
 			&ingredient_mapping.Nutrient.Amount_Unit_Desc,
 			&ingredient_mapping.Nutrient.Serving_Size,
@@ -135,4 +156,85 @@ func update_ingredient_details(old_ingredient *schemas.Ingredient_Details, new_i
 	if new_ingredient.Nutrient.Serving_Total != 0 {
 		old_ingredient.Nutrient.Serving_Total = new_ingredient.Nutrient.Serving_Total
 	}
+}
+func save_ingredient_details(db *sql.DB, ingredient_mapping schemas.Ingredient_Details) error {
+	txn, err := db.Begin()
+	if err != nil {
+		log.Println("save_ingredient_details | Error: ", err.Error())
+		return err
+	}
+	// Ingredient
+	_, err = txn.Exec(
+		`UPDATE ingredient SET
+			name = $1,
+			name_ph = $2,
+			name_owner = $3,
+			ingredient_desc = $4,
+			category_id = $5
+		WHERE id = $6`,
+		ingredient_mapping.Ingredient.Name,
+		ingredient_mapping.Ingredient.Name_Ph,
+		ingredient_mapping.Ingredient.Name_Owner,
+		ingredient_mapping.Ingredient.Ingredient_Desc,
+		ingredient_mapping.Ingredient.Category_Id,
+		ingredient_mapping.Ingredient.ID,
+	)
+	if err != nil {
+		log.Println("save_ingredient_details | Error: ", err.Error())
+		return err
+	}
+	// Variant
+	_, err = txn.Exec(
+		`UPDATE ingredient_variant SET
+			name = $1,
+			name_ph = $2
+		WHERE id = $3`,
+		ingredient_mapping.Ingredient_Variant.Name,
+		ingredient_mapping.Ingredient_Variant.Name_Ph,
+		ingredient_mapping.Ingredient_Variant.ID,
+	)
+	if err != nil {
+		log.Println("save_ingredient_details | Error: ", err.Error())
+		return err
+	}
+	// Subvariant
+	_, err = txn.Exec(
+		`UPDATE ingredient_subvariant SET
+			name = $1,
+			name_ph = $2
+		WHERE id = $3`,
+		ingredient_mapping.Ingredient_Subvariant.Name,
+		ingredient_mapping.Ingredient_Subvariant.Name_Ph,
+		ingredient_mapping.Ingredient_Subvariant.ID,
+	)
+	if err != nil {
+		log.Println("save_ingredient_details | Error: ", err.Error())
+		return err
+	}
+	// Nutrient
+	_, err = txn.Exec(
+		`UPDATE nutrient SET
+			amount_unit = $1,
+			amount_unit_desc = $2,
+			serving_size = $3,
+			serving_total = $4
+		WHERE id = $5`,
+		ingredient_mapping.Nutrient.Amount_Unit,
+		ingredient_mapping.Nutrient.Amount_Unit_Desc,
+		ingredient_mapping.Nutrient.Serving_Size,
+		ingredient_mapping.Nutrient.Serving_Total,
+		ingredient_mapping.Nutrient.ID,
+	)
+	if err != nil {
+		log.Println("save_ingredient_details | Error: ", err.Error())
+		return err
+	}
+
+	err = txn.Commit()
+	if err != nil {
+		txn.Rollback()
+		log.Println("save_ingredient_details (commit) | Error: ", err.Error())
+		return err
+	}
+	return nil
 }
