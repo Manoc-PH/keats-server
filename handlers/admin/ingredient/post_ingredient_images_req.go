@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"crypto/hmac"
-	"crypto/sha1"
 	"database/sql"
-	"encoding/base64"
 	"log"
+	"net/url"
 	"server/middlewares"
 	"server/models"
 	schemas "server/schemas/admin/ingredient"
@@ -13,6 +11,7 @@ import (
 	"server/utilities"
 	"strconv"
 
+	cld "github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -40,11 +39,11 @@ func Post_Ingredient_Images_Req(c *fiber.Ctx, db *sql.DB) error {
 	// Generating signature
 	strTimestamp := strconv.FormatInt(reqData.Timestamp.Unix(), 10)
 	// TODO FIX SIGNATURE GENERATION
-	signature := generateCloudinarySignature(setup.CloudinaryConfig.APISecret, strTimestamp, setup.CloudinaryConfig.CloudName)
+	signature, err := cld.SignParameters(url.Values{"timestamp": []string{strTimestamp}}, setup.CloudinaryConfig.APISecret)
 	response := schemas.Res_Post_Ingredient_Images{
 		Ingredient_Images: reqData.Ingredient_Images,
 		Signature:         signature,
-		Timestamp:         reqData.Timestamp.Unix(),
+		Timestamp:         strTimestamp,
 	}
 	return c.Status(fiber.StatusOK).JSON(response)
 }
@@ -95,10 +94,4 @@ func insert_ingredient_images_req(db *sql.DB, ingredient_images []models.Ingredi
 		return err
 	}
 	return nil
-}
-func generateCloudinarySignature(apiSecret string, timestamp string, publicID string) string {
-	toSign := "&timestamp=" + timestamp + apiSecret
-	h := hmac.New(sha1.New, []byte(apiSecret))
-	h.Write([]byte(toSign))
-	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
