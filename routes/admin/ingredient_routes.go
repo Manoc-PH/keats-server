@@ -12,4 +12,5 @@ func Ingredient_Routes(app *fiber.App) {
 
 	r.Get("/", func(c *fiber.Ctx) error { return handlers.Get_Indredients(c, setup.Admin_DB) })
 	r.Put("/details", func(c *fiber.Ctx) error { return handlers.Put_Ingredient_Details(c, setup.Admin_DB) })
+	r.Post("/images/req", func(c *fiber.Ctx) error { return handlers.Post_Ingredient_Images_Req(c, setup.Admin_DB) })
 }

@@ -40,12 +40,30 @@ var FiberConfig = fiber.Config{
 	},
 }
 
+// Cloudinary API credentials
+type CloudinaryConfigType struct {
+	CloudName string
+	APIKey    string
+	APISecret string
+}
+
+var CloudinaryConfig CloudinaryConfigType
+
 func SetupApp() *fiber.App {
 	app := fiber.New(FiberConfig)
 
 	app.Use(cors.New(cors.Config{
 		AllowCredentials: true,
 	}))
+
+	CloudName := utilities.GoDotEnvVariable("CLOUDINARY_NAME")
+	APIKey := utilities.GoDotEnvVariable("CLOUDINARY_API_KEY")
+	APISecret := utilities.GoDotEnvVariable("CLOUDINARY_API_SECRET")
+	CloudinaryConfig = CloudinaryConfigType{
+		CloudName: CloudName,
+		APIKey:    APIKey,
+		APISecret: APISecret,
+	}
 
 	return app
 }
