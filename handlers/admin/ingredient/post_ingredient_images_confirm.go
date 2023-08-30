@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"server/middlewares"
 	"server/models"
 	schemas "server/schemas/admin/ingredient"
 	"server/utilities"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -33,7 +35,7 @@ func Post_Ingredient_Images_Confirm(c *fiber.Ctx, db *sql.DB) error {
 	// Inserting Images
 	if err = confirm_ingredient_images(db, reqData.Ingredient_Images); err != nil {
 		log.Println("Post_Ingredient_Images_Confirm | Error on confirm_ingredient_images: ", err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(err.Error())
+		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 	}
 	return c.Status(fiber.StatusOK).JSON(reqData)
 }
@@ -54,9 +56,15 @@ func confirm_ingredient_images(db *sql.DB, ingredient_images []models.Ingredient
 
 	// Insert each row
 	for _, img := range ingredient_images {
-		_, err := stmt.Exec(img.Name_URL, img.ID)
+		res, err := stmt.Exec(img.Name_URL, img.ID)
+		if rows_affected, _ := res.RowsAffected(); rows_affected < 1 {
+			log.Println("confirm_ingredient_images (No Rows affected) | Error")
+			err = errors.New("Image with id of: " + strconv.Itoa(int(img.ID)) + " not found")
+			return err
+		}
 		if err != nil {
 			log.Println("confirm_ingredient_images (Exec) | Error: ", err.Error())
+			return err
 		}
 	}
 

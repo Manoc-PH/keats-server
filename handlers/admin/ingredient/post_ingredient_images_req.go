@@ -37,7 +37,7 @@ func Post_Ingredient_Images_Req(c *fiber.Ctx, db *sql.DB) error {
 	// Inserting Images
 	if insert_ingredient_images_req(db, reqData.Ingredient_Images); err != nil {
 		log.Println("Post_Ingredient_Images_Req | Error on insert_ingredient_images_req: ", err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(err.Error())
+		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 	}
 	// Generating signature
 	strTimestamp := strconv.FormatInt(reqData.Timestamp.Unix(), 10)
