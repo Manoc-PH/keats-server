@@ -5,11 +5,11 @@ import (
 	"time"
 )
 
-type Req_Post_Ingredient_Images struct {
+type Req_Post_Images_Req struct {
 	Ingredient_Images []models.Ingredient_Image `json:"ingredient_images"`
 	Timestamp         time.Time                 `json:"timestamp" validate:"required"`
 }
-type Res_Post_Ingredient_Images struct {
+type Res_Post_Images_Req struct {
 	Ingredient_Images []models.Ingredient_Image `json:"ingredient_images"`
 	Signature         string                    `json:"signature"`
 	Timestamp         string                    `json:"timestamp"`

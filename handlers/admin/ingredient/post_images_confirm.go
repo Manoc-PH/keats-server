@@ -27,7 +27,7 @@ func Post_Images_Confirm(c *fiber.Ctx, db *sql.DB) error {
 		return utilities.Send_Error(c, "Only admin users are allowed to access this endpoint", fiber.StatusUnauthorized)
 	}
 	//* data validation
-	reqData := new(schemas.Req_Post_Ingredient_Images_Confirm)
+	reqData := new(schemas.Req_Post_Images_Confirm)
 	if err_data, err := middlewares.Body_Validation(reqData, c); err != nil {
 		log.Println("Post_Images_Confirm | Error on body validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)

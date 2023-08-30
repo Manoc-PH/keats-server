@@ -29,7 +29,7 @@ func Post_Images_Req(c *fiber.Ctx, db *sql.DB) error {
 		return utilities.Send_Error(c, "Only admin users are allowed to access this endpoint", fiber.StatusUnauthorized)
 	}
 	//* data validation
-	reqData := new(schemas.Req_Post_Ingredient_Images)
+	reqData := new(schemas.Req_Post_Images_Req)
 	if err_data, err := middlewares.Body_Validation(reqData, c); err != nil {
 		log.Println("Post_Images_Req | Error on body validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
@@ -43,7 +43,7 @@ func Post_Images_Req(c *fiber.Ctx, db *sql.DB) error {
 	strTimestamp := strconv.FormatInt(reqData.Timestamp.Unix(), 10)
 	// TODO FIX SIGNATURE GENERATION
 	signature, err := cld.SignParameters(url.Values{"timestamp": []string{strTimestamp}}, setup.CloudinaryConfig.APISecret)
-	response := schemas.Res_Post_Ingredient_Images{
+	response := schemas.Res_Post_Images_Req{
 		Ingredient_Images: reqData.Ingredient_Images,
 		Signature:         signature,
 		Timestamp:         strTimestamp,
