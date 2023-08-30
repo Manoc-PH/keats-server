@@ -54,7 +54,7 @@ func confirm_ingredient_images(db *sql.DB, ingredient_images []models.Ingredient
 
 	// Insert each row
 	for _, img := range ingredient_images {
-		_, err := stmt.Exec(img.Name_File, img.ID)
+		_, err := stmt.Exec(img.Name_URL, img.ID)
 		if err != nil {
 			log.Println("confirm_ingredient_images (Exec) | Error: ", err.Error())
 		}
