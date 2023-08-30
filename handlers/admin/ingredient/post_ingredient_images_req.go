@@ -31,11 +31,14 @@ func Post_Ingredient_Images_Req(c *fiber.Ctx, db *sql.DB) error {
 	//* data validation
 	reqData := new(schemas.Req_Post_Ingredient_Images)
 	if err_data, err := middlewares.Body_Validation(reqData, c); err != nil {
-		log.Println("Post_Ingredient_Images_Req | Error on query validation: ", err.Error())
+		log.Println("Post_Ingredient_Images_Req | Error on body validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
 	// Inserting Images
-	insert_ingredient_images_req(db, reqData.Ingredient_Images)
+	if insert_ingredient_images_req(db, reqData.Ingredient_Images); err != nil {
+		log.Println("Post_Ingredient_Images_Req | Error on insert_ingredient_images_req: ", err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(err.Error())
+	}
 	// Generating signature
 	strTimestamp := strconv.FormatInt(reqData.Timestamp.Unix(), 10)
 	// TODO FIX SIGNATURE GENERATION
