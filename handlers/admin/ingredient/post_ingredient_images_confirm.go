@@ -41,12 +41,14 @@ func Post_Ingredient_Images_Confirm(c *fiber.Ctx, db *sql.DB) error {
 func confirm_ingredient_images(db *sql.DB, ingredient_images []models.Ingredient_Image) error {
 	txn, err := db.Begin()
 	if err != nil {
-		log.Fatal(err)
+		log.Println("insert_ingredient_images_req (Begin) | Error: ", err.Error())
+		return err
 	}
 	// Prepare the SQL statement
 	stmt, err := txn.Prepare(`UPDATE ingredient_image SET name_url = $1 WHERE id = $2`)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("insert_ingredient_images_req (Prepare) | Error: ", err.Error())
+		return err
 	}
 	defer stmt.Close()
 
@@ -54,7 +56,7 @@ func confirm_ingredient_images(db *sql.DB, ingredient_images []models.Ingredient
 	for _, img := range ingredient_images {
 		_, err := stmt.Exec(img.Name_File, img.ID)
 		if err != nil {
-			log.Println("confirm_ingredient_images (commit) | Error: ", err.Error())
+			log.Println("confirm_ingredient_images (Exec) | Error: ", err.Error())
 		}
 	}
 

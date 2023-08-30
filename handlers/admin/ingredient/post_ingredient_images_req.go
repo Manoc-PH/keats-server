@@ -54,7 +54,8 @@ func Post_Ingredient_Images_Req(c *fiber.Ctx, db *sql.DB) error {
 func insert_ingredient_images_req(db *sql.DB, ingredient_images []models.Ingredient_Image) error {
 	txn, err := db.Begin()
 	if err != nil {
-		log.Fatal(err)
+		log.Println("insert_ingredient_images_req (Begin) | Error: ", err.Error())
+		return err
 	}
 	// Prepare the SQL statement
 	stmt, err := txn.Prepare(
@@ -69,7 +70,8 @@ func insert_ingredient_images_req(db *sql.DB, ingredient_images []models.Ingredi
 			VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("insert_ingredient_images_req (Prepare) | Error: ", err.Error())
+		return err
 	}
 	defer stmt.Close()
 
@@ -86,7 +88,7 @@ func insert_ingredient_images_req(db *sql.DB, ingredient_images []models.Ingredi
 		err = row.Scan(&new_image.ID)
 		ingredient_images[i] = new_image
 		if err != nil {
-			log.Println("insert_ingredient_images_req (commit) | Error: ", err.Error())
+			log.Println("insert_ingredient_images_req (Exec) | Error: ", err.Error())
 		}
 	}
 
