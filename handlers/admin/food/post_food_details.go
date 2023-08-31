@@ -7,6 +7,7 @@ import (
 	"server/middlewares"
 	schemas "server/schemas/admin/food"
 	"server/utilities"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -30,6 +31,11 @@ func Post_Food_Details(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Post_Food_Details | Error on body validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
+	// Inserting data
+	if err = insert_food_details(db, reqData); err != nil {
+		log.Println("Post_Food_Details | Error on body validation: ", err.Error())
+		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+	}
 	return c.Status(fiber.StatusOK).JSON(reqData)
 }
 func insert_food_details(db *sql.DB, food *schemas.Req_Post_Food_Details) error {
@@ -39,7 +45,7 @@ func insert_food_details(db *sql.DB, food *schemas.Req_Post_Food_Details) error 
 		newErr := errors.New("An error on starting txn: " + err.Error())
 		return newErr
 	}
-	row := db.QueryRow(`
+	row := txn.QueryRow(`
 		INSERT INTO nutrient
 			(amount,
 			amount_unit,
@@ -83,7 +89,7 @@ func insert_food_details(db *sql.DB, food *schemas.Req_Post_Food_Details) error 
 		return newErr
 	}
 
-	row = db.QueryRow(`
+	row = txn.QueryRow(`
 		INSERT INTO food 
 			(name,
 			date_created,
@@ -96,7 +102,7 @@ func insert_food_details(db *sql.DB, food *schemas.Req_Post_Food_Details) error 
 		RETURNING id
 	`,
 		food.Food.Name,
-		food.Food.Date_Created,
+		time.Now(),
 		food.Food.Barcode,
 		food.Food.Food_Desc,
 		food.Food.Category_Id,
