@@ -29,6 +29,7 @@ func main() {
 	// Admin routes
 	admin_routes.Ingredient_Routes(app)
 	admin_routes.Food_Routes(app)
+	admin_routes.Auth_Routes(app)
 
 	log.Fatal(app.Listen(":" + port))
 }
