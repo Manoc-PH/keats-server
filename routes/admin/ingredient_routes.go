@@ -14,6 +14,7 @@ func Ingredient_Routes(app *fiber.App) {
 	r.Put("/details", func(c *fiber.Ctx) error { return handlers.Put_Ingredient_Details(c, setup.Admin_DB) })
 	r.Post("/images/req", func(c *fiber.Ctx) error { return handlers.Post_Images_Req(c, setup.Admin_DB) })
 	r.Post("/images/confirm", func(c *fiber.Ctx) error { return handlers.Post_Images_Confirm(c, setup.Admin_DB) })
+	r.Post("/images/duplicate", func(c *fiber.Ctx) error { return handlers.Post_Images_Duplicate(c, setup.Admin_DB) })
 	r.Post("/thumbnail/req", func(c *fiber.Ctx) error { return handlers.Post_Thumbnail_Req(c, setup.Admin_DB) })
 	r.Post("/thumbnail/confirm", func(c *fiber.Ctx) error { return handlers.Post_Thumbnail_Confirm(c, setup.Admin_DB) })
 }

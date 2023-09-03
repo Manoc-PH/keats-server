@@ -35,7 +35,7 @@ func Post_Images_Req(c *fiber.Ctx, db *sql.DB) error {
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
 	// Inserting Images
-	if insert_ingredient_images_req(db, reqData.Ingredient_Images); err != nil {
+	if err = insert_ingredient_images_req(db, reqData.Ingredient_Images); err != nil {
 		log.Println("Post_Images_Req | Error on insert_ingredient_images_req: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 	}
