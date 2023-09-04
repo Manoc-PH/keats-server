@@ -6,6 +6,12 @@ import (
 	"github.com/google/uuid"
 )
 
+type Account_Admin struct {
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
+	Password []byte    `json:"-"` // putting a minus means not returning field
+}
+
 type Account struct {
 	ID              uuid.UUID `json:"id"`
 	Username        string    `json:"username"`

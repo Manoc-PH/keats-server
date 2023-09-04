@@ -26,6 +26,7 @@ type Food_Image struct {
 	ID               uint    `json:"id"`
 	Food_Id          uint    `json:"food_id"`
 	Name_File        string  `json:"name_file"`
+	Name_URL         string  `json:"name_url"`
 	Amount           float32 `json:"amount"`
 	Amount_Unit      string  `json:"amount_unit"`
 	Amount_Unit_Desc string  `json:"amount_unit_desc"`

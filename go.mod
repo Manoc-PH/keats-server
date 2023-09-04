@@ -3,6 +3,7 @@ module server
 go 1.18
 
 require (
+	github.com/cloudinary/cloudinary-go/v2 v2.4.0
 	github.com/go-playground/validator/v10 v10.12.0
 	github.com/gofiber/fiber/v2 v2.42.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
