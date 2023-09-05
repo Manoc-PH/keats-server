@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log"
 	"server/middlewares"
-	"server/models"
 	schemas "server/schemas/admin/ingredient"
 	"server/utilities"
 	"strconv"
@@ -40,23 +39,23 @@ func Post_Images_Confirm(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(reqData)
 }
 
-func confirm_ingredient_images(db *sql.DB, ingredient_images []models.Ingredient_Image) error {
+func confirm_ingredient_images(db *sql.DB, ingredient_images []schemas.Ingredient_Image) error {
 	txn, err := db.Begin()
 	if err != nil {
-		log.Println("insert_ingredient_images_req (Begin) | Error: ", err.Error())
+		log.Println("confirm_ingredient_images (Begin) | Error: ", err.Error())
 		return err
 	}
 	// Prepare the SQL statement
-	stmt, err := txn.Prepare(`UPDATE ingredient_image SET name_url = $1 WHERE id = $2`)
+	stmt, err := txn.Prepare(`UPDATE ingredient_image SET name_url = $1, name_file = $2 WHERE id = $3`)
 	if err != nil {
-		log.Println("insert_ingredient_images_req (Prepare) | Error: ", err.Error())
+		log.Println("confirm_ingredient_images (Prepare) | Error: ", err.Error())
 		return err
 	}
 	defer stmt.Close()
 
 	// Insert each row
 	for _, img := range ingredient_images {
-		res, err := stmt.Exec(img.Name_URL, img.ID)
+		res, err := stmt.Exec(img.Name_URL, img.Name_File, img.ID)
 		if rows_affected, _ := res.RowsAffected(); rows_affected < 1 {
 			log.Println("confirm_ingredient_images (No Rows affected) | Error")
 			err = errors.New("Image with id of: " + strconv.Itoa(int(img.ID)) + " not found")
