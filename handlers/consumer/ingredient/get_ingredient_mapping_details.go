@@ -24,7 +24,6 @@ func Get_Ingredient_Mapping_Details(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Get_Ingredient_Mapping_Details | Error on query validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
-	log.Println(reqData)
 
 	response := schemas.Res_Get_Ingredient_Details{Ingredient_Mapping_ID: reqData.Ingredient_Mapping_ID}
 	// querying ingredient mapping
