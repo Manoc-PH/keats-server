@@ -147,7 +147,7 @@ func query_and_scan_food_images(db *sql.DB, ingredient_mapping_id uint) ([]model
 			id,
 			ingredient_mapping_id,
 			name_file,
-			name_file_domain,
+			name_url,
 			amount,
 			amount_unit,
 			amount_unit_desc
