@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/url"
 	"server/middlewares"
-	"server/models"
 	schemas "server/schemas/admin/ingredient"
 	"server/setup"
 	"server/utilities"
@@ -51,12 +50,13 @@ func Post_Images_Req(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func insert_ingredient_images_req(db *sql.DB, ingredient_images []models.Ingredient_Image) error {
+func insert_ingredient_images_req(db *sql.DB, ingredient_images []schemas.Ingredient_Image_Req) error {
 	txn, err := db.Begin()
 	if err != nil {
 		log.Println("insert_ingredient_images_req (Begin) | Error: ", err.Error())
 		return err
 	}
+	// TODO GENERATE NAME_FILE
 	// Prepare the SQL statement
 	stmt, err := txn.Prepare(
 		`INSERT INTO ingredient_image (
@@ -78,7 +78,7 @@ func insert_ingredient_images_req(db *sql.DB, ingredient_images []models.Ingredi
 	// Insert each row
 	for i, img := range ingredient_images {
 		row := stmt.QueryRow(img.Ingredient_Mapping_Id, img.Name_File, img.Amount, img.Amount_Unit, img.Amount_Unit_Desc, "")
-		new_image := models.Ingredient_Image{
+		new_image := schemas.Ingredient_Image_Req{
 			Ingredient_Mapping_Id: img.Ingredient_Mapping_Id,
 			Name_File:             img.Name_File,
 			Amount:                img.Amount,

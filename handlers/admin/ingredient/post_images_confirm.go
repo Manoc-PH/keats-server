@@ -39,7 +39,7 @@ func Post_Images_Confirm(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(reqData)
 }
 
-func confirm_ingredient_images(db *sql.DB, ingredient_images []schemas.Ingredient_Image) error {
+func confirm_ingredient_images(db *sql.DB, ingredient_images []schemas.Ingredient_Image_Confirm) error {
 	txn, err := db.Begin()
 	if err != nil {
 		log.Println("confirm_ingredient_images (Begin) | Error: ", err.Error())

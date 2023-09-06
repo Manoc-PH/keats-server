@@ -1,6 +1,6 @@
 package schemas
 
-type Ingredient_Image struct {
+type Ingredient_Image_Confirm struct {
 	ID                    uint    `json:"id" validate:"required"`
 	Ingredient_Mapping_Id uint    `json:"ingredient_mapping_id"`
 	Name_File             string  `json:"name_file" validate:"required"`
@@ -11,5 +11,5 @@ type Ingredient_Image struct {
 }
 
 type Req_Post_Images_Confirm struct {
-	Ingredient_Images []Ingredient_Image `json:"ingredient_images" validate:"required"`
+	Ingredient_Images []Ingredient_Image_Confirm `json:"ingredient_images" validate:"required"`
 }
