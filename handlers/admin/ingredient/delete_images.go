@@ -15,6 +15,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// TODO CREATE ENDPOINT THAT DELETES CLOUDINARY IMAGE IF THIS ENDPOINT FAILS TO DELETE SOME
 func Delete_Images(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
 	_, owner_id, err := middlewares.AuthMiddleware(c)
@@ -109,16 +110,27 @@ func hasDuplicateImages(db *sql.DB, name_url string) (bool, error) {
 	return true, nil
 }
 
+// PUBLIC IDS ARE THE URL ENDPOINTS
 func delete_image_cloudinary(image_names api.CldAPIArray) (*admin.DeleteAssetsResult, error) {
-
-	cld, _ := cloudinary.New()
+	apiURL :=
+		"https://" +
+			setup.CloudinaryConfig.APIKey +
+			":" + setup.CloudinaryConfig.APISecret +
+			"@api.cloudinary.com/v1_1/" +
+			setup.CloudinaryConfig.CloudName +
+			"/resources/image/upload"
+	cld, err := cloudinary.NewFromURL(apiURL)
+	if err != nil {
+		return nil, err
+	}
 	cld.Admin.Config.Cloud.APIKey = setup.CloudinaryConfig.APIKey
 	cld.Admin.Config.Cloud.APISecret = setup.CloudinaryConfig.APISecret
 	cld.Admin.Config.Cloud.CloudName = setup.CloudinaryConfig.CloudName
 
 	var ctx = context.Background()
+	// SAMPLE PUBLIC ID:
+	// keats/ingredient/chicken/breast/boneless-raw/logo_filled
 	resp, err := cld.Admin.DeleteAssets(ctx, admin.DeleteAssetsParams{PublicIDs: image_names})
-	log.Println(resp)
 	if err != nil {
 		return resp, err
 	}
