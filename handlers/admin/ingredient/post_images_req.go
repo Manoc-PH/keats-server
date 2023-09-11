@@ -9,6 +9,7 @@ import (
 	"server/setup"
 	"server/utilities"
 	"strconv"
+	"strings"
 
 	cld "github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/gofiber/fiber/v2"
@@ -56,7 +57,7 @@ func insert_ingredient_images_req(db *sql.DB, ingredient_images []schemas.Ingred
 		log.Println("insert_ingredient_images_req (Begin) | Error: ", err.Error())
 		return err
 	}
-	// TODO GENERATE NAME_FILE
+
 	// Prepare the SQL statement
 	stmt, err := txn.Prepare(
 		`INSERT INTO ingredient_image (
@@ -77,19 +78,27 @@ func insert_ingredient_images_req(db *sql.DB, ingredient_images []schemas.Ingred
 
 	// Insert each row
 	for i, img := range ingredient_images {
-		row := stmt.QueryRow(img.Ingredient_Mapping_Id, img.Name_File, img.Amount, img.Amount_Unit, img.Amount_Unit_Desc, "")
+		name_file, err := generate_ingredient_img_name(db, img.Ingredient_Mapping_Id, img.Amount)
+		if err != nil {
+			log.Println("insert_ingredient_images_req (generate_ingredient_img_name) | Error: ", err.Error())
+			txn.Rollback()
+			return err
+		}
+		row := stmt.QueryRow(img.Ingredient_Mapping_Id, name_file, img.Amount, img.Amount_Unit, img.Amount_Unit_Desc, "")
 		new_image := schemas.Ingredient_Image_Req{
 			Ingredient_Mapping_Id: img.Ingredient_Mapping_Id,
-			Name_File:             img.Name_File,
+			Name_File:             name_file,
 			Amount:                img.Amount,
 			Amount_Unit:           img.Amount_Unit,
 			Amount_Unit_Desc:      img.Amount_Unit_Desc,
 		}
 		err = row.Scan(&new_image.ID)
-		ingredient_images[i] = new_image
 		if err != nil {
 			log.Println("insert_ingredient_images_req (Exec) | Error: ", err.Error())
+			txn.Rollback()
+			return err
 		}
+		ingredient_images[i] = new_image
 	}
 
 	err = txn.Commit()
@@ -99,4 +108,28 @@ func insert_ingredient_images_req(db *sql.DB, ingredient_images []schemas.Ingred
 		return err
 	}
 	return nil
+}
+func generate_ingredient_img_name(db *sql.DB, ingredient_mapping_id uint, amount float32) (string, error) {
+	name := ""
+	variant_name := ""
+	subvariant_name := ""
+	row := db.QueryRow(`
+		SELECT ingredient.name, ingredient_variant.name, ingredient_subvariant.name
+		FROM ingredient_mapping
+		JOIN ingredient ON ingredient_mapping.ingredient_id = ingredient.id
+		JOIN ingredient_variant ON ingredient_mapping.ingredient_variant_id = ingredient_variant.id
+		JOIN ingredient_subvariant ON ingredient_mapping.ingredient_subvariant_id = ingredient_subvariant.id
+		WHERE ingredient_mapping.id = $1
+	`, ingredient_mapping_id)
+
+	err := row.Scan(&name, &variant_name, &subvariant_name)
+	if err != nil {
+		return "", err
+	}
+	name = strings.Join(strings.Split(name, " "), "_")
+	variant_name = strings.Join(strings.Split(variant_name, " "), "_")
+	subvariant_name = strings.Join(strings.Split(subvariant_name, " "), "_")
+	amount_str := strconv.FormatFloat(float64(amount), 'f', -1, 32)
+	finalData := "keats/ingredient/" + name + "/" + variant_name + "/" + subvariant_name + "/" + amount_str
+	return finalData, nil
 }

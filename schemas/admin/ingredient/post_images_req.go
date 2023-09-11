@@ -10,7 +10,7 @@ type Ingredient_Image_Req struct {
 	Ingredient_Mapping_Id uint    `json:"ingredient_mapping_id" validate:"required"`
 	Name_File             string  `json:"name_file"`
 	Name_URL              string  `json:"name_url"`
-	Amount                float32 `json:"amount" validate:"required"`
+	Amount                float32 `json:"amount" validate:"required,gte=0"`
 	Amount_Unit           string  `json:"amount_unit" validate:"required"`
 	Amount_Unit_Desc      string  `json:"amount_unit_desc" validate:"required"`
 }
