@@ -115,7 +115,7 @@ func ConnectAdminDB() {
 	db, err := sql.Open("postgres", psqlInfo)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error trying to connect to admin db account: ", err)
 	}
 	db.SetConnMaxIdleTime(time.Minute * 2)
 	pingErr := db.Ping()
