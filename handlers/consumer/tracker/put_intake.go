@@ -126,10 +126,10 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 		response_data.Added_Daily_Nutrients.Iron = daily_nutrients_to_add.Iron
 		response_data.Added_Daily_Nutrients.Calcium = daily_nutrients_to_add.Calcium
 
-		ingredient_mapping := schemas.Ingredient_Mapping_Schema{}
+		ingredient_mapping := &schemas.Ingredient_Mapping_Schema{}
 		// Getting ingredient data
 		row = query_ingredient(reqData.Ingredient_Mapping_Id, db)
-		err = scan_ingredient(row, &ingredient_mapping)
+		err = scan_ingredient(row, ingredient_mapping)
 		if err != nil {
 			log.Println("Post_Intake | Error on scanning ingredient: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
@@ -230,7 +230,7 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 		response_data.Added_Daily_Nutrients.Iron = daily_nutrients_to_add.Iron
 		response_data.Added_Daily_Nutrients.Calcium = daily_nutrients_to_add.Calcium
 
-		food_mapping := schemas.Food_Mapping_Schema{}
+		food_mapping := &schemas.Food_Mapping_Schema{}
 		// Getting food data
 		row = query_food_and_nutrient(reqData.Food_Id, db)
 		err = scan_food_and_nutrient(row, &food_mapping.Food, &food_mapping.Nutrient)
