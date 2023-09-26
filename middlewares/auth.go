@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// TODO Switch to bearer tokens for authentication
 func AuthMiddleware(c *fiber.Ctx) (*jwt.Token, uuid.UUID, error) {
 	cookie := c.Cookies("jwt")
 
