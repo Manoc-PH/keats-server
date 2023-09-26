@@ -1,8 +1,10 @@
 package middlewares
 
 import (
+	"database/sql"
 	"log"
 	"server/constants"
+	"server/models"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
@@ -31,4 +33,17 @@ func AuthMiddleware(c *fiber.Ctx) (*jwt.Token, uuid.UUID, error) {
 		return nil, uuid.Nil, err
 	}
 	return token, owner_id, nil
+}
+
+// TODO REVIEW THIS ENDPOINT
+func IsAdmin(owner_id uuid.UUID, db *sql.DB) bool {
+	var user = models.Account{}
+	// checking if user exists
+	row := db.QueryRow(`SELECT id, username FROM account_admin WHERE id = $1`, owner_id)
+	// scanning and returning error
+	if err := row.Scan(&user.ID, &user.Username); err != nil {
+		log.Println("IsAdmin | Error in scanning row: ", err.Error())
+		return false
+	}
+	return true
 }
