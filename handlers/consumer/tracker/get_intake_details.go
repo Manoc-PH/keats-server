@@ -53,9 +53,9 @@ func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 		Amount_Unit_Desc:      intake.Amount_Unit_Desc,
 		Serving_Size:          intake.Serving_Size,
 	}
-	// TODO add query for food
 	if intake.Ingredient_Mapping_Id != 0 {
 		ingredient_mapping := schemas.Ingredient_Mapping_Schema{}
+		response.Ingredient = &schemas.Intake_Ingredient{}
 		// Getting ingredient data
 		row := query_ingredient(intake.Ingredient_Mapping_Id, db)
 		err = scan_ingredient(row, &ingredient_mapping)
@@ -64,7 +64,30 @@ func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
 		response.Ingredient.Details = ingredient_mapping
-		// TODO add query for ingredient images
+		images, err := get_ingredient_images(db, intake.Ingredient_Mapping_Id)
+		if err != nil {
+			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+		}
+		response.Ingredient.Images = images
+		response.Food = nil
+	}
+	if intake.Food_Id != 0 {
+		food_mapping := schemas.Food_Mapping_Schema{}
+		response.Food = &schemas.Intake_Food{}
+		// Getting ingredient data
+		row := query_food_and_nutrient(intake.Food_Id, db)
+		err = scan_food_and_nutrient(row, &food_mapping.Food, &food_mapping.Nutrient)
+		if err != nil {
+			log.Println("Post_Intake | Error on scanning food: ", err.Error())
+			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+		}
+		response.Food.Details = food_mapping
+		images, err := get_food_images(db, intake.Food_Id)
+		if err != nil {
+			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+		}
+		response.Food.Images = images
+		response.Ingredient = nil
 	}
 	return c.Status(fiber.StatusOK).JSON(response)
 }
@@ -100,4 +123,80 @@ func scan_intake(row *sql.Row, intake *models.Intake) error {
 		&intake.Serving_Size,
 	)
 	return err
+}
+func get_ingredient_images(db *sql.DB, ingredient_mapping_id uint) ([]models.Ingredient_Image, error) {
+	rows, err := db.Query(`SELECT
+			id,
+			ingredient_mapping_id,
+			name_file,
+			name_file_domain,
+			amount,
+			amount_unit,
+			amount_unit_desc
+		FROM ingredient_image
+		WHERE ingredient_mapping_id = $1`,
+		ingredient_mapping_id,
+	)
+	if err != nil {
+		log.Println("error in querying get_ingredient_images: ", err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+	ingredient_images := make([]models.Ingredient_Image, 0, 10)
+	for rows.Next() {
+		var ingredient_img = models.Ingredient_Image{}
+		if err := rows.
+			Scan(
+				&ingredient_img.ID,
+				&ingredient_img.Ingredient_Mapping_Id,
+				&ingredient_img.Name_File,
+				&ingredient_img.Name_File_Domain,
+				&ingredient_img.Amount,
+				&ingredient_img.Amount_Unit,
+				&ingredient_img.Amount_Unit_Desc,
+			); err != nil {
+			log.Println("Get_Daily_Nutrients_List | error in scanning Daily_Nutrients: ", err.Error())
+			return nil, err
+		}
+		ingredient_images = append(ingredient_images, ingredient_img)
+	}
+	return ingredient_images, nil
+}
+func get_food_images(db *sql.DB, food_id uint) ([]models.Food_Image, error) {
+	rows, err := db.Query(`SELECT
+			id,
+			food_id,
+			name_file,
+			name_url,
+			amount,
+			amount_unit,
+			amount_unit_desc
+		FROM food_image
+		WHERE food_id = $1`, food_id,
+	)
+	if err != nil {
+		log.Println("Get_Food_Details | error in querying food: ", err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+
+	images := make([]models.Food_Image, 0, 10)
+	for rows.Next() {
+		var new_image = models.Food_Image{}
+		if err := rows.
+			Scan(
+				&new_image.ID,
+				&new_image.Food_Id,
+				&new_image.Name_File,
+				&new_image.Name_URL,
+				&new_image.Amount,
+				&new_image.Amount_Unit,
+				&new_image.Amount_Unit_Desc,
+			); err != nil {
+			log.Println("Get_Food_Details | error in scanning image: ", err.Error())
+			return nil, err
+		}
+		images = append(images, new_image)
+	}
+	return images, err
 }

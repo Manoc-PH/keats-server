@@ -40,7 +40,7 @@ func Get_Ingredient_Mapping_Details(c *fiber.Ctx, db *sql.DB) error {
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
 	// querying ingredient images
-	images, err := query_and_scan_food_images(db, reqData.Ingredient_Mapping_ID)
+	images, err := get_ingredient_images(db, reqData.Ingredient_Mapping_ID)
 	if err != nil {
 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 	}
@@ -142,7 +142,7 @@ func scan_ingredient_mapping(row *sql.Row, ingredient_mapping *schemas.Res_Get_I
 	}
 	return nil
 }
-func query_and_scan_food_images(db *sql.DB, ingredient_mapping_id uint) ([]models.Ingredient_Image, error) {
+func get_ingredient_images(db *sql.DB, ingredient_mapping_id uint) ([]models.Ingredient_Image, error) {
 	rows, err := db.Query(`SELECT
 			id,
 			ingredient_mapping_id,
@@ -156,7 +156,7 @@ func query_and_scan_food_images(db *sql.DB, ingredient_mapping_id uint) ([]model
 		ingredient_mapping_id,
 	)
 	if err != nil {
-		log.Println("error in querying query_and_scan_food_images: ", err.Error())
+		log.Println("error in querying get_ingredient_images: ", err.Error())
 		return nil, err
 	}
 	defer rows.Close()
