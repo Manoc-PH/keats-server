@@ -129,7 +129,7 @@ func get_ingredient_images(db *sql.DB, ingredient_mapping_id uint) ([]models.Ing
 			id,
 			ingredient_mapping_id,
 			name_file,
-			name_file_domain,
+			name_url,
 			amount,
 			amount_unit,
 			amount_unit_desc
@@ -150,7 +150,7 @@ func get_ingredient_images(db *sql.DB, ingredient_mapping_id uint) ([]models.Ing
 				&ingredient_img.ID,
 				&ingredient_img.Ingredient_Mapping_Id,
 				&ingredient_img.Name_File,
-				&ingredient_img.Name_File_Domain,
+				&ingredient_img.Name_URL,
 				&ingredient_img.Amount,
 				&ingredient_img.Amount_Unit,
 				&ingredient_img.Amount_Unit_Desc,
