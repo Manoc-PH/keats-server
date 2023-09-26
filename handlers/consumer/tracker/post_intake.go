@@ -38,12 +38,12 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 	//* data processing
 	// *Ingredient
 	if reqData.Ingredient_Mapping_Id != 0 {
-		ingredient_mapping := schemas.Ingredient_Mapping_Schema{}
+		ingredient_mapping := &schemas.Ingredient_Mapping_Schema{}
 		daily_nutrients := models.Daily_Nutrients{Account_Id: owner_id}
 		nutrients_to_add := models.Nutrient{}
 		// Getting ingredient data
 		row := query_ingredient(reqData.Ingredient_Mapping_Id, db)
-		err = scan_ingredient(row, &ingredient_mapping)
+		err = scan_ingredient(row, ingredient_mapping)
 		if err != nil {
 			log.Println("Post_Intake | Error on scanning ingredient: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
@@ -96,18 +96,19 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 		}
 		response_data.Added_Daily_Nutrients = nutrients_to_add
 		response_data.Ingredient = ingredient_mapping
+		response_data.Food = nil
 		response_data.Intake = new_intake
 	}
 
 	// *Food
 	if reqData.Food_Id != 0 && len(reqData.Food_Ingredients) < 1 {
-		food := models.Food{}
+		food := &models.Food{}
 		food_nutrients := models.Nutrient{}
 		daily_nutrients := models.Daily_Nutrients{Account_Id: owner_id}
 		nutrients_to_add := models.Nutrient{}
 		// Getting ingredient data
 		row := query_food_and_nutrient(reqData.Food_Id, db)
-		err = scan_food_and_nutrient(row, &food, &food_nutrients)
+		err = scan_food_and_nutrient(row, food, &food_nutrients)
 		if err != nil {
 			log.Println("Post_Intake | Error on scanning food: ", err.Error())
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
@@ -160,6 +161,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 		}
 		response_data.Added_Daily_Nutrients = nutrients_to_add
 		response_data.Food = food
+		response_data.Ingredient = nil
 		response_data.Intake = new_intake
 	}
 
