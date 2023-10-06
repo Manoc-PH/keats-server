@@ -21,7 +21,8 @@ type Ingredient_Mapping_Schema struct {
 	Ingredient            models.Ingredient            `json:"ingredient"`
 	Ingredient_Variant    models.Ingredient_Variant    `json:"ingredient_variant"`
 	Ingredient_Subvariant models.Ingredient_Subvariant `json:"ingredient_subvariant"`
-	Nutrient              models.Nutrient              `json:"nutrient"`
+	// TODO Check if nutrient is needed, if not remove
+	Nutrient models.Nutrient `json:"nutrient"`
 }
 type Food_Mapping_Schema struct {
 	Food     models.Food     `json:"food"`
@@ -30,7 +31,7 @@ type Food_Mapping_Schema struct {
 type Res_Post_Intake struct {
 	Added_Daily_Nutrients models.Nutrient `json:"added_daily_nutrients"`
 	// Added_Coins_And_XP    Added_Coins_And_XP    `json:"added_coins_and_xp"`
-	Intake     models.Intake             `json:"intake"`
-	Ingredient Ingredient_Mapping_Schema `json:"ingredient"`
-	Food       models.Food               `json:"food"`
+	Intake     models.Intake              `json:"intake"`
+	Ingredient *Ingredient_Mapping_Schema `json:"ingredient"`
+	Food       *models.Food               `json:"food"`
 }

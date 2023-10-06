@@ -61,7 +61,7 @@ func Get_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
 			return utilities.Send_Error(c, "Ingredient does not exist", fiber.StatusBadRequest)
 		}
 		// querying ingredient images
-		images, err := query_and_scan_food_images(db, response.Ingredient_Mappings[0].ID)
+		images, err := get_ingredient_images(db, response.Ingredient_Mappings[0].ID)
 		if err != nil {
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
