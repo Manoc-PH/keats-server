@@ -38,7 +38,7 @@ func Get_Daily_Calorie_List(c *fiber.Ctx, db *sql.DB) error {
 
 func query_and_scan_d_nutrients_list(db *sql.DB, user_id uuid.UUID, reqData *schemas.Req_Get_Daily_Calorie_List) ([]schemas.Res_Get_Daily_Calorie_List, error) {
 	rows, err := db.Query(`SELECT
-			id, date_created, calories
+			id, date_created, calories, max_calories
 		FROM daily_nutrients WHERE account_id = $1
 		AND date_created BETWEEN $2 AND $3
 		ORDER BY date_created desc`,
@@ -59,6 +59,7 @@ func query_and_scan_d_nutrients_list(db *sql.DB, user_id uuid.UUID, reqData *sch
 				&new_daily_nutrient.ID,
 				&new_daily_nutrient.Date_Created,
 				&new_daily_nutrient.Calories,
+				&new_daily_nutrient.Max_Calories,
 			); err != nil {
 			log.Println("Get_Daily_Calorie_List | error in scanning Daily_Nutrients: ", err.Error())
 			return nil, err

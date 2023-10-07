@@ -17,5 +17,6 @@ type Res_Get_Daily_Calorie_List struct {
 	ID           uint      `json:"id"`
 	Account_Id   uuid.UUID `json:"account_id"`
 	Calories     float32   `json:"calories"`
+	Max_Calories float32   `json:"max_calories"`
 	Date_Created time.Time `json:"date_created"`
 }
