@@ -139,8 +139,7 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 		response_data.Intake = new_intake
 
 	}
-	// TODO ADD SUPPORT FOR FOOD
-	if reqData.Food_Id != 0 && len(reqData.Food_Ingredients) < 1 {
+	if reqData.Food_Id != 0 {
 		intake := models.Intake{}
 		new_nutrient := models.Nutrient{}
 		old_nutrient := models.Nutrient{}
