@@ -90,3 +90,6 @@ func insert_recipe_images(db *sql.DB, recipe_images []schemas.Recipe_Image_Schem
 	}
 	return nil
 }
+
+// Documentation for uploading assets to cloudinary:
+// https://cloudinary.com/documentation/upload_images#authenticated_requests
