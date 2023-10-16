@@ -56,3 +56,73 @@ type Recipe_Instruction_Schema struct {
 	Instruction_Description string `json:"instruction_description" validate:"required"`
 	Step_Num                uint   `json:"step_num"`
 }
+
+// *SAMPLE RESPONSE
+// "recipe": {
+// 	"id": 6,
+// 	"name": "test",
+// 	"name_ph": "",
+// 	"name_owner": "Cloyd Abad",
+// 	"owner_id": "4767bca7-4911-4496-9de2-fb6b2d318c6c",
+// 	"date_created": "0001-01-01T00:00:00Z",
+// 	"category_id": 0,
+// 	"thumbnail_image_link": "",
+// 	"main_image_link": "",
+// 	"likes": 0,
+// 	"rating": 0,
+// 	"servings": 4,
+// 	"servings_size": 40,
+// 	"prep_time": 20,
+// 	"description": ""
+// },
+// "recipe_ingredients": [
+// 	{
+// 			"id": 3,
+// 			"food_id": 0,
+// 			"ingredient_mapping_id": 89,
+// 			"amount": 100,
+// 			"amount_unit": "",
+// 			"amount_unit_desc": "",
+// 			"serving_size": 0
+// 	},
+// 	{
+// 			"id": 4,
+// 			"food_id": 0,
+// 			"ingredient_mapping_id": 99,
+// 			"amount": 100,
+// 			"amount_unit": "",
+// 			"amount_unit_desc": "",
+// 			"serving_size": 0
+// 	},
+// 	{
+// 			"id": 5,
+// 			"food_id": 0,
+// 			"ingredient_mapping_id": 29,
+// 			"amount": 100,
+// 			"amount_unit": "",
+// 			"amount_unit_desc": "",
+// 			"serving_size": 0
+// 	}
+// ],
+// "recipe_instructions": [
+// 	{
+// 			"id": 2,
+// 			"recipe_id": 0,
+// 			"instruction_description": "test",
+// 			"step_num": 0
+// 	},
+// 	{
+// 			"id": 3,
+// 			"recipe_id": 0,
+// 			"instruction_description": "test2",
+// 			"step_num": 0
+// 	},
+// 	{
+// 			"id": 4,
+// 			"recipe_id": 0,
+// 			"instruction_description": "test3",
+// 			"step_num": 0
+// 	}
+// ],
+// "signature": "f3d52cedcab2c2383cc5ba6461b21525532bb047",
+// "timestamp": "1697470437"

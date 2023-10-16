@@ -55,3 +55,12 @@ type Recipe_Type struct {
 	ID   uuid.UUID `json:"id"`
 	Name string    `json:"name"`
 }
+type Recipe_Image struct {
+	ID               uint    `json:"id"`
+	Recipe_Id        uint    `json:"recipe_id"`
+	Name_File        string  `json:"name_file"`
+	Name_URL         string  `json:"name_url"`
+	Amount           float32 `json:"amount"`
+	Amount_Unit      string  `json:"amount_unit"`
+	Amount_Unit_Desc string  `json:"amount_unit_desc"`
+}
