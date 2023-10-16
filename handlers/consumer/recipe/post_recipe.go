@@ -3,10 +3,14 @@ package handlers
 import (
 	"database/sql"
 	"log"
+	"net/url"
 	"server/middlewares"
 	schemas "server/schemas/consumer/recipe"
+	"server/setup"
 	"server/utilities"
+	"strconv"
 
+	cld "github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -50,7 +54,17 @@ func Post_Recipe(c *fiber.Ctx, db *sql.DB) error {
 		return utilities.Send_Error(c, "An error occured in saving recipe", fiber.StatusInternalServerError)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(reqData)
+	// Generating signature
+	strTimestamp := strconv.FormatInt(reqData.Timestamp.Unix(), 10)
+	signature, err := cld.SignParameters(url.Values{"timestamp": []string{strTimestamp}}, setup.CloudinaryConfig.APISecret)
+	response := schemas.Res_Post_Recipe{
+		Recipe:              reqData.Recipe,
+		Recipe_Ingredients:  reqData.Recipe_Ingredients,
+		Recipe_Instructions: reqData.Recipe_Instructions,
+		Signature:           signature,
+		Timestamp:           strTimestamp,
+	}
+	return c.Status(fiber.StatusOK).JSON(response)
 }
 func ingredient_exists(ingredient_mapping_id uint, db *sql.DB) bool {
 	row := db.QueryRow(`SELECT id FROM ingredient_mapping WHERE id = $1`, ingredient_mapping_id)

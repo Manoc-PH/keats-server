@@ -11,6 +11,16 @@ type Req_Post_Recipe struct {
 	Recipe              Recipe_Schema               `json:"recipe"`
 	Recipe_Ingredients  []Recipe_Ingredient_Schema  `json:"recipe_ingredients" validate:"required"`
 	Recipe_Instructions []Recipe_Instruction_Schema `json:"recipe_instructions" validate:"required"`
+	Timestamp           time.Time                   `json:"timestamp" validate:"required"`
+}
+
+// *RESPONSES
+type Res_Post_Recipe struct {
+	Recipe              Recipe_Schema               `json:"recipe"`
+	Recipe_Ingredients  []Recipe_Ingredient_Schema  `json:"recipe_ingredients" validate:"required"`
+	Recipe_Instructions []Recipe_Instruction_Schema `json:"recipe_instructions" validate:"required"`
+	Signature           string                      `json:"signature"`
+	Timestamp           string                      `json:"timestamp"`
 }
 
 // Schemas
