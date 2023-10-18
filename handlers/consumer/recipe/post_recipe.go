@@ -9,6 +9,7 @@ import (
 	"server/setup"
 	"server/utilities"
 	"strconv"
+	"time"
 
 	cld "github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/gofiber/fiber/v2"
@@ -49,7 +50,6 @@ func Post_Recipe(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	// Saving Recipe
-	// TODO FIX NOT SAVING DATE CREATED
 	err = save_recipe_txn(reqData, db, owner_id)
 	if err != nil {
 		return utilities.Send_Error(c, "An error occured in saving recipe", fiber.StatusInternalServerError)
@@ -150,7 +150,7 @@ func save_recipe_details(txn *sql.Tx, recipe *schemas.Req_Post_Recipe, owner_id 
 		recipe.Recipe.Name_Ph,
 		recipe.Recipe.Name_Owner,
 		owner_id,
-		recipe.Recipe.Date_Created,
+		time.Now(),
 		// recipe.Recipe.Category_Id,
 		recipe.Recipe.Thumbnail_Image_Link,
 		recipe.Recipe.Main_Image_Link,
