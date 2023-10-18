@@ -41,10 +41,11 @@ type Recipe_Review struct {
 	Recipe_Id    uint      `json:"recipe_id"`
 	Date_Created time.Time `json:"date_created"`
 }
-type Recipe_Likes struct {
+type Recipe_Like struct {
 	ID           uint      `json:"id"`
-	Owner_Id     uint      `json:"owner_id"`
+	Owner_Id     uuid.UUID `json:"owner_id"`
 	Date_Created time.Time `json:"date_created"`
+	Recipe_Id    uint      `json:"recipe_id"`
 }
 type Recipe_Instruction struct {
 	ID                      uint   `json:"id"`
