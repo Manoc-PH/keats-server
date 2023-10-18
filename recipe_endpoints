@@ -1,0 +1,10 @@
+post like recipe
+get recipe details
+get recipe reviews (paginated)
+get recipe ingredients
+get recipe instructions
+patch recipe
+patch recipe review
+delete recipe
+delete recipe like
+delete recipe review

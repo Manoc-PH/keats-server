@@ -41,7 +41,6 @@ func Post_Recipe_Review(c *fiber.Ctx, db *sql.DB) error {
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
 	new_rating := (float32(sum+int(reqData.Rating)) / float32(count+1))
-	log.Println(new_rating)
 
 	//* starting transaction
 	txn, err := db.Begin()
