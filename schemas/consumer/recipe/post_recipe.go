@@ -35,7 +35,7 @@ type Recipe_Schema struct {
 	Thumbnail_Image_Link string    `json:"thumbnail_image_link"`
 	Main_Image_Link      string    `json:"main_image_link"`
 	Likes                uint      `json:"likes"`
-	Rating               uint      `json:"rating"`
+	Rating               float32   `json:"rating"`
 	Servings             uint      `json:"servings" validate:"required"`
 	Servings_Size        uint      `json:"servings_size" validate:"required"`
 	Prep_Time            uint      `json:"prep_time" validate:"required"`

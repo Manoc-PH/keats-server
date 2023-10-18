@@ -49,6 +49,7 @@ func Post_Recipe(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	// Saving Recipe
+	// TODO FIX NOT SAVING DATE CREATED
 	err = save_recipe_txn(reqData, db, owner_id)
 	if err != nil {
 		return utilities.Send_Error(c, "An error occured in saving recipe", fiber.StatusInternalServerError)

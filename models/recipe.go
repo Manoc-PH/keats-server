@@ -17,7 +17,7 @@ type Recipe struct {
 	Thumbnail_Image_Link string    `json:"thumbnail_image_link"`
 	Main_Image_Link      string    `json:"main_image_link"`
 	Likes                uint      `json:"likes"`
-	Rating               uint      `json:"rating"`
+	Rating               float32   `json:"rating"`
 	Servings             uint      `json:"servings"`
 	Servings_Size        uint      `json:"servings_size"`
 	Prep_Time            uint      `json:"prep_time"`
@@ -33,12 +33,12 @@ type Recipe_Ingredient struct {
 	Serving_Size          float32 `json:"serving_size"`
 }
 type Recipe_Review struct {
-	ID                 uint      `json:"id"`
-	Review_Description string    `json:"review_description"`
-	Rating             uint      `json:"rating"`
-	Owner_Id           uuid.UUID `json:"owner_id"`
-	Food_Id            uint      `json:"food_id"`
-	Date_Created       time.Time `json:"date_created"`
+	ID           uint      `json:"id"`
+	Description  string    `json:"description"`
+	Rating       float32   `json:"rating"`
+	Owner_Id     uuid.UUID `json:"owner_id"`
+	Recipe_Id    uint      `json:"recipe_id"`
+	Date_Created time.Time `json:"date_created"`
 }
 type Recipe_Likes struct {
 	ID           uint      `json:"id"`
@@ -47,7 +47,7 @@ type Recipe_Likes struct {
 }
 type Recipe_Instruction struct {
 	ID                      uint   `json:"id"`
-	Food_Id                 uint   `json:"food_id"`
+	Recipe_Id               uint   `json:"recipe_id"`
 	Instruction_Description string `json:"instruction_description"`
 	Step_Num                uint   `json:"step_num"`
 }
