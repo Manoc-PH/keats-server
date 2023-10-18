@@ -23,6 +23,7 @@ type Recipe struct {
 	Servings_Size        uint      `json:"servings_size"`
 	Prep_Time            uint      `json:"prep_time"`
 	Description          string    `json:"description"`
+	Nutrient_Id          uint      `json:"nutrient_id"`
 }
 type Recipe_Ingredient struct {
 	ID                    uint    `json:"id"`
@@ -32,6 +33,7 @@ type Recipe_Ingredient struct {
 	Amount_Unit           string  `json:"amount_unit"`
 	Amount_Unit_Desc      string  `json:"amount_unit_desc"`
 	Serving_Size          float32 `json:"serving_size"`
+	Recipe_Id             uint    `json:"recipe_id"`
 }
 type Recipe_Review struct {
 	ID           uint      `json:"id"`
@@ -53,9 +55,9 @@ type Recipe_Instruction struct {
 	Instruction_Description string `json:"instruction_description"`
 	Step_Num                uint   `json:"step_num"`
 }
-type Recipe_Type struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
+type Recipe_Category struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
 }
 type Recipe_Image struct {
 	ID               uint    `json:"id"`

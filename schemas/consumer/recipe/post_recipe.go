@@ -1,6 +1,7 @@
 package schemas
 
 import (
+	"server/models"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,8 +18,9 @@ type Req_Post_Recipe struct {
 // *RESPONSES
 type Res_Post_Recipe struct {
 	Recipe              Recipe_Schema               `json:"recipe"`
-	Recipe_Ingredients  []Recipe_Ingredient_Schema  `json:"recipe_ingredients" validate:"required"`
-	Recipe_Instructions []Recipe_Instruction_Schema `json:"recipe_instructions" validate:"required"`
+	Recipe_Ingredients  []Recipe_Ingredient_Schema  `json:"recipe_ingredients"`
+	Recipe_Instructions []Recipe_Instruction_Schema `json:"recipe_instructions"`
+	Nutrient            models.Nutrient             `json:"nutrient"`
 	Signature           string                      `json:"signature"`
 	Timestamp           string                      `json:"timestamp"`
 }
@@ -38,7 +40,7 @@ type Recipe_Schema struct {
 	Rating               float32   `json:"rating"`
 	Rating_Count         uint      `json:"rating_count"`
 	Servings             uint      `json:"servings" validate:"required"`
-	Servings_Size        uint      `json:"servings_size" validate:"required"`
+	Servings_Size        float32   `json:"servings_size" validate:"required"`
 	Prep_Time            uint      `json:"prep_time" validate:"required"`
 	Description          string    `json:"description"`
 }
@@ -50,6 +52,7 @@ type Recipe_Ingredient_Schema struct {
 	Amount_Unit           string  `json:"amount_unit"`
 	Amount_Unit_Desc      string  `json:"amount_unit_desc"`
 	Serving_Size          float32 `json:"serving_size"`
+	Recipe_Id             uint    `json:"recipe_id"`
 }
 type Recipe_Instruction_Schema struct {
 	ID                      uint   `json:"id"`
