@@ -61,7 +61,7 @@ func Post_Recipe_Review(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	// updating recipe rating
-	err = update_recipe_rating(txn, new_rating, reqData.Recipe_Id)
+	err = update_recipe_rating(txn, new_rating, reqData.Recipe_Id, uint(count+1))
 
 	// committing
 	err = txn.Commit()
@@ -125,8 +125,8 @@ func save_recipe_review(txn *sql.Tx, recipe_review *schemas.Req_Post_Recipe_Revi
 	}
 	return nil
 }
-func update_recipe_rating(txn *sql.Tx, new_rating float32, recipe_id uint) error {
-	_, err := txn.Exec(`UPDATE recipe SET rating = $1 WHERE id = $2`, new_rating, recipe_id)
+func update_recipe_rating(txn *sql.Tx, new_rating float32, recipe_id uint, count uint) error {
+	_, err := txn.Exec(`UPDATE recipe SET rating = $1, rating_count = $2 WHERE id = $3`, new_rating, count, recipe_id)
 	if err != nil {
 		return err
 	}

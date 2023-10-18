@@ -18,6 +18,7 @@ type Recipe struct {
 	Main_Image_Link      string    `json:"main_image_link"`
 	Likes                uint      `json:"likes"`
 	Rating               float32   `json:"rating"`
+	Rating_Count         uint      `json:"rating_count"`
 	Servings             uint      `json:"servings"`
 	Servings_Size        uint      `json:"servings_size"`
 	Prep_Time            uint      `json:"prep_time"`
