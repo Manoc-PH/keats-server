@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// TODO ADD LIMIT TO NUMBER OF INGREDIENTS ALLOWED
 func Post_Recipe(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
 	_, owner_id, err := middlewares.AuthMiddleware(c)
