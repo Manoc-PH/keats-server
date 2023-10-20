@@ -15,10 +15,11 @@ import (
 	cld "github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/meilisearch/meilisearch-go"
 )
 
 // TODO ALSO INSERT RECIPE TO MEILISEARCH DB
-func Post_Recipe(c *fiber.Ctx, db *sql.DB) error {
+func Post_Recipe(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error {
 	// auth validation
 	_, owner_id, err := middlewares.AuthMiddleware(c)
 	if err != nil {
@@ -41,7 +42,7 @@ func Post_Recipe(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	// Saving Recipe
-	err = save_recipe_txn(reqData, db, owner_id, nutrient)
+	err = save_recipe_txn(reqData, db, db_search, owner_id, nutrient)
 	if err != nil {
 		return utilities.Send_Error(c, "An error occured in saving recipe", fiber.StatusInternalServerError)
 	}
@@ -201,7 +202,13 @@ func generate_nutrients(db *sql.DB, reqData *schemas.Req_Post_Recipe) (*models.N
 
 	return nutrient, nil
 }
-func save_recipe_txn(recipe *schemas.Req_Post_Recipe, db *sql.DB, owner_id uuid.UUID, nutrient *models.Nutrient) error {
+func save_recipe_txn(
+	recipe *schemas.Req_Post_Recipe,
+	db *sql.DB,
+	db_search *meilisearch.Client,
+	owner_id uuid.UUID,
+	nutrient *models.Nutrient,
+) error {
 	txn, err := db.Begin()
 	if err != nil {
 		log.Println("Post_Recipe | Error on save_recipe_txn: ", err.Error())
@@ -229,6 +236,13 @@ func save_recipe_txn(recipe *schemas.Req_Post_Recipe, db *sql.DB, owner_id uuid.
 	err = save_recipe_instructions(txn, recipe)
 	if err != nil {
 		log.Println("Post_Recipe | Error on save_recipe_instructions: ", err.Error())
+		return err
+	}
+	// Saving Recipe to Meilisearch
+	err = save_recipe_to_meili(db_search, recipe)
+	if err != nil {
+		log.Println("Post_Recipe | Error on save_recipe_to_meili: ", err.Error())
+		txn.Rollback()
 		return err
 	}
 
@@ -393,6 +407,23 @@ func save_nutrient(txn *sql.Tx, nutrient *models.Nutrient) error {
 		nutrient.Calcium,
 	)
 	err := row.Scan(&nutrient.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func save_recipe_to_meili(db_search *meilisearch.Client, recipe *schemas.Req_Post_Recipe) error {
+	new_item := map[string]interface{}{
+		"id":                   recipe.Recipe.ID,
+		"name":                 recipe.Recipe.Name,
+		"name_ph":              recipe.Recipe.Name_Ph,
+		"name_owner":           recipe.Recipe.Name_Owner,
+		"thumbnail_image_link": recipe.Recipe.Thumbnail_Image_Link,
+		"main_image_link":      recipe.Recipe.Main_Image_Link,
+		"rating":               recipe.Recipe.Rating,
+		"rating_count":         recipe.Recipe.Rating_Count,
+	}
+	_, err := db_search.Index("recipes").AddDocuments(new_item)
 	if err != nil {
 		return err
 	}
