@@ -1,5 +1,3 @@
-get recipe reviews (paginated) 
-get recipe instructions
 patch recipe
 patch recipe review
 delete recipe

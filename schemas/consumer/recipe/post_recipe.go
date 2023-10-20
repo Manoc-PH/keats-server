@@ -10,8 +10,8 @@ import (
 // *REQUESTS
 type Req_Post_Recipe struct {
 	Recipe              Recipe_Schema               `json:"recipe"`
-	Recipe_Ingredients  []Recipe_Ingredient_Schema  `json:"recipe_ingredients" validate:"required"`
-	Recipe_Instructions []Recipe_Instruction_Schema `json:"recipe_instructions" validate:"required"`
+	Recipe_Ingredients  []Recipe_Ingredient_Schema  `json:"recipe_ingredients" validate:"required,max=10"`
+	Recipe_Instructions []Recipe_Instruction_Schema `json:"recipe_instructions" validate:"required,max=20"`
 	Timestamp           time.Time                   `json:"timestamp" validate:"required"`
 }
 
