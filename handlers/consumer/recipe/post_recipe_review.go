@@ -10,9 +10,11 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/meilisearch/meilisearch-go"
 )
 
-func Post_Recipe_Review(c *fiber.Ctx, db *sql.DB) error {
+// TODO UPDATE MEILISEARCH RECIPE'S RATING AND RATING COUNT
+func Post_Recipe_Review(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error {
 	// auth validation
 	_, owner_id, err := middlewares.AuthMiddleware(c)
 	if err != nil {
@@ -62,6 +64,17 @@ func Post_Recipe_Review(c *fiber.Ctx, db *sql.DB) error {
 
 	// updating recipe rating
 	err = update_recipe_rating(txn, new_rating, reqData.Recipe_Id, uint(count+1))
+	if err != nil {
+		log.Println("Post_Recipe_Review | Error on update_recipe_rating: ", err.Error())
+		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
+	}
+
+	// updating recipe to meili
+	err = update_recipe_rating_meili(db_search, new_rating, reqData.Recipe_Id, uint(count+1))
+	if err != nil {
+		log.Println("Post_Recipe_Review | Error on update_recipe_rating_meili: ", err.Error())
+		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
+	}
 
 	// committing
 	err = txn.Commit()
@@ -130,5 +143,14 @@ func update_recipe_rating(txn *sql.Tx, new_rating float32, recipe_id uint, count
 	if err != nil {
 		return err
 	}
+	return nil
+}
+func update_recipe_rating_meili(db_search *meilisearch.Client, new_rating float32, recipe_id uint, count uint) error {
+	recipe_meili := map[string]interface{}{
+		"id":     recipe_id,
+		"rating": new_rating,
+		"count":  count,
+	}
+	db_search.Index("recipes").UpdateDocuments(recipe_meili)
 	return nil
 }

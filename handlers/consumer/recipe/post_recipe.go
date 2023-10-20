@@ -423,7 +423,7 @@ func save_recipe_to_meili(db_search *meilisearch.Client, recipe *schemas.Req_Pos
 		"rating":               recipe.Recipe.Rating,
 		"rating_count":         recipe.Recipe.Rating_Count,
 	}
-	_, err := db_search.Index("recipes").AddDocuments(new_item)
+	_, err := db_search.Index("recipes").AddDocuments(new_item, "id")
 	if err != nil {
 		return err
 	}
