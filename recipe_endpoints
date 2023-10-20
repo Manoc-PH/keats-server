@@ -1,6 +1,4 @@
-get recipe details
-get recipe reviews (paginated)
-get recipe ingredients
+get recipe reviews (paginated) 
 get recipe instructions
 patch recipe
 patch recipe review

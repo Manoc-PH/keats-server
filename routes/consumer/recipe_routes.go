@@ -16,4 +16,5 @@ func Recipe_Routes(app *fiber.App) {
 	r.Post("/like", func(c *fiber.Ctx) error { return handlers.Post_Recipe_Like(c, setup.DB) })
 	r.Get("", func(c *fiber.Ctx) error { return handlers.Get_Recipe_Details(c, setup.DB) })
 	r.Get("/ingredients", func(c *fiber.Ctx) error { return handlers.Get_Recipe_Ingredients(c, setup.DB) })
+	r.Get("/instructions", func(c *fiber.Ctx) error { return handlers.Get_Recipe_Instructions(c, setup.DB) })
 }
