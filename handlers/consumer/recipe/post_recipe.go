@@ -18,6 +18,7 @@ import (
 )
 
 // TODO ADD LIMIT TO NUMBER OF INGREDIENTS ALLOWED
+// TODO ALSO INSERT RECIPE TO MEILISEARCH DB
 func Post_Recipe(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
 	_, owner_id, err := middlewares.AuthMiddleware(c)
