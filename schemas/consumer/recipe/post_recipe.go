@@ -10,8 +10,8 @@ import (
 // *REQUESTS
 type Req_Post_Recipe struct {
 	Recipe              Recipe_Schema               `json:"recipe"`
-	Recipe_Ingredients  []Recipe_Ingredient_Schema  `json:"recipe_ingredients" validate:"required,max=10"`
-	Recipe_Instructions []Recipe_Instruction_Schema `json:"recipe_instructions" validate:"required,max=20"`
+	Recipe_Ingredients  []Recipe_Ingredient_Schema  `json:"recipe_ingredients" validate:"required,max=10,dive"`
+	Recipe_Instructions []Recipe_Instruction_Schema `json:"recipe_instructions" validate:"required,max=20,dive"`
 	Timestamp           time.Time                   `json:"timestamp" validate:"required"`
 }
 
@@ -58,7 +58,7 @@ type Recipe_Instruction_Schema struct {
 	ID                      uint   `json:"id"`
 	Recipe_Id               uint   `json:"recipe_id"`
 	Instruction_Description string `json:"instruction_description" validate:"required"`
-	Step_Num                uint   `json:"step_num"`
+	Step_Num                uint   `json:"step_num" validate:"required"`
 }
 
 // *SAMPLE RESPONSE
