@@ -35,7 +35,7 @@ func Patch_Recipe(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	// Updating Recipe details
-	err = updateRecipeDetails(txn, &reqData.Recipe)
+	err = update_recipe_details(txn, &reqData.Recipe)
 	if err != nil {
 		log.Println("Patch_Recipe | Error on updateRecipeDetails: ", err.Error())
 		return utilities.Send_Error(c, "An error occured in updating recipe details", fiber.StatusInternalServerError)
@@ -43,12 +43,20 @@ func Patch_Recipe(c *fiber.Ctx, db *sql.DB) error {
 
 	// Updating Recipe Ingredients
 	if len(reqData.Recipe_Ingredients) > 0 {
-
+		err = update_recipe_ingredients(txn, &reqData.Recipe_Ingredients, reqData.Recipe)
+		if err != nil {
+			log.Println("Patch_Recipe | Error on updateRecipeIngredients: ", err.Error())
+			return utilities.Send_Error(c, "An error occured in updating recipe details", fiber.StatusInternalServerError)
+		}
 	}
 
 	// Updating Recipe Instructions
 	if len(reqData.Recipe_Instructions) > 0 {
-
+		err = update_instructions(txn, &reqData.Recipe_Instructions, reqData.Recipe)
+		if err != nil {
+			log.Println("Patch_Recipe | Error on update_instructions: ", err.Error())
+			return utilities.Send_Error(c, "An error occured in updating recipe details", fiber.StatusInternalServerError)
+		}
 	}
 
 	err = txn.Commit()
@@ -60,9 +68,9 @@ func Patch_Recipe(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(reqData)
 }
 
-func updateRecipeDetails(txn *sql.Tx, data *schemas.Recipe_Patch) error {
+func update_recipe_details(tx *sql.Tx, data *schemas.Recipe_Patch) error {
 	// TODO ADD category_id, thumbnail_image_link, main_image_link
-	_, err := txn.Exec(`UPDATE recipe SET 
+	_, err := tx.Exec(`UPDATE recipe SET 
 			name = $1,
 			name_ph = $2,
 			servings = $3,
@@ -81,7 +89,7 @@ func updateRecipeDetails(txn *sql.Tx, data *schemas.Recipe_Patch) error {
 
 	return err
 }
-func updateRecipeIngredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredient, recipe schemas.Recipe_Patch) error {
+func update_recipe_ingredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredient, recipe schemas.Recipe_Patch) error {
 	stmtInsert, err := tx.Prepare(`INSERT INTO recipe_ingredient (
 				food_id,
 				ingredient_mapping_id,
@@ -189,8 +197,8 @@ func updateRecipeIngredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredient
 	err = update_nutrient(tx, nutrients)
 	return err
 }
-func update_nutrient(txn *sql.Tx, nutrient *models.Nutrient) error {
-	_, err := txn.Exec(`UPDATE nutrient
+func update_nutrient(tx *sql.Tx, nutrient *models.Nutrient) error {
+	_, err := tx.Exec(`UPDATE nutrient
 			amount = $1,
 			amount_unit = $2,
 			amount_unit_desc = $3,
@@ -228,6 +236,54 @@ func update_nutrient(txn *sql.Tx, nutrient *models.Nutrient) error {
 	)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, recipe schemas.Recipe_Patch) error {
+	stmtInsert, err := tx.Prepare(`INSERT INTO recipe_instruction (
+			recipe_id,
+			instruction_description,
+			step_num)
+		VALUES ($1, $2, $3) RETURNING id`)
+	if err != nil {
+		return nil
+	}
+	stmtUpdate, err := tx.Prepare(`UPDATE recipe_instruction SET
+		instruction_description = $1,
+		step_num = $2, 
+	WHERE id = $3`)
+	if err != nil {
+		return nil
+	}
+	stmtDelete, err := tx.Prepare(`DELETE FROM recipe_instruction WHERE id = $1`)
+	if err != nil {
+		return nil
+	}
+	for _, item := range *data {
+		if item.Action_Type == constants.Action_Types.Insert {
+			_, err = stmtInsert.Exec(
+				recipe.ID,
+				item.Instruction_Description,
+				item.Step_Num)
+			if err != nil {
+				return err
+			}
+		}
+		if item.Action_Type == constants.Action_Types.Update {
+			_, err = stmtUpdate.Exec(
+				item.Instruction_Description,
+				item.Step_Num,
+				item.ID)
+			if err != nil {
+				return err
+			}
+		}
+		if item.Action_Type == constants.Action_Types.Delete {
+			_, err = stmtDelete.Exec(item.ID)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
