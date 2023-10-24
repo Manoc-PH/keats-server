@@ -24,6 +24,7 @@ type Recipe_Patch struct {
 	Servings_Size        float32 `json:"servings_size" validate:"required"`
 	Prep_Time            uint    `json:"prep_time" validate:"required"`
 	Description          string  `json:"description"`
+	Nutrient_Id          uint    `json:"nutrient_id"`
 }
 
 // Client can send either delete, update, or insert action type which will determine what to do with the data
@@ -32,8 +33,8 @@ type Recipe_Patch_Ingredient struct {
 	Food_Id               uint    `json:"food_id" validate:"required_if=Ingredient_Mapping_Id 0"`
 	Ingredient_Mapping_Id uint    `json:"ingredient_mapping_id" validate:"required_if=Food_Id 0"`
 	Amount                float32 `json:"amount" validate:"required"`
-	Amount_Unit           string  `json:"amount_unit"`
-	Amount_Unit_Desc      string  `json:"amount_unit_desc"`
+	Amount_Unit           string  `json:"amount_unit" validate:"required"`
+	Amount_Unit_Desc      string  `json:"amount_unit_desc" validate:"required"`
 	Serving_Size          float32 `json:"serving_size"`
 	Recipe_Id             uint    `json:"recipe_id"`
 	Action_Type           string  `json:"action_type"  validate:"required,oneof=delete update insert"`

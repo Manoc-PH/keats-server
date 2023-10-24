@@ -35,7 +35,7 @@ func Post_Recipe(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error 
 	}
 
 	// Generating the nutrients
-	nutrient, err := generate_nutrients(db, reqData)
+	nutrient, err := generate_nutrients(db, &reqData.Recipe_Ingredients, reqData.Recipe.Servings)
 	if err != nil {
 		log.Println("Post_Recipe | Error on generate_nutrients: ", err.Error())
 		return utilities.Send_Error(c, "An ingredient does not exist.", fiber.StatusBadRequest)
@@ -152,9 +152,9 @@ func get_food_nutrient(food_id uint, db *sql.DB, nutrient *models.Nutrient) erro
 	}
 	return nil
 }
-func generate_nutrients(db *sql.DB, reqData *schemas.Req_Post_Recipe) (*models.Nutrient, error) {
+func generate_nutrients(db *sql.DB, reqData *[]schemas.Recipe_Ingredient_Schema, servings uint) (*models.Nutrient, error) {
 	nutrient := new(models.Nutrient)
-	for _, item := range reqData.Recipe_Ingredients {
+	for _, item := range *reqData {
 		item_nutrient := new(models.Nutrient)
 		if item.Ingredient_Mapping_Id != 0 {
 			err := get_ingredient_nutrient(item.Ingredient_Mapping_Id, db, item_nutrient)
@@ -187,7 +187,7 @@ func generate_nutrients(db *sql.DB, reqData *schemas.Req_Post_Recipe) (*models.N
 	nutrient.Amount = 100
 	nutrient.Amount_Unit = "g"
 	nutrient.Amount_Unit_Desc = "grams"
-	nutrient.Serving_Size = nutrient.Serving_Total / float32(reqData.Recipe.Servings)
+	nutrient.Serving_Size = nutrient.Serving_Total / float32(servings)
 	nutrient.Calories = nutrient.Calories / divider
 	nutrient.Protein = nutrient.Protein / divider
 	nutrient.Carbs = nutrient.Carbs / divider
