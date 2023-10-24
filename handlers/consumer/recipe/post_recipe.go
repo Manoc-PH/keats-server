@@ -18,7 +18,7 @@ import (
 	"github.com/meilisearch/meilisearch-go"
 )
 
-// TODO ALSO INSERT RECIPE TO MEILISEARCH DB
+// TODO UPDATE THE HANDLER FOR IMAGE UPLOAD. THE URL SHOULD BE GENERATED HERE
 func Post_Recipe(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error {
 	// auth validation
 	_, owner_id, err := middlewares.AuthMiddleware(c)

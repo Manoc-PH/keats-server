@@ -1,7 +1,7 @@
 package schemas
 
 type Req_Post_Images struct {
-	Recipe_Image []Recipe_Image_Schema `json:"recipe_images" validate:"required,dive"`
+	Recipe_Image []Recipe_Image_Schema `json:"recipe_images" validate:"required,max=7,dive"`
 }
 type Res_Post_Images struct {
 	Recipe_Image []Recipe_Image_Schema `json:"recipe_images"`
