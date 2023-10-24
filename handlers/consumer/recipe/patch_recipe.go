@@ -102,7 +102,7 @@ func update_recipe_ingredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredie
 	)
 	if err != nil {
 		log.Println(" Error on update_recipe_ingredients")
-		return nil
+		return err
 	}
 	stmtUpdate, err := tx.Prepare(`UPDATE recipe_ingredient SET
 			food_id = $1,
@@ -114,12 +114,12 @@ func update_recipe_ingredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredie
 		WHERE id = $7`)
 	if err != nil {
 		log.Println(" Error on update_recipe_ingredients")
-		return nil
+		return err
 	}
 	stmtDelete, err := tx.Prepare(`DELETE FROM recipe_ingredient WHERE id = $1`)
 	if err != nil {
 		log.Println(" Error on update_recipe_ingredients")
-		return nil
+		return err
 	}
 	for _, item := range *data {
 		if item.Action_Type == constants.Action_Types.Insert {
@@ -257,7 +257,7 @@ func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, r
 		VALUES ($1, $2, $3) RETURNING id`)
 	if err != nil {
 		log.Println("Error on update_instructions(stmtInsert)")
-		return nil
+		return err
 	}
 	stmtUpdate, err := tx.Prepare(`UPDATE recipe_instruction SET
 		instruction_description = $1,
@@ -265,12 +265,12 @@ func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, r
 	WHERE id = $3`)
 	if err != nil {
 		log.Println("Error on update_instructions(stmtUpdate)")
-		return nil
+		return err
 	}
 	stmtDelete, err := tx.Prepare(`DELETE FROM recipe_instruction WHERE id = $1`)
 	if err != nil {
 		log.Println("Error on update_instructions(stmtDelete)")
-		return nil
+		return err
 	}
 	for _, item := range *data {
 		if item.Action_Type == constants.Action_Types.Insert {
