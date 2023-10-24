@@ -37,7 +37,7 @@ func Patch_Recipe(c *fiber.Ctx, db *sql.DB) error {
 	// Updating Recipe details
 	err = update_recipe_details(txn, &reqData.Recipe)
 	if err != nil {
-		log.Println("Patch_Recipe | Error on updateRecipeDetails: ", err.Error())
+		log.Println("Patch_Recipe | Error on update_recipe_details: ", err.Error())
 		return utilities.Send_Error(c, "An error occured in updating recipe details", fiber.StatusInternalServerError)
 	}
 
@@ -45,7 +45,7 @@ func Patch_Recipe(c *fiber.Ctx, db *sql.DB) error {
 	if len(reqData.Recipe_Ingredients) > 0 {
 		err = update_recipe_ingredients(txn, &reqData.Recipe_Ingredients, reqData.Recipe)
 		if err != nil {
-			log.Println("Patch_Recipe | Error on updateRecipeIngredients: ", err.Error())
+			log.Println("Patch_Recipe | Error on update_recipe_ingredients: ", err.Error())
 			return utilities.Send_Error(c, "An error occured in updating recipe details", fiber.StatusInternalServerError)
 		}
 	}
@@ -91,16 +91,17 @@ func update_recipe_details(tx *sql.Tx, data *schemas.Recipe_Patch) error {
 }
 func update_recipe_ingredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredient, recipe schemas.Recipe_Patch) error {
 	stmtInsert, err := tx.Prepare(`INSERT INTO recipe_ingredient (
-				food_id,
-				ingredient_mapping_id,
-				amount,
-				amount_unit,
-				amount_unit_desc,
-				serving_size,
-				recipe_id)
-			VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+			food_id,
+			ingredient_mapping_id,
+			amount,
+			amount_unit,
+			amount_unit_desc,
+			serving_size,
+			recipe_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
 	)
 	if err != nil {
+		log.Println(" Error on update_recipe_ingredients")
 		return nil
 	}
 	stmtUpdate, err := tx.Prepare(`UPDATE recipe_ingredient SET
@@ -112,10 +113,12 @@ func update_recipe_ingredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredie
 			serving_size = $6
 		WHERE id = $7`)
 	if err != nil {
+		log.Println(" Error on update_recipe_ingredients")
 		return nil
 	}
 	stmtDelete, err := tx.Prepare(`DELETE FROM recipe_ingredient WHERE id = $1`)
 	if err != nil {
+		log.Println(" Error on update_recipe_ingredients")
 		return nil
 	}
 	for _, item := range *data {
@@ -168,6 +171,7 @@ func update_recipe_ingredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredie
 	defer rows.Close()
 
 	if err != nil {
+		log.Println(" Error on update_recipe_ingredients")
 		return err
 	}
 
@@ -175,16 +179,17 @@ func update_recipe_ingredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredie
 	for rows.Next() {
 		newIngredient := schemas.Recipe_Ingredient_Schema{}
 		err := rows.Scan(
-			newIngredient.ID,
-			newIngredient.Food_Id,
-			newIngredient.Ingredient_Mapping_Id,
-			newIngredient.Amount,
-			newIngredient.Amount_Unit,
-			newIngredient.Amount_Unit_Desc,
-			newIngredient.Serving_Size,
-			newIngredient.Recipe_Id,
+			&newIngredient.ID,
+			&newIngredient.Food_Id,
+			&newIngredient.Ingredient_Mapping_Id,
+			&newIngredient.Amount,
+			&newIngredient.Amount_Unit,
+			&newIngredient.Amount_Unit_Desc,
+			&newIngredient.Serving_Size,
+			&newIngredient.Recipe_Id,
 		)
 		if err != nil {
+			log.Println(" Error on update_recipe_ingredients")
 			return err
 		}
 		newIngredients = append(newIngredients, newIngredient)
@@ -192,13 +197,17 @@ func update_recipe_ingredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredie
 
 	nutrients, err := generate_nutrients_tx(tx, &newIngredients, recipe.Servings)
 	nutrients.ID = recipe.Nutrient_Id
+	if err != nil {
+		log.Println(" Error on update_recipe_ingredients")
+		return err
+	}
 
 	// Updating Nutrient
 	err = update_nutrient(tx, nutrients)
 	return err
 }
 func update_nutrient(tx *sql.Tx, nutrient *models.Nutrient) error {
-	_, err := tx.Exec(`UPDATE nutrient
+	_, err := tx.Exec(`UPDATE nutrient SET
 			amount = $1,
 			amount_unit = $2,
 			amount_unit_desc = $3,
@@ -235,6 +244,7 @@ func update_nutrient(tx *sql.Tx, nutrient *models.Nutrient) error {
 		nutrient.ID,
 	)
 	if err != nil {
+		log.Println(" Error on update_nutrient")
 		return err
 	}
 	return nil
@@ -246,17 +256,20 @@ func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, r
 			step_num)
 		VALUES ($1, $2, $3) RETURNING id`)
 	if err != nil {
+		log.Println("Error on update_instructions(stmtInsert)")
 		return nil
 	}
 	stmtUpdate, err := tx.Prepare(`UPDATE recipe_instruction SET
 		instruction_description = $1,
-		step_num = $2, 
+		step_num = $2
 	WHERE id = $3`)
 	if err != nil {
+		log.Println("Error on update_instructions(stmtUpdate)")
 		return nil
 	}
 	stmtDelete, err := tx.Prepare(`DELETE FROM recipe_instruction WHERE id = $1`)
 	if err != nil {
+		log.Println("Error on update_instructions(stmtDelete)")
 		return nil
 	}
 	for _, item := range *data {
@@ -266,6 +279,7 @@ func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, r
 				item.Instruction_Description,
 				item.Step_Num)
 			if err != nil {
+				log.Println(" Error on update_instructions(stmtInsert.Exec)")
 				return err
 			}
 		}
@@ -275,12 +289,14 @@ func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, r
 				item.Step_Num,
 				item.ID)
 			if err != nil {
+				log.Println(" Error on update_instructions(stmtUpdate.Exec)")
 				return err
 			}
 		}
 		if item.Action_Type == constants.Action_Types.Delete {
 			_, err = stmtDelete.Exec(item.ID)
 			if err != nil {
+				log.Println(" Error on update_instructions(stmtDelete.Exec)")
 				return err
 			}
 		}
@@ -330,6 +346,7 @@ func get_ingredient_nutrient_tx(ingredient_mapping_id uint, tx *sql.Tx, nutrient
 			&nutrient.Iron,
 			&nutrient.Calcium,
 		); err != nil {
+		log.Println("Error on get_ingredient_nutrient_tx(Scan)")
 		return err
 	}
 	return nil
@@ -376,6 +393,7 @@ func get_food_nutrient_tx(food_id uint, tx *sql.Tx, nutrient *models.Nutrient) e
 			&nutrient.Iron,
 			&nutrient.Calcium,
 		); err != nil {
+		log.Println("Error on get_food_nutrient_tx(Scan)")
 		return err
 	}
 	return nil
@@ -387,12 +405,14 @@ func generate_nutrients_tx(tx *sql.Tx, reqData *[]schemas.Recipe_Ingredient_Sche
 		if item.Ingredient_Mapping_Id != 0 {
 			err := get_ingredient_nutrient_tx(item.Ingredient_Mapping_Id, tx, item_nutrient)
 			if err != nil {
+				log.Println("Error on get_ingredient_nutrient_tx")
 				return nil, err
 			}
 		}
 		if item.Food_Id != 0 {
 			err := get_food_nutrient_tx(item.Food_Id, tx, item_nutrient)
 			if err != nil {
+				log.Println("Error on get_food_nutrient_tx")
 				return nil, err
 			}
 		}
