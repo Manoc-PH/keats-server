@@ -22,48 +22,48 @@ func Post_Recipe_Review(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client)
 		return utilities.Send_Error(c, err.Error(), fiber.StatusUnauthorized)
 	}
 
-	//* data validation
+	// data validation
 	reqData := new(schemas.Req_Post_Recipe_Review)
 	if err_data, err := middlewares.Body_Validation(reqData, c); err != nil {
 		log.Println("Post_Recipe_Review | Error on query validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
 
-	// *checking if review exists
-	exists := review_exists(owner_id, reqData.Recipe_Id, db)
+	// starting transaction
+	tx, err := db.Begin()
+	if err != nil {
+		log.Println("Post_Recipe_Review | Error on db.Begin(): ", err.Error())
+		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
+	}
+
+	// checking if review exists
+	exists := review_exists(owner_id, reqData.Recipe_Id, tx)
 	if exists == true {
 		log.Println("Post_Recipe_Review | Error review exists: ")
 		return utilities.Send_Error(c, "You've already made a review, cannot submit another one", fiber.StatusBadRequest)
 	}
 
-	//* getting rating and count of recipe
-	sum, count, err := get_rating_sum_and_count(db, reqData.Recipe_Id)
+	// getting rating and count of recipe
+	sum, count, err := get_rating_sum_and_count(tx, reqData.Recipe_Id)
 	if err != nil {
 		log.Println("Post_Recipe_Review | Error on get_rating_sum_and_count: ", err.Error())
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
 	new_rating := (float32(sum+int(reqData.Rating)) / float32(count+1))
 
-	//* starting transaction
-	txn, err := db.Begin()
-	if err != nil {
-		log.Println("Post_Recipe_Review | Error on db.Begin(): ", err.Error())
-		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
-	}
-
 	// updating recipe values
 	reqData.Owner_Id = owner_id
 	reqData.Date_Created = time.Now()
 
 	// saving recipe review
-	err = save_recipe_review(txn, reqData)
+	err = save_recipe_review(tx, reqData)
 	if err != nil {
 		log.Println("Post_Recipe_Review | Error on save_recipe_review: ", err.Error())
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
 
 	// updating recipe rating
-	err = update_recipe_rating(txn, new_rating, reqData.Recipe_Id, uint(count+1))
+	err = update_recipe_rating(tx, new_rating, reqData.Recipe_Id, uint(count+1))
 	if err != nil {
 		log.Println("Post_Recipe_Review | Error on update_recipe_rating: ", err.Error())
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
@@ -77,19 +77,19 @@ func Post_Recipe_Review(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client)
 	}
 
 	// committing
-	err = txn.Commit()
+	err = tx.Commit()
 	if err != nil {
-		log.Println("Post_Recipe_Review | Error on txn.Commit(): ", err.Error())
-		err = txn.Rollback()
+		log.Println("Post_Recipe_Review | Error on tx.Commit(): ", err.Error())
+		err = tx.Rollback()
 		if err != nil {
-			log.Println("Post_Recipe_Review | txn.Rollback(): ", err.Error())
+			log.Println("Post_Recipe_Review | tx.Rollback(): ", err.Error())
 		}
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
 	return c.Status(fiber.StatusOK).JSON(reqData)
 }
-func review_exists(owner_id uuid.UUID, recipe_id uint, db *sql.DB) bool {
-	row := db.QueryRow(`
+func review_exists(owner_id uuid.UUID, recipe_id uint, tx *sql.Tx) bool {
+	row := tx.QueryRow(`
 		SELECT id FROM recipe_review 
 		WHERE owner_id = $1 AND	recipe_id = $2`, owner_id, recipe_id)
 	var id uint
@@ -106,8 +106,8 @@ func review_exists(owner_id uuid.UUID, recipe_id uint, db *sql.DB) bool {
 	}
 	return false
 }
-func get_rating_sum_and_count(db *sql.DB, recipe_id uint) (sum int, count int, er error) {
-	row := db.QueryRow(`SELECT COUNT(id), COALESCE(SUM(rating), 0) FROM recipe_review WHERE recipe_id = $1`, recipe_id)
+func get_rating_sum_and_count(tx *sql.Tx, recipe_id uint) (sum int, count int, er error) {
+	row := tx.QueryRow(`SELECT COUNT(id), COALESCE(SUM(rating), 0) FROM recipe_review WHERE recipe_id = $1`, recipe_id)
 	var recipe_count int
 	var recipe_sum int
 	err := row.Scan(&recipe_count, &recipe_sum)
@@ -116,8 +116,8 @@ func get_rating_sum_and_count(db *sql.DB, recipe_id uint) (sum int, count int, e
 	}
 	return recipe_sum, recipe_count, nil
 }
-func save_recipe_review(txn *sql.Tx, recipe_review *schemas.Req_Post_Recipe_Review) error {
-	row := txn.QueryRow(`INSERT INTO 
+func save_recipe_review(tx *sql.Tx, recipe_review *schemas.Req_Post_Recipe_Review) error {
+	row := tx.QueryRow(`INSERT INTO 
 		recipe_review(
 			description,
 			rating,
@@ -138,8 +138,8 @@ func save_recipe_review(txn *sql.Tx, recipe_review *schemas.Req_Post_Recipe_Revi
 	}
 	return nil
 }
-func update_recipe_rating(txn *sql.Tx, new_rating float32, recipe_id uint, count uint) error {
-	_, err := txn.Exec(`UPDATE recipe SET rating = $1, rating_count = $2 WHERE id = $3`, new_rating, count, recipe_id)
+func update_recipe_rating(tx *sql.Tx, new_rating float32, recipe_id uint, count uint) error {
+	_, err := tx.Exec(`UPDATE recipe SET rating = $1, rating_count = $2 WHERE id = $3`, new_rating, count, recipe_id)
 	if err != nil {
 		return err
 	}

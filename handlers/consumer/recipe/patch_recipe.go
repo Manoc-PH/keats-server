@@ -303,7 +303,6 @@ func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, r
 	}
 	return nil
 }
-
 func get_ingredient_nutrient_tx(ingredient_mapping_id uint, tx *sql.Tx, nutrient *models.Nutrient) error {
 	row := tx.QueryRow(`SELECT
 			nutrient.id,
