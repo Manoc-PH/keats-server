@@ -22,4 +22,5 @@ func Recipe_Routes(app *fiber.App) {
 	r.Patch("/review", func(c *fiber.Ctx) error { return handlers.Patch_Recipe_Review(c, setup.DB) })
 	r.Delete("", func(c *fiber.Ctx) error { return handlers.Delete_Recipe(c, setup.DB) })
 	r.Delete("/like", func(c *fiber.Ctx) error { return handlers.Delete_Recipe_Like(c, setup.DB) })
+	r.Delete("/review", func(c *fiber.Ctx) error { return handlers.Delete_Recipe_Review(c, setup.DB) })
 }
