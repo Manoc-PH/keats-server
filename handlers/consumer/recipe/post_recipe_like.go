@@ -47,7 +47,7 @@ func Post_Recipe_Like(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Post_Recipe_Like | Error on save_recipe_like: ", err.Error())
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
-	err = update_recipe_likes(txn, reqData.Recipe_Id)
+	err = update_recipe_likes(txn, reqData.Recipe_Id, true)
 	if err != nil {
 		log.Println("Post_Recipe_Like | Error on update_recipe_likes: ", err.Error())
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
@@ -96,12 +96,22 @@ func save_recipe_like(txn *sql.Tx, recipe_id uint, owner_id uuid.UUID) error {
 	}
 	return nil
 }
-func update_recipe_likes(txn *sql.Tx, recipe_id uint) error {
-	_, err := txn.Exec(`UPDATE recipe SET likes = likes + 1 WHERE id = $1`,
-		recipe_id,
-	)
-	if err != nil {
-		return err
+func update_recipe_likes(txn *sql.Tx, recipe_id uint, add bool) error {
+	if add {
+		_, err := txn.Exec(`UPDATE recipe SET likes = likes + 1 WHERE id = $1`,
+			recipe_id,
+		)
+		if err != nil {
+			return err
+		}
+	}
+	if !add {
+		_, err := txn.Exec(`UPDATE recipe SET likes = likes - 1 WHERE id = $1`,
+			recipe_id,
+		)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
