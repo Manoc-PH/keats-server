@@ -19,6 +19,7 @@ func Recipe_Routes(app *fiber.App) {
 	r.Get("/instructions", func(c *fiber.Ctx) error { return handlers.Get_Recipe_Instructions(c, setup.DB) })
 	r.Get("/reviews", func(c *fiber.Ctx) error { return handlers.Get_Recipe_Reviews(c, setup.DB) })
 	r.Get("/search", func(c *fiber.Ctx) error { return handlers.Get_Search_Recipe(c, setup.DB_Search) })
+	r.Get("/discovery", func(c *fiber.Ctx) error { return handlers.Get_Recipe_Discovery(c, setup.DB) })
 	r.Patch("", func(c *fiber.Ctx) error { return handlers.Patch_Recipe(c, setup.DB, setup.DB_Search) })
 	r.Patch("/review", func(c *fiber.Ctx) error { return handlers.Patch_Recipe_Review(c, setup.DB, setup.DB_Search) })
 	r.Delete("", func(c *fiber.Ctx) error { return handlers.Delete_Recipe(c, setup.DB, setup.DB_Search) })
