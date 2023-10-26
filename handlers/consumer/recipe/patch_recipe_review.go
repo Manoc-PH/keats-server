@@ -9,9 +9,10 @@ import (
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/meilisearch/meilisearch-go"
 )
 
-func Patch_Recipe_Review(c *fiber.Ctx, db *sql.DB) error {
+func Patch_Recipe_Review(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error {
 	// auth validation
 	_, _, err := middlewares.AuthMiddleware(c)
 	if err != nil {
@@ -50,6 +51,13 @@ func Patch_Recipe_Review(c *fiber.Ctx, db *sql.DB) error {
 
 	// updating recipe
 	err = update_recipe_rating(tx, new_rating, reqData.Recipe_Id, uint(count))
+	if err != nil {
+		log.Println("Patch_Recipe_Review | Error on update_recipe_rating: ", err.Error())
+		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
+	}
+
+	// Updating recipe on meili
+	err = update_recipe_rating_meili(db_search, new_rating, reqData.Recipe_Id, uint(count))
 	if err != nil {
 		log.Println("Patch_Recipe_Review | Error on update_recipe_rating: ", err.Error())
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
