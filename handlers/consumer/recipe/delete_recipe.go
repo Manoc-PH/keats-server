@@ -7,11 +7,13 @@ import (
 	"server/models"
 	schemas "server/schemas/consumer/recipe"
 	"server/utilities"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/meilisearch/meilisearch-go"
 )
 
-func Delete_Recipe(c *fiber.Ctx, db *sql.DB) error {
+func Delete_Recipe(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error {
 	// auth validation
 	_, owner_id, err := middlewares.AuthMiddleware(c)
 	if err != nil {
@@ -59,6 +61,13 @@ func Delete_Recipe(c *fiber.Ctx, db *sql.DB) error {
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
 
+	// deleting recipe from meilisearch
+	err = delete_recipe_meili(db_search, reqData.ID)
+	if err != nil {
+		log.Println("Delete_Recipe | Error on delete_recipe_meili: ", err.Error())
+		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
+	}
+
 	// committing DB transaction
 	err = tx.Commit()
 	if err != nil {
@@ -83,6 +92,10 @@ func delete_recipe(tx *sql.Tx, recipe_id uint) error {
 }
 func delete_recipe_nutrient(tx *sql.Tx, nutrient_id uint) error {
 	_, err := tx.Exec(`DELETE FROM nutrient WHERE id = $1`, nutrient_id)
+	return err
+}
+func delete_recipe_meili(db_search *meilisearch.Client, recipe_id uint) error {
+	_, err := db_search.Index("recipes").DeleteDocument(strconv.FormatUint(uint64(recipe_id), 10))
 	return err
 }
 

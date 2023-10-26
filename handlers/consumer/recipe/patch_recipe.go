@@ -68,6 +68,7 @@ func Patch_Recipe(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(reqData)
 }
 
+// TODO ADD UPDATE FOR MEILISEARCH
 func update_recipe_details(tx *sql.Tx, data *schemas.Recipe_Patch) error {
 	// TODO ADD category_id, thumbnail_image_link, main_image_link
 	_, err := tx.Exec(`UPDATE recipe SET 
