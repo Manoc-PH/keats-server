@@ -10,9 +10,10 @@ import (
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/meilisearch/meilisearch-go"
 )
 
-func Patch_Recipe(c *fiber.Ctx, db *sql.DB) error {
+func Patch_Recipe(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error {
 	// auth validation
 	_, _, err := middlewares.AuthMiddleware(c)
 	if err != nil {
@@ -59,6 +60,13 @@ func Patch_Recipe(c *fiber.Ctx, db *sql.DB) error {
 		}
 	}
 
+	// Updating recipe in meilli
+	err = update_recipe_details_meili(db_search, &reqData.Recipe)
+	if err != nil {
+		log.Println("Patch_Recipe | Error on update_recipe_details_meili: ", err.Error())
+		return utilities.Send_Error(c, "An error occured in updating recipe details", fiber.StatusInternalServerError)
+	}
+
 	err = txn.Commit()
 	if err != nil {
 		txn.Rollback()
@@ -68,7 +76,6 @@ func Patch_Recipe(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(reqData)
 }
 
-// TODO ADD UPDATE FOR MEILISEARCH
 func update_recipe_details(tx *sql.Tx, data *schemas.Recipe_Patch) error {
 	// TODO ADD category_id, thumbnail_image_link, main_image_link
 	_, err := tx.Exec(`UPDATE recipe SET 
@@ -87,7 +94,17 @@ func update_recipe_details(tx *sql.Tx, data *schemas.Recipe_Patch) error {
 		data.Description,
 		data.ID,
 	)
-
+	return err
+}
+func update_recipe_details_meili(db_search *meilisearch.Client, data *schemas.Recipe_Patch) error {
+	document := []map[string]interface{}{
+		{
+			"id":      data.ID,
+			"name":    data.Name,
+			"name_ph": data.Name_Ph,
+		},
+	}
+	_, err := db_search.Index("recipes").UpdateDocuments(document)
 	return err
 }
 func update_recipe_ingredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredient, recipe schemas.Recipe_Patch) error {
