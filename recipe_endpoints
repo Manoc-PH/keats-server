@@ -1,4 +1,3 @@
-delete recipe review
 get search recipe
-get recommended recipes
+get discover recipes
 get filtered recipes
