@@ -101,7 +101,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	// *Food
-	if reqData.Food_Id != 0 && len(reqData.Food_Ingredients) < 1 {
+	if reqData.Food_Id != 0 {
 		food := &models.Food{}
 		food_nutrients := models.Nutrient{}
 		daily_nutrients := models.Daily_Nutrients{Account_Id: owner_id}

@@ -41,3 +41,8 @@ type Ingredient_Image struct {
 	Amount_Unit           string  `json:"amount_unit"`
 	Amount_Unit_Desc      string  `json:"amount_unit_desc"`
 }
+
+type Edible_Category struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
