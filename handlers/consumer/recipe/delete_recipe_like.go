@@ -66,13 +66,13 @@ func Delete_Recipe_Like(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(reqData)
 }
 
-func get_recipe_like(tx *sql.Tx, recipe_id uint, owner_id uuid.UUID, recipe_like *models.Recipe_Like) error {
+func get_recipe_like(tx *sql.Tx, recipe_id uuid.UUID, owner_id uuid.UUID, recipe_like *models.Recipe_Like) error {
 	row := tx.QueryRow(`SELECT id FROM recipe_like WHERE recipe_id = $1 AND owner_id = $2`, recipe_id, owner_id)
 	err := row.Scan(&recipe_like.ID)
 	return err
 }
 
-func delete_recipe_like(tx *sql.Tx, id uint) error {
+func delete_recipe_like(tx *sql.Tx, id uuid.UUID) error {
 	_, err := tx.Exec(`DELETE FROM recipe_like WHERE id = $1`, id)
 	return err
 }

@@ -7,9 +7,9 @@ import (
 	"server/models"
 	schemas "server/schemas/consumer/recipe"
 	"server/utilities"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/meilisearch/meilisearch-go"
 )
 
@@ -78,7 +78,7 @@ func Delete_Recipe(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) erro
 	return c.Status(fiber.StatusOK).JSON(reqData)
 }
 
-func get_recipe_nutrient_id_and_owner(db *sql.DB, recipe_id uint, recipe *models.Recipe) error {
+func get_recipe_nutrient_id_and_owner(db *sql.DB, recipe_id uuid.UUID, recipe *models.Recipe) error {
 	row := db.QueryRow(`SELECT nutrient_id, owner_id FROM recipe WHERE id = $1`, recipe_id)
 	err := row.Scan(&recipe.Nutrient_Id, &recipe.Owner_Id)
 	if err != nil {
@@ -86,16 +86,16 @@ func get_recipe_nutrient_id_and_owner(db *sql.DB, recipe_id uint, recipe *models
 	}
 	return nil
 }
-func delete_recipe(tx *sql.Tx, recipe_id uint) error {
+func delete_recipe(tx *sql.Tx, recipe_id uuid.UUID) error {
 	_, err := tx.Exec(`DELETE FROM recipe WHERE id = $1`, recipe_id)
 	return err
 }
-func delete_recipe_nutrient(tx *sql.Tx, nutrient_id uint) error {
+func delete_recipe_nutrient(tx *sql.Tx, nutrient_id uuid.UUID) error {
 	_, err := tx.Exec(`DELETE FROM nutrient WHERE id = $1`, nutrient_id)
 	return err
 }
-func delete_recipe_meili(db_search *meilisearch.Client, recipe_id uint) error {
-	_, err := db_search.Index("recipes").DeleteDocument(strconv.FormatUint(uint64(recipe_id), 10))
+func delete_recipe_meili(db_search *meilisearch.Client, recipe_id uuid.UUID) error {
+	_, err := db_search.Index("recipes").DeleteDocument(recipe_id.String())
 	return err
 }
 
