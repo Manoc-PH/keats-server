@@ -92,7 +92,7 @@ func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func query_intake(db *sql.DB, user_id uuid.UUID, intake_id uint) *sql.Row {
+func query_intake(db *sql.DB, user_id uuid.UUID, intake_id uuid.UUID) *sql.Row {
 	row := db.QueryRow(`SELECT
 			intake.id,
 			intake.account_id,
