@@ -54,7 +54,6 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 		row = query_daily_nutrients(db, owner_id)
 		err = scan_daily_nutrients(row, &daily_nutrients)
 		if err != nil {
-			log.Println("Post_Intake | Error on scanning daily nutrients: ", err.Error())
 			if err.Error() == sql.ErrNoRows.Error() {
 				err = generate_daily_nutrients(db, owner_id, &daily_nutrients)
 				if err != nil {
@@ -62,6 +61,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 					return utilities.Send_Error(c, "An error occured in getting daily nutrients", fiber.StatusInternalServerError)
 				}
 			} else {
+				log.Println("Post_Intake | Error on scanning daily nutrients: ", err.Error())
 				return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 			}
 		}
@@ -120,7 +120,6 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 		row = query_daily_nutrients(db, owner_id)
 		err = scan_daily_nutrients(row, &daily_nutrients)
 		if err != nil {
-			log.Println("Post_Intake | Error on scanning daily nutrients: ", err.Error())
 			if err.Error() == sql.ErrNoRows.Error() {
 				err = generate_daily_nutrients(db, owner_id, &daily_nutrients)
 				if err != nil {
@@ -128,6 +127,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 					return utilities.Send_Error(c, "An error occured in getting daily nutrients", fiber.StatusInternalServerError)
 				}
 			} else {
+				log.Println("Post_Intake | Error on scanning daily nutrients: ", err.Error())
 				return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 			}
 		}
