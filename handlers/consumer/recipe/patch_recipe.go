@@ -274,10 +274,11 @@ func update_nutrient(tx *sql.Tx, nutrient *models.Nutrient) error {
 }
 func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, recipe schemas.Recipe_Patch) error {
 	stmtInsert, err := tx.Prepare(`INSERT INTO recipe_instruction (
+			id,
 			recipe_id,
 			instruction_description,
 			step_num)
-		VALUES ($1, $2, $3) RETURNING id`)
+		VALUES ($1, $2, $3, $4)`)
 	if err != nil {
 		log.Println("Error on update_instructions(stmtInsert)")
 		return err
@@ -295,9 +296,12 @@ func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, r
 		log.Println("Error on update_instructions(stmtDelete)")
 		return err
 	}
-	for _, item := range *data {
+	for i, item := range *data {
 		if item.Action_Type == constants.Action_Types.Insert {
+			id := uuid.New()
+			(*data)[i].ID = id
 			_, err = stmtInsert.Exec(
+				id,
 				recipe.ID,
 				item.Instruction_Description,
 				item.Step_Num)
@@ -326,7 +330,7 @@ func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, r
 	}
 	return nil
 }
-func get_ingredient_nutrient_tx(ingredient_mapping_id uint, tx *sql.Tx, nutrient *models.Nutrient) error {
+func get_ingredient_nutrient_tx(ingredient_mapping_id uuid.UUID, tx *sql.Tx, nutrient *models.Nutrient) error {
 	row := tx.QueryRow(`SELECT
 			nutrient.id,
 			nutrient.amount,
@@ -373,7 +377,7 @@ func get_ingredient_nutrient_tx(ingredient_mapping_id uint, tx *sql.Tx, nutrient
 	}
 	return nil
 }
-func get_food_nutrient_tx(food_id uint, tx *sql.Tx, nutrient *models.Nutrient) error {
+func get_food_nutrient_tx(food_id uuid.UUID, tx *sql.Tx, nutrient *models.Nutrient) error {
 	row := tx.QueryRow(`SELECT 
 			nutrient.id,
 			nutrient.amount,
@@ -424,14 +428,14 @@ func generate_nutrients_tx(tx *sql.Tx, reqData *[]schemas.Recipe_Ingredient_Sche
 	nutrient := new(models.Nutrient)
 	for _, item := range *reqData {
 		item_nutrient := new(models.Nutrient)
-		if item.Ingredient_Mapping_Id != 0 {
+		if item.Ingredient_Mapping_Id != constants.Empty_UUID {
 			err := get_ingredient_nutrient_tx(item.Ingredient_Mapping_Id, tx, item_nutrient)
 			if err != nil {
 				log.Println("Error on get_ingredient_nutrient_tx")
 				return nil, err
 			}
 		}
-		if item.Food_Id != 0 {
+		if item.Food_Id != constants.Empty_UUID {
 			err := get_food_nutrient_tx(item.Food_Id, tx, item_nutrient)
 			if err != nil {
 				log.Println("Error on get_food_nutrient_tx")
