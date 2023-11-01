@@ -3,12 +3,14 @@ package handlers
 import (
 	"database/sql"
 	"log"
+	"server/constants"
 	"server/middlewares"
 	"server/models"
 	schemas "server/schemas/consumer/food"
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Get_Food_Details(c *fiber.Ctx, db *sql.DB) error {
@@ -56,8 +58,8 @@ func Get_Food_Details(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func query_food_and_nutrient(food_id uint, barcode string, db *sql.DB) *sql.Row {
-	if food_id != 0 {
+func query_food_and_nutrient(food_id uuid.UUID, barcode string, db *sql.DB) *sql.Row {
+	if food_id != constants.Empty_UUID {
 		row := db.QueryRow(`SELECT
 				food.id,
 				food.name,
@@ -160,7 +162,7 @@ func scan_food_and_nutrient(row *sql.Row, food *models.Food, nutrient *models.Nu
 	}
 	return nil
 }
-func query_and_scan_food_images(db *sql.DB, food_id uint) ([]models.Food_Image, error) {
+func query_and_scan_food_images(db *sql.DB, food_id uuid.UUID) ([]models.Food_Image, error) {
 	rows, err := db.Query(`SELECT
 			id,
 			food_id,
