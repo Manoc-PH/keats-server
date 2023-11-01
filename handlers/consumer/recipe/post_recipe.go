@@ -325,8 +325,10 @@ func save_recipe_ingredients(txn *sql.Tx, recipe *schemas.Req_Post_Recipe) error
 	defer stmt.Close()
 	// Insert each row
 	for i, item := range recipe.Recipe_Ingredients {
-		recipe.Recipe_Ingredients[i].ID = uuid.New()
+		id := uuid.New()
+		recipe.Recipe_Ingredients[i].ID = id
 		_, err := stmt.Exec(
+			id,
 			item.ID,
 			item.Food_Id,
 			item.Ingredient_Mapping_Id,
@@ -360,9 +362,10 @@ func save_recipe_instructions(txn *sql.Tx, recipe *schemas.Req_Post_Recipe) erro
 	defer stmt.Close()
 	// Insert each row
 	for i, item := range recipe.Recipe_Instructions {
-		recipe.Recipe_Instructions[i].ID = uuid.New()
+		id := uuid.New()
+		recipe.Recipe_Instructions[i].ID = id
 		_, err := stmt.Exec(
-			item.ID,
+			id,
 			recipe.Recipe.ID,
 			item.Instruction_Description,
 			item.Step_Num,
@@ -394,6 +397,7 @@ func save_nutrient(txn *sql.Tx, nutrient *models.Nutrient) error {
 			iron,
 			calcium)
 		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
+		nutrient.ID,
 		nutrient.Amount,
 		nutrient.Amount_Unit,
 		nutrient.Amount_Unit_Desc,

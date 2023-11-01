@@ -62,9 +62,10 @@ func insert_recipe_images(db *sql.DB, recipe_images []schemas.Recipe_Image_Schem
 
 	// Insert each row
 	for i, img := range recipe_images {
-		recipe_images[i].ID = uuid.New()
+		id := uuid.New()
+		recipe_images[i].ID = id
 		_, err := stmt.Exec(
-			img.ID,
+			id,
 			img.Recipe_Id,
 			img.Name_File,
 			img.Name_URL,

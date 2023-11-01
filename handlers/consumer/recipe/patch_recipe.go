@@ -10,6 +10,7 @@ import (
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/meilisearch/meilisearch-go"
 )
 
@@ -109,6 +110,7 @@ func update_recipe_details_meili(db_search *meilisearch.Client, data *schemas.Re
 }
 func update_recipe_ingredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredient, recipe schemas.Recipe_Patch) error {
 	stmtInsert, err := tx.Prepare(`INSERT INTO recipe_ingredient (
+			id,
 			food_id,
 			ingredient_mapping_id,
 			amount,
@@ -116,7 +118,7 @@ func update_recipe_ingredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredie
 			amount_unit_desc,
 			serving_size,
 			recipe_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 	)
 	if err != nil {
 		log.Println(" Error on update_recipe_ingredients")
@@ -139,9 +141,12 @@ func update_recipe_ingredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredie
 		log.Println(" Error on update_recipe_ingredients")
 		return err
 	}
-	for _, item := range *data {
+	for i, item := range *data {
 		if item.Action_Type == constants.Action_Types.Insert {
+			id := uuid.New()
+			(*data)[i].ID = id
 			_, err = stmtInsert.Exec(
+				id,
 				item.Food_Id,
 				item.Ingredient_Mapping_Id,
 				item.Amount,
