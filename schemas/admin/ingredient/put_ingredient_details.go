@@ -1,6 +1,10 @@
 package schemas
 
-import "server/models"
+import (
+	"server/models"
+
+	"github.com/google/uuid"
+)
 
 type Ingredient_Details struct {
 	Ingredient            models.Ingredient            `json:"ingredient"`
@@ -11,6 +15,6 @@ type Ingredient_Details struct {
 }
 
 type Req_Put_Ingredient_Details struct {
-	Ingredient_Mapping_ID uint               `json:"ingredient_mapping_id" validate:"required"`
+	Ingredient_Mapping_ID uuid.UUID          `json:"ingredient_mapping_id" validate:"required"`
 	Ingredient_Details    Ingredient_Details `json:"ingredient_details"`
 }
