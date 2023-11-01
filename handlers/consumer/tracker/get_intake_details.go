@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"log"
+	"server/constants"
 	"server/middlewares"
 	"server/models"
 	schemas "server/schemas/consumer/tracker"
@@ -53,7 +54,7 @@ func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 		Amount_Unit_Desc:      intake.Amount_Unit_Desc,
 		Serving_Size:          intake.Serving_Size,
 	}
-	if intake.Ingredient_Mapping_Id != 0 {
+	if intake.Ingredient_Mapping_Id != constants.Empty_UUID {
 		ingredient_mapping := schemas.Ingredient_Mapping_Schema{}
 		response.Ingredient = &schemas.Intake_Ingredient{}
 		// Getting ingredient data
@@ -71,7 +72,7 @@ func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 		response.Ingredient.Images = images
 		response.Food = nil
 	}
-	if intake.Food_Id != 0 {
+	if intake.Food_Id != constants.Empty_UUID {
 		food_mapping := schemas.Food_Mapping_Schema{}
 		response.Food = &schemas.Intake_Food{}
 		// Getting ingredient data
@@ -124,7 +125,7 @@ func scan_intake(row *sql.Row, intake *models.Intake) error {
 	)
 	return err
 }
-func get_ingredient_images(db *sql.DB, ingredient_mapping_id uint) ([]models.Ingredient_Image, error) {
+func get_ingredient_images(db *sql.DB, ingredient_mapping_id uuid.UUID) ([]models.Ingredient_Image, error) {
 	rows, err := db.Query(`SELECT
 			id,
 			ingredient_mapping_id,
@@ -162,7 +163,7 @@ func get_ingredient_images(db *sql.DB, ingredient_mapping_id uint) ([]models.Ing
 	}
 	return ingredient_images, nil
 }
-func get_food_images(db *sql.DB, food_id uint) ([]models.Food_Image, error) {
+func get_food_images(db *sql.DB, food_id uuid.UUID) ([]models.Food_Image, error) {
 	rows, err := db.Query(`SELECT
 			id,
 			food_id,

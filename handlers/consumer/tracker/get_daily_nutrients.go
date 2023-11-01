@@ -78,6 +78,7 @@ func generate_daily_nutrients(db *sql.DB, Owner_Id uuid.UUID, daily_nutrients *m
 		return err
 	}
 	prtn, crbs, fts := utilities.Calculate_Daily_Nutrients(calories, diet_plan.Protein_Percentage, diet_plan.Carbs_Percentage, diet_plan.Fats_Percentage)
+	daily_nutrients.ID = uuid.New()
 	daily_nutrients.Max_Calories = calories
 	daily_nutrients.Max_Protein = prtn
 	daily_nutrients.Max_Carbs = crbs
@@ -178,8 +179,9 @@ func query_and_scan_account_details(
 	return err
 }
 func insert_d_nutrients(db *sql.DB, daily_nutrients *models.Daily_Nutrients, consumer_vitals *models.Consumer_Vitals) error {
-	row := db.
-		QueryRow(`INSERT INTO daily_nutrients (
+	_, err := db.
+		Exec(`INSERT INTO daily_nutrients (
+			id,
 			account_id,
 			date_created,
 			calories,
@@ -192,8 +194,8 @@ func insert_d_nutrients(db *sql.DB, daily_nutrients *models.Daily_Nutrients, con
 			max_fats,
 			activity_lvl_id,
 			diet_plan_id
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
-			daily_nutrients.Account_Id, time.Now().Format(constants.YYYY_MM_DD), 0, 0, 0, 0,
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
+			daily_nutrients.ID, daily_nutrients.Account_Id, time.Now().Format(constants.YYYY_MM_DD), 0, 0, 0, 0,
 			daily_nutrients.Max_Calories,
 			daily_nutrients.Max_Protein,
 			daily_nutrients.Max_Carbs,
@@ -201,7 +203,6 @@ func insert_d_nutrients(db *sql.DB, daily_nutrients *models.Daily_Nutrients, con
 			consumer_vitals.Activity_Lvl_Id,
 			consumer_vitals.Diet_Plan_Id,
 		)
-	err := row.Scan(&daily_nutrients.ID)
 	if err != nil {
 		return err
 	}
