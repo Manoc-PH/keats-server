@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"log"
+	"server/constants"
 	"server/middlewares"
 	"server/models"
 	schemas "server/schemas/consumer/tracker"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
@@ -27,7 +29,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Post_Intake | Error on query validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
-	if reqData.Food_Id != 0 && reqData.Ingredient_Mapping_Id != 0 {
+	if reqData.Food_Id != constants.Empty_UUID && reqData.Ingredient_Mapping_Id != constants.Empty_UUID {
 		log.Println("Post_Intake | Error: user sending recipe id and food id")
 		return utilities.Send_Error(c, "only one food item id required, received 2", fiber.StatusBadRequest)
 	}
@@ -37,7 +39,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 
 	//* data processing
 	// *Ingredient
-	if reqData.Ingredient_Mapping_Id != 0 {
+	if reqData.Ingredient_Mapping_Id != constants.Empty_UUID {
 		ingredient_mapping := &schemas.Ingredient_Mapping_Schema{}
 		daily_nutrients := models.Daily_Nutrients{Account_Id: owner_id}
 		nutrients_to_add := models.Nutrient{}
@@ -67,6 +69,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 		calc_nutrients(&nutrients_to_add, &ingredient_mapping.Nutrient, reqData.Amount)
 		nutrients_to_add.ID = daily_nutrients.ID
 		new_intake := models.Intake{
+			ID:                    uuid.New(),
 			Account_Id:            owner_id,
 			Date_Created:          time.Now(),
 			Ingredient_Mapping_Id: reqData.Ingredient_Mapping_Id,
@@ -101,7 +104,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	// *Food
-	if reqData.Food_Id != 0 {
+	if reqData.Food_Id != constants.Empty_UUID {
 		food := &models.Food{}
 		food_nutrients := models.Nutrient{}
 		daily_nutrients := models.Daily_Nutrients{Account_Id: owner_id}
@@ -132,6 +135,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 		calc_nutrients(&nutrients_to_add, &food_nutrients, reqData.Amount)
 		nutrients_to_add.ID = daily_nutrients.ID
 		new_intake := models.Intake{
+			ID:               uuid.New(),
 			Account_Id:       owner_id,
 			Date_Created:     time.Now(),
 			Food_Id:          reqData.Food_Id,
@@ -168,7 +172,7 @@ func Post_Intake(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(response_data)
 }
 
-func query_ingredient(ingredient_mapping_id uint, db *sql.DB) *sql.Row {
+func query_ingredient(ingredient_mapping_id uuid.UUID, db *sql.DB) *sql.Row {
 	row := db.QueryRow(`SELECT
 			ingredient.id, ingredient.name, coalesce(ingredient.name_ph, ''), ingredient.name_owner,
 			ingredient_variant.id, ingredient_variant.name, coalesce(ingredient_variant.name_ph, ''), 
@@ -256,7 +260,7 @@ func calc_nutrients(nutrients_to_add *models.Nutrient, nutrient *models.Nutrient
 	nutrients_to_add.Iron = (nutrient.Iron * amount_modifier)
 	nutrients_to_add.Calcium = (nutrient.Calcium * amount_modifier)
 }
-func query_food_and_nutrient(food_id uint, db *sql.DB) *sql.Row {
+func query_food_and_nutrient(food_id uuid.UUID, db *sql.DB) *sql.Row {
 	row := db.QueryRow(`SELECT
 			food.id, food.name, food.name_ph, food.name_owner,
 			nutrient.id,
@@ -353,9 +357,10 @@ func save_intake_ingredient(txn *sql.Tx, intake *models.Intake) error {
 	// 	log.Println("save_intake_ingredient (update account_game_stat)| Error: ", err.Error())
 	// 	return err
 	// }
-	row := txn.QueryRow(
-		`INSERT INTO intake (account_id, date_created, ingredient_mapping_id, amount,	amount_unit, amount_unit_desc, serving_size)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)  RETURNING id`,
+	_, err := txn.Exec(
+		`INSERT INTO intake (id, account_id, date_created, ingredient_mapping_id, amount,	amount_unit, amount_unit_desc, serving_size)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		intake.ID,
 		intake.Account_Id,
 		intake.Date_Created,
 		intake.Ingredient_Mapping_Id,
@@ -364,7 +369,6 @@ func save_intake_ingredient(txn *sql.Tx, intake *models.Intake) error {
 		intake.Amount_Unit_Desc,
 		intake.Serving_Size,
 	)
-	err := row.Scan(&intake.ID)
 	if err != nil {
 		log.Println("save_intake_ingredient (insert intake)| Error: ", err.Error())
 		return err
@@ -372,9 +376,10 @@ func save_intake_ingredient(txn *sql.Tx, intake *models.Intake) error {
 	return nil
 }
 func save_intake_food(txn *sql.Tx, intake *models.Intake) error {
-	row := txn.QueryRow(
-		`INSERT INTO intake (account_id, date_created, food_id, amount,	amount_unit, amount_unit_desc, serving_size)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)  RETURNING id`,
+	_, err := txn.Exec(
+		`INSERT INTO intake (id, account_id, date_created, food_id, amount,	amount_unit, amount_unit_desc, serving_size)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		intake.ID,
 		intake.Account_Id,
 		intake.Date_Created,
 		intake.Food_Id,
@@ -383,7 +388,6 @@ func save_intake_food(txn *sql.Tx, intake *models.Intake) error {
 		intake.Amount_Unit_Desc,
 		intake.Serving_Size,
 	)
-	err := row.Scan(&intake.ID)
 	if err != nil {
 		log.Println("save_intake_food (insert intake)| Error: ", err.Error())
 		return err
