@@ -54,7 +54,7 @@ func Post_Recipe(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error 
 
 	// Generating signature
 	strTimestamp := strconv.FormatInt(reqData.Timestamp.Unix(), 10)
-	signature, err := cld.SignParameters(url.Values{"timestamp": []string{strTimestamp}}, setup.CloudinaryConfig.APISecret)
+	signature, err := cld.SignParameters(url.Values{"timestamp": []string{strTimestamp}}, setup.Cloudinary_Config.APISecret)
 	response := schemas.Res_Post_Recipe{
 		Recipe:              reqData.Recipe,
 		Recipe_Ingredients:  reqData.Recipe_Ingredients,

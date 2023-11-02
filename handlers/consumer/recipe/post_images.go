@@ -5,6 +5,7 @@ import (
 	"log"
 	"server/middlewares"
 	schemas "server/schemas/consumer/recipe"
+	"server/setup"
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
@@ -63,14 +64,15 @@ func insert_recipe_images(db *sql.DB, recipe_images []schemas.Recipe_Image_Schem
 	// Insert each row
 	for i, img := range recipe_images {
 		id := uuid.New()
-		name_file := "recipe/" + id.String() + ".jpg"
+		name_file := "/recipe/images/" + id.String() + ".jpg"
+		name_url := setup.Cloudinary_URL + "/" + setup.Cloudinary_Config.CloudName + "/image/upload/recipe/images/" + id.String() + ".jpg"
 		recipe_images[i].ID = id
 		recipe_images[i].Name_File = name_file
 		_, err := stmt.Exec(
 			id,
 			img.Recipe_Id,
 			name_file,
-			img.Name_URL,
+			name_url,
 			img.Amount,
 			img.Amount_Unit,
 			img.Amount_Unit_Desc,
