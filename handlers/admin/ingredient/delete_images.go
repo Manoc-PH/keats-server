@@ -114,18 +114,18 @@ func hasDuplicateImages(db *sql.DB, name_url string) (bool, error) {
 func delete_image_cloudinary(image_names api.CldAPIArray) (*admin.DeleteAssetsResult, error) {
 	apiURL :=
 		"https://" +
-			setup.CloudinaryConfig.APIKey +
-			":" + setup.CloudinaryConfig.APISecret +
+			setup.Cloudinary_Config.APIKey +
+			":" + setup.Cloudinary_Config.APISecret +
 			"@api.cloudinary.com/v1_1/" +
-			setup.CloudinaryConfig.CloudName +
+			setup.Cloudinary_Config.CloudName +
 			"/resources/image/upload"
 	cld, err := cloudinary.NewFromURL(apiURL)
 	if err != nil {
 		return nil, err
 	}
-	cld.Admin.Config.Cloud.APIKey = setup.CloudinaryConfig.APIKey
-	cld.Admin.Config.Cloud.APISecret = setup.CloudinaryConfig.APISecret
-	cld.Admin.Config.Cloud.CloudName = setup.CloudinaryConfig.CloudName
+	cld.Admin.Config.Cloud.APIKey = setup.Cloudinary_Config.APIKey
+	cld.Admin.Config.Cloud.APISecret = setup.Cloudinary_Config.APISecret
+	cld.Admin.Config.Cloud.CloudName = setup.Cloudinary_Config.CloudName
 
 	var ctx = context.Background()
 	// SAMPLE PUBLIC ID:
