@@ -52,6 +52,7 @@ func Post_Recipe_Review(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client)
 	new_rating := (float32(sum+int(reqData.Rating)) / float32(count+1))
 
 	// updating recipe values
+	reqData.ID = uuid.New()
 	reqData.Owner_Id = owner_id
 	reqData.Date_Created = time.Now()
 
@@ -88,7 +89,7 @@ func Post_Recipe_Review(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client)
 	}
 	return c.Status(fiber.StatusOK).JSON(reqData)
 }
-func review_exists(owner_id uuid.UUID, recipe_id uint, tx *sql.Tx) bool {
+func review_exists(owner_id uuid.UUID, recipe_id uuid.UUID, tx *sql.Tx) bool {
 	row := tx.QueryRow(`
 		SELECT id FROM recipe_review 
 		WHERE owner_id = $1 AND	recipe_id = $2`, owner_id, recipe_id)
@@ -106,7 +107,7 @@ func review_exists(owner_id uuid.UUID, recipe_id uint, tx *sql.Tx) bool {
 	}
 	return false
 }
-func get_rating_sum_and_count(tx *sql.Tx, recipe_id uint) (sum int, count int, er error) {
+func get_rating_sum_and_count(tx *sql.Tx, recipe_id uuid.UUID) (sum int, count int, er error) {
 	row := tx.QueryRow(`SELECT COUNT(id), COALESCE(SUM(rating), 0) FROM recipe_review WHERE recipe_id = $1`, recipe_id)
 	var recipe_count int
 	var recipe_sum int
@@ -117,35 +118,35 @@ func get_rating_sum_and_count(tx *sql.Tx, recipe_id uint) (sum int, count int, e
 	return recipe_sum, recipe_count, nil
 }
 func save_recipe_review(tx *sql.Tx, recipe_review *schemas.Req_Post_Recipe_Review) error {
-	row := tx.QueryRow(`INSERT INTO 
+	_, err := tx.Exec(`INSERT INTO 
 		recipe_review(
+			id,
 			description,
 			rating,
 			owner_id,
 			recipe_id,
 			date_created)
-		VALUES($1, $2, $3, $4, $5)
-		RETURNING id`,
+		VALUES($1, $2, $3, $4, $5, $6)`,
+		recipe_review.ID,
 		recipe_review.Description,
 		recipe_review.Rating,
 		recipe_review.Owner_Id,
 		recipe_review.Recipe_Id,
 		recipe_review.Date_Created,
 	)
-	err := row.Scan(&recipe_review.ID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
-func update_recipe_rating(tx *sql.Tx, new_rating float32, recipe_id uint, count uint) error {
+func update_recipe_rating(tx *sql.Tx, new_rating float32, recipe_id uuid.UUID, count uint) error {
 	_, err := tx.Exec(`UPDATE recipe SET rating = $1, rating_count = $2 WHERE id = $3`, new_rating, count, recipe_id)
 	if err != nil {
 		return err
 	}
 	return nil
 }
-func update_recipe_rating_meili(db_search *meilisearch.Client, new_rating float32, recipe_id uint, count uint) error {
+func update_recipe_rating_meili(db_search *meilisearch.Client, new_rating float32, recipe_id uuid.UUID, count uint) error {
 	recipe_meili := map[string]interface{}{
 		"id":     recipe_id,
 		"rating": new_rating,

@@ -7,7 +7,7 @@ import (
 )
 
 type Food struct {
-	ID                   uint      `json:"id"`
+	ID                   uuid.UUID `json:"id"`
 	Name                 string    `json:"name"`
 	Name_Ph              string    `json:"name_ph"`
 	Name_Owner           string    `json:"name_owner"`
@@ -25,11 +25,11 @@ type Food_Category struct {
 	Name string `json:"name"`
 }
 type Food_Image struct {
-	ID               uint    `json:"id"`
-	Food_Id          uint    `json:"food_id"`
-	Name_File        string  `json:"name_file"`
-	Name_URL         string  `json:"name_url"`
-	Amount           float32 `json:"amount"`
-	Amount_Unit      string  `json:"amount_unit"`
-	Amount_Unit_Desc string  `json:"amount_unit_desc"`
+	ID               uuid.UUID `json:"id"`
+	Food_Id          uint      `json:"food_id"`
+	Name_File        string    `json:"name_file"`
+	Name_URL         string    `json:"name_url"`
+	Amount           float32   `json:"amount"`
+	Amount_Unit      string    `json:"amount_unit"`
+	Amount_Unit_Desc string    `json:"amount_unit_desc"`
 }

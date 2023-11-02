@@ -3,11 +3,13 @@ package handlers
 import (
 	"database/sql"
 	"log"
+	"server/constants"
 	"server/middlewares"
 	schemas "server/schemas/consumer/recipe"
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Get_Recipe_Ingredients(c *fiber.Ctx, db *sql.DB) error {
@@ -33,7 +35,7 @@ func Get_Recipe_Ingredients(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func get_recipe_ingredients(db *sql.DB, recipe_id uint, recipe_ings *[]schemas.Recipe_Ingredient_Details_Schema) error {
+func get_recipe_ingredients(db *sql.DB, recipe_id uuid.UUID, recipe_ings *[]schemas.Recipe_Ingredient_Details_Schema) error {
 	rows, err := db.Query(`SELECT
 			recipe_ingredient.id,
 			recipe_ingredient.ingredient_mapping_id,
@@ -87,11 +89,11 @@ func get_recipe_ingredients(db *sql.DB, recipe_id uint, recipe_ings *[]schemas.R
 			); err != nil {
 			return err
 		}
-		if recipe_ing.Ingredient_Mapping_Id != 0 {
+		if recipe_ing.Ingredient_Mapping_Id != constants.Empty_UUID {
 			recipe_ing.Name = ingredient_name + " " + ingredient_variant_name + " " + ingredient_subvariant_name
 			recipe_ing.Name_Owner = ingredient_owner_name
 		}
-		if recipe_ing.Food_Id != 0 {
+		if recipe_ing.Food_Id != constants.Empty_UUID {
 			recipe_ing.Name = food_name
 			recipe_ing.Name_Owner = food_owner_name
 		}

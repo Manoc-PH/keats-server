@@ -9,6 +9,7 @@ import (
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Get_Recipe_Instructions(c *fiber.Ctx, db *sql.DB) error {
@@ -34,7 +35,7 @@ func Get_Recipe_Instructions(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func get_recipe_instructions(db *sql.DB, recipe_id uint, recipe_ings *[]models.Recipe_Instruction) error {
+func get_recipe_instructions(db *sql.DB, recipe_id uuid.UUID, recipe_ings *[]models.Recipe_Instruction) error {
 	rows, err := db.Query(`SELECT 
 			id,
 			recipe_id,

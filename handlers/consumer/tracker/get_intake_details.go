@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"log"
+	"server/constants"
 	"server/middlewares"
 	"server/models"
 	schemas "server/schemas/consumer/tracker"
@@ -12,11 +13,10 @@ import (
 	"github.com/google/uuid"
 )
 
-// TODO Update this handler, add handler for food
 // Gets the details of the intake
 func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
-	_, Owner_Id, err := middlewares.AuthMiddleware(c)
+	_, owner_id, err := middlewares.AuthMiddleware(c)
 	if err != nil {
 		log.Println("Get_Intake_Details | Error on auth middleware: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusUnauthorized)
@@ -29,7 +29,7 @@ func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 	}
 	intake := models.Intake{}
 	// querying intake
-	row := query_intake(db, Owner_Id, reqData.Intake_ID)
+	row := query_intake(db, owner_id, reqData.Intake_ID)
 	// scanning intake
 	err = scan_intake(row, &intake)
 	if err != nil && err == sql.ErrNoRows {
@@ -53,7 +53,7 @@ func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 		Amount_Unit_Desc:      intake.Amount_Unit_Desc,
 		Serving_Size:          intake.Serving_Size,
 	}
-	if intake.Ingredient_Mapping_Id != 0 {
+	if intake.Ingredient_Mapping_Id != constants.Empty_UUID {
 		ingredient_mapping := schemas.Ingredient_Mapping_Schema{}
 		response.Ingredient = &schemas.Intake_Ingredient{}
 		// Getting ingredient data
@@ -71,7 +71,7 @@ func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 		response.Ingredient.Images = images
 		response.Food = nil
 	}
-	if intake.Food_Id != 0 {
+	if intake.Food_Id != constants.Empty_UUID {
 		food_mapping := schemas.Food_Mapping_Schema{}
 		response.Food = &schemas.Intake_Food{}
 		// Getting ingredient data
@@ -92,20 +92,20 @@ func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func query_intake(db *sql.DB, user_id uuid.UUID, intake_id uint) *sql.Row {
+func query_intake(db *sql.DB, owner_id uuid.UUID, intake_id uuid.UUID) *sql.Row {
 	row := db.QueryRow(`SELECT
 			intake.id,
 			intake.account_id,
 			intake.date_created,
-			COALESCE(intake.ingredient_mapping_id, 0) as ingredient_mapping_id,
-			COALESCE(intake.food_id, 0) as food_id,
+			intake.ingredient_mapping_id as ingredient_mapping_id,
+			intake.food_id as food_id,
 			intake.amount,
 			intake.amount_unit,
 			intake.amount_unit_desc,
 			intake.serving_size
 		FROM intake
 		WHERE intake.account_id = $1 AND intake.id = $2`,
-		user_id, intake_id,
+		owner_id, intake_id,
 	)
 	return row
 }
@@ -124,7 +124,7 @@ func scan_intake(row *sql.Row, intake *models.Intake) error {
 	)
 	return err
 }
-func get_ingredient_images(db *sql.DB, ingredient_mapping_id uint) ([]models.Ingredient_Image, error) {
+func get_ingredient_images(db *sql.DB, ingredient_mapping_id uuid.UUID) ([]models.Ingredient_Image, error) {
 	rows, err := db.Query(`SELECT
 			id,
 			ingredient_mapping_id,
@@ -162,7 +162,7 @@ func get_ingredient_images(db *sql.DB, ingredient_mapping_id uint) ([]models.Ing
 	}
 	return ingredient_images, nil
 }
-func get_food_images(db *sql.DB, food_id uint) ([]models.Food_Image, error) {
+func get_food_images(db *sql.DB, food_id uuid.UUID) ([]models.Food_Image, error) {
 	rows, err := db.Query(`SELECT
 			id,
 			food_id,

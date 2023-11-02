@@ -65,7 +65,7 @@ func Delete_Recipe_Review(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(reqData)
 }
 
-func delete_recipe_review(tx *sql.Tx, recipe_id uint, owner_id uuid.UUID) error {
+func delete_recipe_review(tx *sql.Tx, recipe_id uuid.UUID, owner_id uuid.UUID) error {
 	_, err := tx.Exec(`DELETE FROM recipe_review WHERE recipe_id = $1 AND owner_id = $2`,
 		recipe_id, owner_id)
 	return err

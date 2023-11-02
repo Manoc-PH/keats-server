@@ -65,7 +65,7 @@ func Post_Recipe_Like(c *fiber.Ctx, db *sql.DB) error {
 	}
 	return c.Status(fiber.StatusOK).JSON(reqData)
 }
-func like_exists(owner_id uuid.UUID, recipe_id uint, db *sql.DB) bool {
+func like_exists(owner_id uuid.UUID, recipe_id uuid.UUID, db *sql.DB) bool {
 	row := db.QueryRow(`
 		SELECT id FROM recipe_like 
 		WHERE owner_id = $1 AND	recipe_id = $2`, owner_id, recipe_id)
@@ -83,10 +83,11 @@ func like_exists(owner_id uuid.UUID, recipe_id uint, db *sql.DB) bool {
 	}
 	return false
 }
-func save_recipe_like(txn *sql.Tx, recipe_id uint, owner_id uuid.UUID) error {
+func save_recipe_like(txn *sql.Tx, recipe_id uuid.UUID, owner_id uuid.UUID) error {
 	_, err := txn.Exec(`INSERT INTO recipe_like
-			(owner_id, date_created, recipe_id)
-			VALUES($1, $2, $3) `,
+			(id, owner_id, date_created, recipe_id)
+			VALUES($1, $2, $3, $4) `,
+		uuid.New(),
 		owner_id,
 		time.Now(),
 		recipe_id,
@@ -96,7 +97,7 @@ func save_recipe_like(txn *sql.Tx, recipe_id uint, owner_id uuid.UUID) error {
 	}
 	return nil
 }
-func update_recipe_likes(txn *sql.Tx, recipe_id uint, add bool) error {
+func update_recipe_likes(txn *sql.Tx, recipe_id uuid.UUID, add bool) error {
 	if add {
 		_, err := txn.Exec(`UPDATE recipe SET likes = likes + 1 WHERE id = $1`,
 			recipe_id,

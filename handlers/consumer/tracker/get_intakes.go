@@ -16,13 +16,13 @@ import (
 // Gets the intakes for the day
 func Get_Intakes(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
-	_, Owner_Id, err := middlewares.AuthMiddleware(c)
+	_, owner_id, err := middlewares.AuthMiddleware(c)
 	if err != nil {
 		log.Println("Get_Intakes | Error on auth middleware: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusUnauthorized)
 	}
 	// querying intakes
-	intakes, err := query_and_scan_intakes(db, Owner_Id)
+	intakes, err := query_and_scan_intakes(db, owner_id)
 	// Intakes dont exist yet
 	if err != nil && err == sql.ErrNoRows {
 		log.Println("Get_Intakes | error in query_and_scan_intakes: ", err.Error())
@@ -36,13 +36,13 @@ func Get_Intakes(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(intakes)
 }
 
-func query_and_scan_intakes(db *sql.DB, user_id uuid.UUID) ([]schemas.Res_Get_Intakes, error) {
+func query_and_scan_intakes(db *sql.DB, owner_id uuid.UUID) ([]schemas.Res_Get_Intakes, error) {
 	rows, err := db.Query(`SELECT
 			intake.id,
 			intake.account_id,
 			intake.date_created,
-			COALESCE(intake.ingredient_mapping_id, 0) as ingredient_mapping_id,
-			COALESCE(intake.food_id, 0) as food_id,
+			intake.ingredient_mapping_id as ingredient_mapping_id,
+			intake.food_id as food_id,
 			intake.amount,
 			intake.amount_unit,
 			intake.amount_unit_desc,
@@ -50,7 +50,7 @@ func query_and_scan_intakes(db *sql.DB, user_id uuid.UUID) ([]schemas.Res_Get_In
 			COALESCE(food.name, '') as food_name,
 			COALESCE(food.name_ph, '') as food_name_ph,
 			COALESCE(food.name_owner, '') as food_name_owner,
-			COALESCE(ingredient.id, 0) as ingredient_id,
+			ingredient.id as ingredient_id,
 			COALESCE(ingredient.name, '') as ingredient_name,
 			COALESCE(ingredient.name_ph, '') as ingredient_name_ph,
 			COALESCE(ingredient_variant.name, '') as ingredient_variant_name,
@@ -66,7 +66,7 @@ func query_and_scan_intakes(db *sql.DB, user_id uuid.UUID) ([]schemas.Res_Get_In
 		LEFT JOIN ingredient_subvariant ON ingredient_mapping.ingredient_subvariant_id = ingredient_subvariant.id
 		WHERE intake.account_id = $1 AND intake.date_created >= $2
 		ORDER BY intake.date_created DESC`,
-		user_id, time.Now().Format(constants.YYYY_MM_DD),
+		owner_id, time.Now().Format(constants.YYYY_MM_DD),
 	)
 	if err != nil {
 		log.Println("Get_Intakes | error in querying intakes: ", err.Error())

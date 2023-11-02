@@ -13,6 +13,7 @@ import (
 
 	cld "github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Post_Images_Req(c *fiber.Ctx, db *sql.DB) error {
@@ -60,13 +61,14 @@ func insert_food_images_req(db *sql.DB, food_images []models.Food_Image) error {
 	// Prepare the SQL statement
 	stmt, err := txn.Prepare(
 		`INSERT INTO food_image (
+			id,
 			food_id,
 			name_file,
 			amount,
 			amount_unit,
 			amount_unit_desc
 			)
-			VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+			VALUES ($1, $2, $3, $4, $5)`,
 	)
 	if err != nil {
 		log.Println("insert_food_images_req (Prepare) | Error: ", err.Error())
@@ -76,15 +78,16 @@ func insert_food_images_req(db *sql.DB, food_images []models.Food_Image) error {
 
 	// Insert each row
 	for i, img := range food_images {
-		row := stmt.QueryRow(img.Food_Id, img.Name_File, img.Amount, img.Amount_Unit, img.Amount_Unit_Desc)
+		id := uuid.New()
+		_, err := stmt.Exec(id, img.Food_Id, img.Name_File, img.Amount, img.Amount_Unit, img.Amount_Unit_Desc)
 		new_image := models.Food_Image{
+			ID:               id,
 			Food_Id:          img.Food_Id,
 			Name_File:        img.Name_File,
 			Amount:           img.Amount,
 			Amount_Unit:      img.Amount_Unit,
 			Amount_Unit_Desc: img.Amount_Unit_Desc,
 		}
-		err = row.Scan(&new_image.ID)
 		food_images[i] = new_image
 		if err != nil {
 			log.Println("insert_food_images_req (Exec) | Error: ", err.Error())

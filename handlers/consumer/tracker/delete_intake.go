@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"log"
+	"server/constants"
 	"server/middlewares"
 	"server/models"
 	schemas "server/schemas/consumer/tracker"
@@ -60,7 +61,7 @@ func Delete_Intake(c *fiber.Ctx, db *sql.DB) error {
 	}
 	// TODO ADD HANDLER FOR FOOD
 	// Querying nutrient of intake
-	if intake.Ingredient_Mapping_Id != 0 {
+	if intake.Ingredient_Mapping_Id != constants.Empty_UUID {
 		row = query_ingredient_nutrient(intake.Ingredient_Mapping_Id, db)
 		err = scan_nutrient(row, &nutrient)
 		if err != nil {
@@ -68,7 +69,7 @@ func Delete_Intake(c *fiber.Ctx, db *sql.DB) error {
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
 	}
-	if intake.Food_Id != 0 {
+	if intake.Food_Id != constants.Empty_UUID {
 		row = query_food_nutrient(intake.Food_Id, db)
 		err = scan_nutrient(row, &nutrient)
 		if err != nil {
