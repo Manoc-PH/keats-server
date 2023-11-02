@@ -109,70 +109,125 @@ func update_recipe_details_meili(db_search *meilisearch.Client, data *schemas.Re
 	return err
 }
 func update_recipe_ingredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredient, recipe schemas.Recipe_Patch) error {
-	stmtInsert, err := tx.Prepare(`INSERT INTO recipe_ingredient (
+	stmt_insert_ingredient, err := tx.Prepare(`INSERT INTO recipe_ingredient (
 			id,
-			food_id,
 			ingredient_mapping_id,
 			amount,
 			amount_unit,
 			amount_unit_desc,
 			serving_size,
 			recipe_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 	)
 	if err != nil {
 		log.Println(" Error on update_recipe_ingredients")
 		return err
 	}
-	stmtUpdate, err := tx.Prepare(`UPDATE recipe_ingredient SET
+	defer stmt_insert_ingredient.Close()
+	stmt_insert_food, err := tx.Prepare(`INSERT INTO recipe_ingredient (
+			id,
+			food_id,
+			amount,
+			amount_unit,
+			amount_unit_desc,
+			serving_size,
+			recipe_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+	)
+	if err != nil {
+		log.Println(" Error on update_recipe_ingredients")
+		return err
+	}
+	defer stmt_insert_food.Close()
+	stmt_update_ingredient, err := tx.Prepare(`UPDATE recipe_ingredient SET
+			ingredient_mapping_id = $1,
+			amount = $2,
+			amount_unit = $3,
+			amount_unit_desc = $4,
+			serving_size = $5
+		WHERE id = $6`)
+	if err != nil {
+		log.Println(" Error on update_recipe_ingredients")
+		return err
+	}
+	defer stmt_update_ingredient.Close()
+	stmt_update_food, err := tx.Prepare(`UPDATE recipe_ingredient SET
 			food_id = $1,
-			ingredient_mapping_id = $2,
-			amount = $3,
-			amount_unit = $4,
-			amount_unit_desc = $5,
-			serving_size = $6
-		WHERE id = $7`)
+			amount = $2,
+			amount_unit = $3,
+			amount_unit_desc = $4,
+			serving_size = $5
+		WHERE id = $6`)
 	if err != nil {
 		log.Println(" Error on update_recipe_ingredients")
 		return err
 	}
-	stmtDelete, err := tx.Prepare(`DELETE FROM recipe_ingredient WHERE id = $1`)
+	defer stmt_update_food.Close()
+	stmt_delete, err := tx.Prepare(`DELETE FROM recipe_ingredient WHERE id = $1`)
 	if err != nil {
 		log.Println(" Error on update_recipe_ingredients")
 		return err
 	}
+	defer stmt_delete.Close()
 	for i, item := range *data {
 		if item.Action_Type == constants.Action_Types.Insert {
 			id := uuid.New()
 			(*data)[i].ID = id
-			_, err = stmtInsert.Exec(
-				id,
-				item.Food_Id,
-				item.Ingredient_Mapping_Id,
-				item.Amount,
-				item.Amount_Unit,
-				item.Amount_Unit_Desc,
-				item.Serving_Size,
-				recipe.ID)
-			if err != nil {
-				return err
+			if item.Ingredient_Mapping_Id != constants.Empty_UUID {
+				_, err = stmt_insert_ingredient.Exec(
+					id,
+					item.Ingredient_Mapping_Id,
+					item.Amount,
+					item.Amount_Unit,
+					item.Amount_Unit_Desc,
+					item.Serving_Size,
+					recipe.ID)
+				if err != nil {
+					return err
+				}
+			}
+			if item.Food_Id != constants.Empty_UUID {
+				_, err = stmt_insert_food.Exec(
+					id,
+					item.Food_Id,
+					item.Amount,
+					item.Amount_Unit,
+					item.Amount_Unit_Desc,
+					item.Serving_Size,
+					recipe.ID)
+				if err != nil {
+					return err
+				}
 			}
 		}
 		if item.Action_Type == constants.Action_Types.Update {
-			_, err = stmtUpdate.Exec(
-				item.Food_Id,
-				item.Ingredient_Mapping_Id,
-				item.Amount,
-				item.Amount_Unit,
-				item.Amount_Unit_Desc,
-				item.Serving_Size,
-				item.ID)
-			if err != nil {
-				return err
+			if item.Ingredient_Mapping_Id != constants.Empty_UUID {
+				_, err = stmt_update_ingredient.Exec(
+					item.Ingredient_Mapping_Id,
+					item.Amount,
+					item.Amount_Unit,
+					item.Amount_Unit_Desc,
+					item.Serving_Size,
+					item.ID)
+				if err != nil {
+					return err
+				}
+			}
+			if item.Food_Id != constants.Empty_UUID {
+				_, err = stmt_update_ingredient.Exec(
+					item.Food_Id,
+					item.Amount,
+					item.Amount_Unit,
+					item.Amount_Unit_Desc,
+					item.Serving_Size,
+					item.ID)
+				if err != nil {
+					return err
+				}
 			}
 		}
 		if item.Action_Type == constants.Action_Types.Delete {
-			_, err = stmtDelete.Exec(item.ID)
+			_, err = stmt_delete.Exec(item.ID)
 			if err != nil {
 				return err
 			}
@@ -273,7 +328,7 @@ func update_nutrient(tx *sql.Tx, nutrient *models.Nutrient) error {
 	return nil
 }
 func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, recipe schemas.Recipe_Patch) error {
-	stmtInsert, err := tx.Prepare(`INSERT INTO recipe_instruction (
+	stmt_insert, err := tx.Prepare(`INSERT INTO recipe_instruction (
 			id,
 			recipe_id,
 			instruction_description,
@@ -283,7 +338,8 @@ func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, r
 		log.Println("Error on update_instructions(stmtInsert)")
 		return err
 	}
-	stmtUpdate, err := tx.Prepare(`UPDATE recipe_instruction SET
+	defer stmt_insert.Close()
+	stmt_update, err := tx.Prepare(`UPDATE recipe_instruction SET
 		instruction_description = $1,
 		step_num = $2
 	WHERE id = $3`)
@@ -291,7 +347,8 @@ func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, r
 		log.Println("Error on update_instructions(stmtUpdate)")
 		return err
 	}
-	stmtDelete, err := tx.Prepare(`DELETE FROM recipe_instruction WHERE id = $1`)
+	defer stmt_update.Close()
+	stmt_delete, err := tx.Prepare(`DELETE FROM recipe_instruction WHERE id = $1`)
 	if err != nil {
 		log.Println("Error on update_instructions(stmtDelete)")
 		return err
@@ -300,7 +357,7 @@ func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, r
 		if item.Action_Type == constants.Action_Types.Insert {
 			id := uuid.New()
 			(*data)[i].ID = id
-			_, err = stmtInsert.Exec(
+			_, err = stmt_insert.Exec(
 				id,
 				recipe.ID,
 				item.Instruction_Description,
@@ -311,7 +368,7 @@ func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, r
 			}
 		}
 		if item.Action_Type == constants.Action_Types.Update {
-			_, err = stmtUpdate.Exec(
+			_, err = stmt_update.Exec(
 				item.Instruction_Description,
 				item.Step_Num,
 				item.ID)
@@ -321,7 +378,7 @@ func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, r
 			}
 		}
 		if item.Action_Type == constants.Action_Types.Delete {
-			_, err = stmtDelete.Exec(item.ID)
+			_, err = stmt_delete.Exec(item.ID)
 			if err != nil {
 				log.Println(" Error on update_instructions(stmtDelete.Exec)")
 				return err
