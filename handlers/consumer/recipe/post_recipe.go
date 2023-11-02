@@ -44,6 +44,7 @@ func Post_Recipe(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error 
 		log.Println("Post_Recipe | Error on generate_nutrients: ", err.Error())
 		return utilities.Send_Error(c, "An ingredient does not exist.", fiber.StatusBadRequest)
 	}
+	nutrient.Parent_ID = reqData.Recipe.ID
 
 	// Saving Recipe
 	err = save_recipe_txn(reqData, db, db_search, owner_id, nutrient)
@@ -306,10 +307,9 @@ func save_recipe_details(txn *sql.Tx, recipe *schemas.Req_Post_Recipe, nutrient 
 }
 func save_recipe_ingredients(txn *sql.Tx, recipe *schemas.Req_Post_Recipe) error {
 	// Saving Recipe Ingredients
-	stmt, err := txn.Prepare(
+	stmt_ingredient, err := txn.Prepare(
 		`INSERT INTO recipe_ingredient (
 				id,
-				food_id,
 				ingredient_mapping_id,
 				amount,
 				amount_unit,
@@ -319,25 +319,53 @@ func save_recipe_ingredients(txn *sql.Tx, recipe *schemas.Req_Post_Recipe) error
 			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 	)
 	if err != nil {
-		log.Println("save_recipe_ingredient (Prepare) | Error: ", err.Error())
+		log.Println("save_recipe_ingredient (Prepare 1) | Error: ", err.Error())
 		return err
 	}
-	defer stmt.Close()
+	defer stmt_ingredient.Close()
+	stmt_food, err := txn.Prepare(
+		`INSERT INTO recipe_ingredient (
+				id,
+				food_id,
+				amount,
+				amount_unit,
+				amount_unit_desc,
+				serving_size,
+				recipe_id)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+	)
+	if err != nil {
+		log.Println("save_recipe_ingredient (Prepare 2) | Error: ", err.Error())
+		return err
+	}
+	defer stmt_food.Close()
 	// Insert each row
 	for i, item := range recipe.Recipe_Ingredients {
 		id := uuid.New()
 		recipe.Recipe_Ingredients[i].ID = id
-		_, err := stmt.Exec(
-			id,
-			item.ID,
-			item.Food_Id,
-			item.Ingredient_Mapping_Id,
-			item.Amount,
-			item.Amount_Unit,
-			item.Amount_Unit_Desc,
-			item.Serving_Size,
-			recipe.Recipe.ID,
-		)
+		var err error
+		if item.Food_Id != constants.Empty_UUID {
+			_, err = stmt_food.Exec(
+				id,
+				item.Food_Id,
+				item.Amount,
+				item.Amount_Unit,
+				item.Amount_Unit_Desc,
+				item.Serving_Size,
+				recipe.Recipe.ID,
+			)
+		}
+		if item.Ingredient_Mapping_Id != constants.Empty_UUID {
+			_, err = stmt_ingredient.Exec(
+				id,
+				item.Ingredient_Mapping_Id,
+				item.Amount,
+				item.Amount_Unit,
+				item.Amount_Unit_Desc,
+				item.Serving_Size,
+				recipe.Recipe.ID,
+			)
+		}
 		if err != nil {
 			log.Println("save_recipe_ingredient (Exec) | Error: ", err.Error())
 			return err
@@ -380,6 +408,7 @@ func save_recipe_instructions(txn *sql.Tx, recipe *schemas.Req_Post_Recipe) erro
 func save_nutrient(txn *sql.Tx, nutrient *models.Nutrient) error {
 	_, err := txn.Exec(`INSERT INTO nutrient
 			(id,
+			parent_id,
 			amount,
 			amount_unit,
 			amount_unit_desc,
@@ -396,8 +425,9 @@ func save_nutrient(txn *sql.Tx, nutrient *models.Nutrient) error {
 			sodium,
 			iron,
 			calcium)
-		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
+		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
 		nutrient.ID,
+		nutrient.Parent_ID,
 		nutrient.Amount,
 		nutrient.Amount_Unit,
 		nutrient.Amount_Unit_Desc,
