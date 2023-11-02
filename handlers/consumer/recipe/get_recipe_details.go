@@ -50,7 +50,7 @@ func get_recipe_details_and_nutrients(db *sql.DB, recipe_id uuid.UUID, recipe *m
 			recipe.name_owner,
 			recipe.owner_id,
 			recipe.date_created,
-			COALESCE(recipe.category_id, 0),
+			recipe.category_id,
 			recipe.thumbnail_image_link,
 			recipe.main_image_link,
 			recipe.likes,
