@@ -63,11 +63,13 @@ func insert_recipe_images(db *sql.DB, recipe_images []schemas.Recipe_Image_Schem
 	// Insert each row
 	for i, img := range recipe_images {
 		id := uuid.New()
+		name_file := "recipe/" + id.String() + ".jpg"
 		recipe_images[i].ID = id
+		recipe_images[i].Name_File = name_file
 		_, err := stmt.Exec(
 			id,
 			img.Recipe_Id,
-			img.Name_File,
+			name_file,
 			img.Name_URL,
 			img.Amount,
 			img.Amount_Unit,
