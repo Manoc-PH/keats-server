@@ -8,10 +8,10 @@ import (
 
 //* RESPONSE
 type Res_Get_Intakes struct {
-	ID                    uint      `json:"id"`
+	ID                    uuid.UUID `json:"id"`
 	Account_Id            uuid.UUID `json:"account_id"`
-	Ingredient_Mapping_Id uint      `json:"ingredient_mapping_id"`
-	Food_Id               uint      `json:"food_id"`
+	Ingredient_Mapping_Id uuid.UUID `json:"ingredient_mapping_id"`
+	Food_Id               uuid.UUID `json:"food_id"`
 	Date_Created          time.Time `json:"date_created"`
 	// Calories              float32   `json:"calories"`
 	Amount           float32 `json:"amount"`
@@ -20,14 +20,14 @@ type Res_Get_Intakes struct {
 	Serving_Size     float32 `json:"serving_size"`
 
 	// Ingredient
-	Ingredient_Id                 uint   `json:"ingredient_id"`
-	Ingredient_Name               string `json:"ingredient_name"`
-	Ingredient_Name_Ph            string `json:"ingredient_name_ph"`
-	Ingredient_Variant_Name       string `json:"ingredient_variant_name"`
-	Ingredient_Variant_Name_Ph    string `json:"ingredient_variant_name_ph"`
-	Ingredient_Subvariant_Name    string `json:"ingredient_subvariant_name"`
-	Ingredient_Subvariant_Name_Ph string `json:"ingredient_subvariant_name_ph"`
-	Ingredient_Name_Owner         string `json:"ingredient_name_owner"`
+	Ingredient_Id                 uuid.UUID `json:"ingredient_id"`
+	Ingredient_Name               string    `json:"ingredient_name"`
+	Ingredient_Name_Ph            string    `json:"ingredient_name_ph"`
+	Ingredient_Variant_Name       string    `json:"ingredient_variant_name"`
+	Ingredient_Variant_Name_Ph    string    `json:"ingredient_variant_name_ph"`
+	Ingredient_Subvariant_Name    string    `json:"ingredient_subvariant_name"`
+	Ingredient_Subvariant_Name_Ph string    `json:"ingredient_subvariant_name_ph"`
+	Ingredient_Name_Owner         string    `json:"ingredient_name_owner"`
 
 	// Food
 	Food_Name       string `json:"food_name"`

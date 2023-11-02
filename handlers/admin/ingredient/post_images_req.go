@@ -13,6 +13,7 @@ import (
 
 	cld "github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Post_Images_Req(c *fiber.Ctx, db *sql.DB) error {
@@ -61,6 +62,7 @@ func insert_ingredient_images_req(db *sql.DB, ingredient_images []schemas.Ingred
 	// Prepare the SQL statement
 	stmt, err := txn.Prepare(
 		`INSERT INTO ingredient_image (
+				id,
 				ingredient_mapping_id,
 				name_file,
 				amount,
@@ -68,7 +70,7 @@ func insert_ingredient_images_req(db *sql.DB, ingredient_images []schemas.Ingred
 				amount_unit_desc,
 				name_url
 			)
-			VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 	)
 	if err != nil {
 		log.Println("insert_ingredient_images_req (Prepare) | Error: ", err.Error())
@@ -84,15 +86,16 @@ func insert_ingredient_images_req(db *sql.DB, ingredient_images []schemas.Ingred
 			txn.Rollback()
 			return err
 		}
-		row := stmt.QueryRow(img.Ingredient_Mapping_Id, name_file, img.Amount, img.Amount_Unit, img.Amount_Unit_Desc, "")
+		id := uuid.New()
+		_, err = stmt.Exec(id, img.Ingredient_Mapping_Id, name_file, img.Amount, img.Amount_Unit, img.Amount_Unit_Desc, "")
 		new_image := schemas.Ingredient_Image_Req{
+			ID:                    id,
 			Ingredient_Mapping_Id: img.Ingredient_Mapping_Id,
 			Name_File:             name_file,
 			Amount:                img.Amount,
 			Amount_Unit:           img.Amount_Unit,
 			Amount_Unit_Desc:      img.Amount_Unit_Desc,
 		}
-		err = row.Scan(&new_image.ID)
 		if err != nil {
 			log.Println("insert_ingredient_images_req (Exec) | Error: ", err.Error())
 			txn.Rollback()
@@ -109,7 +112,7 @@ func insert_ingredient_images_req(db *sql.DB, ingredient_images []schemas.Ingred
 	}
 	return nil
 }
-func generate_ingredient_img_name(db *sql.DB, ingredient_mapping_id uint, amount float32) (string, error) {
+func generate_ingredient_img_name(db *sql.DB, ingredient_mapping_id uuid.UUID, amount float32) (string, error) {
 	name := ""
 	variant_name := ""
 	subvariant_name := ""

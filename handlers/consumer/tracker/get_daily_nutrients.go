@@ -13,25 +13,26 @@ import (
 	"github.com/google/uuid"
 )
 
+// TODO Make sure only the owner can view daily nutrients
 // Gets the summary of nutrients for a single day
 func Get_Daily_Nutrients(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
-	_, Owner_Id, err := middlewares.AuthMiddleware(c)
+	_, owner_id, err := middlewares.AuthMiddleware(c)
 	if err != nil {
 		log.Println("Get_Daily_Nutrients | Error on auth middleware: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusUnauthorized)
 	}
-	account_exists := check_account_exists(db, Owner_Id)
+	account_exists := check_account_exists(db, owner_id)
 	if account_exists == false {
 		log.Println("Get_Daily_Nutrients | error account does not exist")
 		return utilities.Send_Error(c, "Account does not exist", fiber.StatusUnauthorized)
 	}
-	daily_nutrients := models.Daily_Nutrients{Account_Id: Owner_Id}
+	daily_nutrients := models.Daily_Nutrients{Account_Id: owner_id}
 	// querying Daily_Nutrients
-	row := query_daily_nutrients(db, Owner_Id)
+	row := query_daily_nutrients(db, owner_id)
 	err = scan_daily_nutrients(row, &daily_nutrients)
 	if err != nil && err == sql.ErrNoRows {
-		err = generate_daily_nutrients(db, Owner_Id, &daily_nutrients)
+		err = generate_daily_nutrients(db, owner_id, &daily_nutrients)
 		if err != nil {
 			log.Println("Get_Daily_Nutrients | error in generate_daily_nutrients: ", err.Error())
 			return utilities.Send_Error(c, "An error occured in getting daily nutrients", fiber.StatusInternalServerError)
@@ -56,11 +57,11 @@ func check_account_exists(db *sql.DB, Owner_Id uuid.UUID) bool {
 	}
 	return true
 }
-func generate_daily_nutrients(db *sql.DB, Owner_Id uuid.UUID, daily_nutrients *models.Daily_Nutrients) error {
+func generate_daily_nutrients(db *sql.DB, owner_id uuid.UUID, daily_nutrients *models.Daily_Nutrients) error {
 	consumer_vitals := models.Consumer_Vitals{}
 	activity_lvl := models.Activity_Lvl{}
 	diet_plan := models.Diet_Plan{}
-	err := query_and_scan_account_details(db, Owner_Id, &consumer_vitals, &activity_lvl, &diet_plan)
+	err := query_and_scan_account_details(db, owner_id, &consumer_vitals, &activity_lvl, &diet_plan)
 	if err != nil {
 		log.Println("Get_Daily_Nutrients | error in query_and_scan_account_details: ", err.Error())
 		return err
@@ -78,6 +79,7 @@ func generate_daily_nutrients(db *sql.DB, Owner_Id uuid.UUID, daily_nutrients *m
 		return err
 	}
 	prtn, crbs, fts := utilities.Calculate_Daily_Nutrients(calories, diet_plan.Protein_Percentage, diet_plan.Carbs_Percentage, diet_plan.Fats_Percentage)
+	daily_nutrients.ID = uuid.New()
 	daily_nutrients.Max_Calories = calories
 	daily_nutrients.Max_Protein = prtn
 	daily_nutrients.Max_Carbs = crbs
@@ -93,14 +95,14 @@ func generate_daily_nutrients(db *sql.DB, Owner_Id uuid.UUID, daily_nutrients *m
 	return nil
 }
 
-func query_daily_nutrients(db *sql.DB, user_id uuid.UUID) *sql.Row {
+func query_daily_nutrients(db *sql.DB, owner_id uuid.UUID) *sql.Row {
 	row := db.QueryRow(`SELECT
 			id, date_created, calories, protein, carbs, fats,
 			max_calories, max_protein, max_carbs, max_fats,
 			activity_lvl_id, diet_plan_id,
 			trans_fat, saturated_fat, sugars, fiber, sodium, iron, calcium
 		FROM daily_nutrients WHERE account_id = $1 AND date_created = $2;`,
-		user_id, time.Now().Format(constants.YYYY_MM_DD),
+		owner_id, time.Now().Format(constants.YYYY_MM_DD),
 	// casting timestamp to date
 	)
 	return row
@@ -132,7 +134,7 @@ func scan_daily_nutrients(row *sql.Row, daily_nutrients *models.Daily_Nutrients)
 	return err
 }
 func query_and_scan_account_details(
-	db *sql.DB, user_id uuid.UUID,
+	db *sql.DB, owner_id uuid.UUID,
 	consumer_vitals *models.Consumer_Vitals,
 	activity_lvl *models.Activity_Lvl,
 	diet_plan *models.Diet_Plan) error {
@@ -155,7 +157,7 @@ func query_and_scan_account_details(
 		JOIN activity_lvl ON consumer_vitals.activity_lvl_id = activity_lvl.id
 		JOIN diet_plan ON consumer_vitals.diet_plan_id = diet_plan.id
 		WHERE consumer_vitals.account_id = $1`,
-		user_id,
+		owner_id,
 	)
 	err := row.Scan(
 		&consumer_vitals.Account_Id,
@@ -178,8 +180,9 @@ func query_and_scan_account_details(
 	return err
 }
 func insert_d_nutrients(db *sql.DB, daily_nutrients *models.Daily_Nutrients, consumer_vitals *models.Consumer_Vitals) error {
-	row := db.
-		QueryRow(`INSERT INTO daily_nutrients (
+	_, err := db.
+		Exec(`INSERT INTO daily_nutrients (
+			id,
 			account_id,
 			date_created,
 			calories,
@@ -192,8 +195,8 @@ func insert_d_nutrients(db *sql.DB, daily_nutrients *models.Daily_Nutrients, con
 			max_fats,
 			activity_lvl_id,
 			diet_plan_id
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
-			daily_nutrients.Account_Id, time.Now().Format(constants.YYYY_MM_DD), 0, 0, 0, 0,
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
+			daily_nutrients.ID, daily_nutrients.Account_Id, time.Now().Format(constants.YYYY_MM_DD), 0, 0, 0, 0,
 			daily_nutrients.Max_Calories,
 			daily_nutrients.Max_Protein,
 			daily_nutrients.Max_Carbs,
@@ -201,7 +204,6 @@ func insert_d_nutrients(db *sql.DB, daily_nutrients *models.Daily_Nutrients, con
 			consumer_vitals.Activity_Lvl_Id,
 			consumer_vitals.Diet_Plan_Id,
 		)
-	err := row.Scan(&daily_nutrients.ID)
 	if err != nil {
 		return err
 	}

@@ -27,13 +27,14 @@ type Res_Post_Recipe struct {
 
 // Schemas
 type Recipe_Schema struct {
-	ID                   uint      `json:"id"`
+	ID                   uuid.UUID `json:"id"`
 	Name                 string    `json:"name" validate:"required"`
 	Name_Ph              string    `json:"name_ph"`
 	Name_Owner           string    `json:"name_owner" validate:"required"`
 	Owner_Id             uuid.UUID `json:"owner_id" validate:"required"`
 	Date_Created         time.Time `json:"date_created"`
-	Category_Id          uint      `json:"category_id"`
+	Category_Id          uuid.UUID `json:"category_id"`
+	Nutrient_Id          uuid.UUID `json:"nutrient_id"`
 	Thumbnail_Image_Link string    `json:"thumbnail_image_link"`
 	Main_Image_Link      string    `json:"main_image_link"`
 	Likes                uint      `json:"likes"`
@@ -45,20 +46,20 @@ type Recipe_Schema struct {
 	Description          string    `json:"description"`
 }
 type Recipe_Ingredient_Schema struct {
-	ID                    uint    `json:"id"`
-	Food_Id               uint    `json:"food_id" validate:"required_if=Ingredient_Mapping_Id 0"`
-	Ingredient_Mapping_Id uint    `json:"ingredient_mapping_id" validate:"required_if=Food_Id 0"`
-	Amount                float32 `json:"amount" validate:"required"`
-	Amount_Unit           string  `json:"amount_unit"`
-	Amount_Unit_Desc      string  `json:"amount_unit_desc"`
-	Serving_Size          float32 `json:"serving_size"`
-	Recipe_Id             uint    `json:"recipe_id"`
+	ID                    uuid.UUID `json:"id"`
+	Food_Id               uuid.UUID `json:"food_id" validate:"required_if=Ingredient_Mapping_Id 0"`
+	Ingredient_Mapping_Id uuid.UUID `json:"ingredient_mapping_id" validate:"required_if=Food_Id 0"`
+	Amount                float32   `json:"amount" validate:"required"`
+	Amount_Unit           string    `json:"amount_unit"`
+	Amount_Unit_Desc      string    `json:"amount_unit_desc"`
+	Serving_Size          float32   `json:"serving_size"`
+	Recipe_Id             uuid.UUID `json:"recipe_id"`
 }
 type Recipe_Instruction_Schema struct {
-	ID                      uint   `json:"id"`
-	Recipe_Id               uint   `json:"recipe_id"`
-	Instruction_Description string `json:"instruction_description" validate:"required"`
-	Step_Num                uint   `json:"step_num" validate:"required"`
+	ID                      uuid.UUID `json:"id"`
+	Recipe_Id               uuid.UUID `json:"recipe_id"`
+	Instruction_Description string    `json:"instruction_description" validate:"required"`
+	Step_Num                uint      `json:"step_num" validate:"required"`
 }
 
 // *SAMPLE RESPONSE

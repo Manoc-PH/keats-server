@@ -8,7 +8,6 @@ import (
 	"server/models"
 	schemas "server/schemas/admin/food"
 	"server/utilities"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -59,7 +58,7 @@ func confirm_food_images(db *sql.DB, food_images []models.Food_Image) error {
 		res, err := stmt.Exec(img.Name_URL, img.ID)
 		if rows_affected, _ := res.RowsAffected(); rows_affected < 1 {
 			log.Println("confirm_food_images (No Rows affected) | Error")
-			err = errors.New("Image with id of: " + strconv.Itoa(int(img.ID)) + " not found")
+			err = errors.New("Image with id of: " + img.ID.String() + " not found")
 			return err
 		}
 		if err != nil {

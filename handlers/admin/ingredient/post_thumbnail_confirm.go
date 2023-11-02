@@ -8,6 +8,7 @@ import (
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Post_Thumbnail_Confirm(c *fiber.Ctx, db *sql.DB) error {
@@ -36,7 +37,7 @@ func Post_Thumbnail_Confirm(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(reqData)
 }
 
-func confirm_thumbnail(db *sql.DB, thumbnail_link string, id uint) error {
+func confirm_thumbnail(db *sql.DB, thumbnail_link string, id uuid.UUID) error {
 	_, err := db.Exec(
 		`UPDATE ingredient SET thumbnail_image_link = $1 WHERE id = $2`,
 		thumbnail_link, id,

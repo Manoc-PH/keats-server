@@ -8,6 +8,7 @@ import (
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Put_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
@@ -49,7 +50,7 @@ func Put_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(old_ingredient_details)
 }
 
-func query_ingredient_mapping(db *sql.DB, ingredient_mapping_id uint) *sql.Row {
+func query_ingredient_mapping(db *sql.DB, ingredient_mapping_id uuid.UUID) *sql.Row {
 	row := db.QueryRow(`SELECT
 			ingredient.id,
 			ingredient.name,

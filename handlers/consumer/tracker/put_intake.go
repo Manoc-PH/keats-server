@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"log"
+	"server/constants"
 	"server/middlewares"
 	"server/models"
 	schemas "server/schemas/consumer/tracker"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
@@ -26,7 +28,7 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Put_Intake | Error on query validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
-	if reqData.Food_Id != 0 && reqData.Ingredient_Mapping_Id != 0 {
+	if reqData.Food_Id != constants.Empty_UUID && reqData.Ingredient_Mapping_Id != constants.Empty_UUID {
 		log.Println("Put_Intake | Error: user sending recipe id and food id")
 		return utilities.Send_Error(c, "only one food item id required, received 2", fiber.StatusBadRequest)
 	}
@@ -35,7 +37,7 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 	response_data := schemas.Res_Put_Intake{}
 
 	//* data processing
-	if reqData.Ingredient_Mapping_Id != 0 {
+	if reqData.Ingredient_Mapping_Id != constants.Empty_UUID {
 		intake := models.Intake{}
 		new_nutrient := models.Nutrient{}
 		old_nutrient := models.Nutrient{}
@@ -139,7 +141,7 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 		response_data.Intake = new_intake
 
 	}
-	if reqData.Food_Id != 0 {
+	if reqData.Food_Id != constants.Empty_UUID {
 		intake := models.Intake{}
 		new_nutrient := models.Nutrient{}
 		old_nutrient := models.Nutrient{}
@@ -245,7 +247,7 @@ func Put_Intake(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(response_data)
 }
 
-func query_ingredient_nutrient(ingredient_mapping_id uint, db *sql.DB) *sql.Row {
+func query_ingredient_nutrient(ingredient_mapping_id uuid.UUID, db *sql.DB) *sql.Row {
 	row := db.QueryRow(`SELECT
 			nutrient.id,
 			nutrient.amount,
@@ -271,7 +273,7 @@ func query_ingredient_nutrient(ingredient_mapping_id uint, db *sql.DB) *sql.Row 
 	)
 	return row
 }
-func query_food_nutrient(food_id uint, db *sql.DB) *sql.Row {
+func query_food_nutrient(food_id uuid.UUID, db *sql.DB) *sql.Row {
 	row := db.QueryRow(`SELECT
 			nutrient.id,
 			nutrient.amount,
@@ -335,7 +337,7 @@ func calc_daily_nutrients_update(old_d_nutrients *models.Nutrient, new_d_nutrien
 	d_nutrients_to_add.Calcium = new_d_nutrients.Calcium - old_d_nutrients.Calcium
 }
 func update_intake(txn *sql.Tx, intake *models.Intake) error {
-	if intake.Ingredient_Mapping_Id != 0 {
+	if intake.Ingredient_Mapping_Id != constants.Empty_UUID {
 		_, err := txn.Exec(
 			`UPDATE intake SET 
 				amount = $1,
@@ -356,7 +358,7 @@ func update_intake(txn *sql.Tx, intake *models.Intake) error {
 			return err
 		}
 	}
-	if intake.Food_Id != 0 {
+	if intake.Food_Id != constants.Empty_UUID {
 		_, err := txn.Exec(
 			`UPDATE intake SET 
 				amount = $1,

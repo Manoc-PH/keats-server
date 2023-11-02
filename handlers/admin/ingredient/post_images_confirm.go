@@ -7,7 +7,6 @@ import (
 	"server/middlewares"
 	schemas "server/schemas/admin/ingredient"
 	"server/utilities"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -58,7 +57,7 @@ func confirm_ingredient_images(db *sql.DB, ingredient_images []schemas.Ingredien
 		res, err := stmt.Exec(img.Name_URL, img.Name_File, img.ID)
 		if rows_affected, _ := res.RowsAffected(); rows_affected < 1 {
 			log.Println("confirm_ingredient_images (No Rows affected) | Error")
-			err = errors.New("Image with id of: " + strconv.Itoa(int(img.ID)) + " not found")
+			err = errors.New("Image with id of: " + img.ID.String() + " not found")
 			return err
 		}
 		if err != nil {

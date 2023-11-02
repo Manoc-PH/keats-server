@@ -8,8 +8,10 @@ import (
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
+// TODO GENERATE FILE URL HERE
 func Post_Images(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
 	_, _, err := middlewares.AuthMiddleware(c)
@@ -43,13 +45,14 @@ func insert_recipe_images(db *sql.DB, recipe_images []schemas.Recipe_Image_Schem
 	// Prepare the SQL statement
 	stmt, err := txn.Prepare(
 		`INSERT INTO recipe_image (
+			id,
 			recipe_id,
 			name_file,
 			name_url,
 			amount,
 			amount_unit,
 			amount_unit_desc)
-		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 	)
 	if err != nil {
 		log.Println("insert_recipe_images (Prepare) | Error: ", err.Error())
@@ -59,24 +62,19 @@ func insert_recipe_images(db *sql.DB, recipe_images []schemas.Recipe_Image_Schem
 
 	// Insert each row
 	for i, img := range recipe_images {
-		row := stmt.QueryRow(
+		id := uuid.New()
+		name_file := "recipe/" + id.String() + ".jpg"
+		recipe_images[i].ID = id
+		recipe_images[i].Name_File = name_file
+		_, err := stmt.Exec(
+			id,
 			img.Recipe_Id,
-			img.Name_File,
+			name_file,
 			img.Name_URL,
 			img.Amount,
 			img.Amount_Unit,
 			img.Amount_Unit_Desc,
 		)
-		new_image := schemas.Recipe_Image_Schema{
-			Recipe_Id:        img.Recipe_Id,
-			Name_File:        img.Name_File,
-			Name_URL:         img.Name_URL,
-			Amount:           img.Amount,
-			Amount_Unit:      img.Amount_Unit,
-			Amount_Unit_Desc: img.Amount_Unit_Desc,
-		}
-		err = row.Scan(&new_image.ID)
-		recipe_images[i].ID = new_image.ID
 		if err != nil {
 			log.Println("insert_recipe_images (Exec) | Error: ", err.Error())
 		}

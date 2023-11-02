@@ -9,6 +9,7 @@ import (
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Get_Ingredient_Mapping_Details(c *fiber.Ctx, db *sql.DB) error {
@@ -73,7 +74,7 @@ func Get_Ingredient_Mapping_Details(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func query_ingredient_mapping(db *sql.DB, ingredient_mapping_id uint) *sql.Row {
+func query_ingredient_mapping(db *sql.DB, ingredient_mapping_id uuid.UUID) *sql.Row {
 	row := db.QueryRow(`SELECT
 			ingredient.id, ingredient.name, coalesce(ingredient.name_ph, ''), ingredient.name_owner,
 			ingredient_variant.id, ingredient_variant.name, coalesce(ingredient_variant.name_ph, ''), 
@@ -141,7 +142,7 @@ func scan_ingredient_mapping(row *sql.Row, ingredient_mapping *schemas.Res_Get_I
 	}
 	return nil
 }
-func get_ingredient_images(db *sql.DB, ingredient_mapping_id uint) ([]models.Ingredient_Image, error) {
+func get_ingredient_images(db *sql.DB, ingredient_mapping_id uuid.UUID) ([]models.Ingredient_Image, error) {
 	rows, err := db.Query(`SELECT
 			id,
 			ingredient_mapping_id,
