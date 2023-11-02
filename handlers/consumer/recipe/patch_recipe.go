@@ -353,6 +353,7 @@ func update_instructions(tx *sql.Tx, data *[]schemas.Recipe_Patch_Instruction, r
 		log.Println("Error on update_instructions(stmtDelete)")
 		return err
 	}
+	defer stmt_delete.Close()
 	for i, item := range *data {
 		if item.Action_Type == constants.Action_Types.Insert {
 			id := uuid.New()
