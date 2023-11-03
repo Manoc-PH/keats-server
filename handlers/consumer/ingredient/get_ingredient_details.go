@@ -8,6 +8,7 @@ import (
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Get_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
@@ -61,7 +62,7 @@ func Get_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
 			return utilities.Send_Error(c, "Ingredient does not exist", fiber.StatusBadRequest)
 		}
 		// querying ingredient images
-		images, err := query_and_scan_food_images(db, response.Ingredient_Mappings[0].ID)
+		images, err := get_ingredient_images(db, response.Ingredient_Mappings[0].ID)
 		if err != nil {
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
@@ -71,7 +72,7 @@ func Get_Ingredient_Details(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func query_ingredient_mappings(db *sql.DB, ingredient_id uint) (*sql.Rows, error) {
+func query_ingredient_mappings(db *sql.DB, ingredient_id uuid.UUID) (*sql.Rows, error) {
 	rows, err := db.Query(`
 		SELECT 
 			ingredient_mapping.id,

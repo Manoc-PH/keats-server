@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Post_Food_Details(c *fiber.Ctx, db *sql.DB) error {
@@ -31,6 +32,8 @@ func Post_Food_Details(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Post_Food_Details | Error on body validation: ", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
+	reqData.Nutrient.ID = uuid.New()
+	reqData.Food.ID = uuid.New()
 	// Inserting data
 	if err = insert_food_details(db, reqData); err != nil {
 		log.Println("Post_Food_Details | Error on body validation: ", err.Error())
@@ -47,7 +50,8 @@ func insert_food_details(db *sql.DB, food *schemas.Req_Post_Food_Details) error 
 	}
 	row := txn.QueryRow(`
 		INSERT INTO nutrient
-			(amount,
+			(id,
+			amount,
 			amount_unit,
 			amount_unit_desc,
 			serving_size,
@@ -63,9 +67,9 @@ func insert_food_details(db *sql.DB, food *schemas.Req_Post_Food_Details) error 
 			iron,
 			calcium,
 			serving_total)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-		RETURNING id
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
 	`,
+		food.Nutrient.ID,
 		food.Nutrient.Amount,
 		food.Nutrient.Amount_Unit,
 		food.Nutrient.Amount_Unit_Desc,
@@ -91,16 +95,17 @@ func insert_food_details(db *sql.DB, food *schemas.Req_Post_Food_Details) error 
 
 	row = txn.QueryRow(`
 		INSERT INTO food 
-			(name,
+			(id, 
+			name,
 			date_created,
 			barcode,
 			food_desc,
 			category_id,
 			food_type_id,
 			nutrient_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`,
+		food.Food.ID,
 		food.Food.Name,
 		time.Now(),
 		food.Food.Barcode,

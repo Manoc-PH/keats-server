@@ -1,10 +1,14 @@
 package schemas
 
-import "server/models"
+import (
+	"server/models"
+
+	"github.com/google/uuid"
+)
 
 // *REQUESTS
 type Req_Delete_Intake struct {
-	Intake_ID uint `json:"intake_id" validate:"required"`
+	Intake_ID uuid.UUID `json:"intake_id" validate:"required"`
 }
 
 type Res_Delete_Intake struct {

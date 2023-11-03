@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"log"
+	"server/constants"
 	"server/middlewares"
 	"server/models"
 	schemas "server/schemas/consumer/tracker"
@@ -12,11 +13,10 @@ import (
 	"github.com/google/uuid"
 )
 
-// TODO Update this handler, add handler for food
 // Gets the details of the intake
 func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
-	_, Owner_Id, err := middlewares.AuthMiddleware(c)
+	_, owner_id, err := middlewares.AuthMiddleware(c)
 	if err != nil {
 		log.Println("Get_Intake_Details | Error on auth middleware: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusUnauthorized)
@@ -29,7 +29,7 @@ func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 	}
 	intake := models.Intake{}
 	// querying intake
-	row := query_intake(db, Owner_Id, reqData.Intake_ID)
+	row := query_intake(db, owner_id, reqData.Intake_ID)
 	// scanning intake
 	err = scan_intake(row, &intake)
 	if err != nil && err == sql.ErrNoRows {
@@ -53,9 +53,9 @@ func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 		Amount_Unit_Desc:      intake.Amount_Unit_Desc,
 		Serving_Size:          intake.Serving_Size,
 	}
-	// TODO add query for food
-	if intake.Ingredient_Mapping_Id != 0 {
+	if intake.Ingredient_Mapping_Id != constants.Empty_UUID {
 		ingredient_mapping := schemas.Ingredient_Mapping_Schema{}
+		response.Ingredient = &schemas.Intake_Ingredient{}
 		// Getting ingredient data
 		row := query_ingredient(intake.Ingredient_Mapping_Id, db)
 		err = scan_ingredient(row, &ingredient_mapping)
@@ -64,25 +64,48 @@ func Get_Intake_Details(c *fiber.Ctx, db *sql.DB) error {
 			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 		}
 		response.Ingredient.Details = ingredient_mapping
-		// TODO add query for ingredient images
+		images, err := get_ingredient_images(db, intake.Ingredient_Mapping_Id)
+		if err != nil {
+			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+		}
+		response.Ingredient.Images = images
+		response.Food = nil
+	}
+	if intake.Food_Id != constants.Empty_UUID {
+		food_mapping := schemas.Food_Mapping_Schema{}
+		response.Food = &schemas.Intake_Food{}
+		// Getting ingredient data
+		row := query_food_and_nutrient(intake.Food_Id, db)
+		err = scan_food_and_nutrient(row, &food_mapping.Food, &food_mapping.Nutrient)
+		if err != nil {
+			log.Println("Post_Intake | Error on scanning food: ", err.Error())
+			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+		}
+		response.Food.Details = food_mapping
+		images, err := get_food_images(db, intake.Food_Id)
+		if err != nil {
+			return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+		}
+		response.Food.Images = images
+		response.Ingredient = nil
 	}
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func query_intake(db *sql.DB, user_id uuid.UUID, intake_id uint) *sql.Row {
+func query_intake(db *sql.DB, owner_id uuid.UUID, intake_id uuid.UUID) *sql.Row {
 	row := db.QueryRow(`SELECT
 			intake.id,
 			intake.account_id,
 			intake.date_created,
-			COALESCE(intake.ingredient_mapping_id, 0) as ingredient_mapping_id,
-			COALESCE(intake.food_id, 0) as food_id,
+			intake.ingredient_mapping_id as ingredient_mapping_id,
+			intake.food_id as food_id,
 			intake.amount,
 			intake.amount_unit,
 			intake.amount_unit_desc,
 			intake.serving_size
 		FROM intake
 		WHERE intake.account_id = $1 AND intake.id = $2`,
-		user_id, intake_id,
+		owner_id, intake_id,
 	)
 	return row
 }
@@ -100,4 +123,80 @@ func scan_intake(row *sql.Row, intake *models.Intake) error {
 		&intake.Serving_Size,
 	)
 	return err
+}
+func get_ingredient_images(db *sql.DB, ingredient_mapping_id uuid.UUID) ([]models.Ingredient_Image, error) {
+	rows, err := db.Query(`SELECT
+			id,
+			ingredient_mapping_id,
+			name_file,
+			name_url,
+			amount,
+			amount_unit,
+			amount_unit_desc
+		FROM ingredient_image
+		WHERE ingredient_mapping_id = $1`,
+		ingredient_mapping_id,
+	)
+	if err != nil {
+		log.Println("error in querying get_ingredient_images: ", err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+	ingredient_images := make([]models.Ingredient_Image, 0, 10)
+	for rows.Next() {
+		var ingredient_img = models.Ingredient_Image{}
+		if err := rows.
+			Scan(
+				&ingredient_img.ID,
+				&ingredient_img.Ingredient_Mapping_Id,
+				&ingredient_img.Name_File,
+				&ingredient_img.Name_URL,
+				&ingredient_img.Amount,
+				&ingredient_img.Amount_Unit,
+				&ingredient_img.Amount_Unit_Desc,
+			); err != nil {
+			log.Println("Get_Daily_Nutrients_List | error in scanning Daily_Nutrients: ", err.Error())
+			return nil, err
+		}
+		ingredient_images = append(ingredient_images, ingredient_img)
+	}
+	return ingredient_images, nil
+}
+func get_food_images(db *sql.DB, food_id uuid.UUID) ([]models.Food_Image, error) {
+	rows, err := db.Query(`SELECT
+			id,
+			food_id,
+			name_file,
+			name_url,
+			amount,
+			amount_unit,
+			amount_unit_desc
+		FROM food_image
+		WHERE food_id = $1`, food_id,
+	)
+	if err != nil {
+		log.Println("Get_Food_Details | error in querying food: ", err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+
+	images := make([]models.Food_Image, 0, 10)
+	for rows.Next() {
+		var new_image = models.Food_Image{}
+		if err := rows.
+			Scan(
+				&new_image.ID,
+				&new_image.Food_Id,
+				&new_image.Name_File,
+				&new_image.Name_URL,
+				&new_image.Amount,
+				&new_image.Amount_Unit,
+				&new_image.Amount_Unit_Desc,
+			); err != nil {
+			log.Println("Get_Food_Details | error in scanning image: ", err.Error())
+			return nil, err
+		}
+		images = append(images, new_image)
+	}
+	return images, err
 }

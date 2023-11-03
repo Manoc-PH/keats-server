@@ -7,7 +7,7 @@ import (
 )
 
 type Daily_Nutrients struct {
-	ID              uint      `json:"id"`
+	ID              uuid.UUID `json:"id"`
 	Account_Id      uuid.UUID `json:"account_id"`
 	Date_Created    time.Time `json:"date_created"`
 	Calories        float32   `json:"calories"`
@@ -31,16 +31,17 @@ type Daily_Nutrients struct {
 }
 
 type Nutrient struct {
-	ID               uint    `json:"id"`
-	Amount           float32 `json:"amount"`
-	Amount_Unit      string  `json:"amount_unit"`
-	Amount_Unit_Desc string  `json:"amount_unit_desc"`
-	Serving_Size     float32 `json:"serving_size"`
-	Serving_Total    float32 `json:"serving_total"`
-	Calories         float32 `json:"calories"`
-	Protein          float32 `json:"protein"`
-	Carbs            float32 `json:"carbs"`
-	Fats             float32 `json:"fats"`
+	ID               uuid.UUID `json:"id"`
+	Parent_ID        uuid.UUID `json:"parent_id"`
+	Amount           float32   `json:"amount"`
+	Amount_Unit      string    `json:"amount_unit"`
+	Amount_Unit_Desc string    `json:"amount_unit_desc"`
+	Serving_Size     float32   `json:"serving_size"`
+	Serving_Total    float32   `json:"serving_total"`
+	Calories         float32   `json:"calories"`
+	Protein          float32   `json:"protein"`
+	Carbs            float32   `json:"carbs"`
+	Fats             float32   `json:"fats"`
 	//
 	Trans_Fat     float32 `json:"trans_fat"`
 	Saturated_Fat float32 `json:"saturated_fat"`

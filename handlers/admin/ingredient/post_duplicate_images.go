@@ -9,6 +9,7 @@ import (
 	"server/utilities"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Post_Images_Duplicate(c *fiber.Ctx, db *sql.DB) error {
@@ -41,7 +42,7 @@ func Post_Images_Duplicate(c *fiber.Ctx, db *sql.DB) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func duplicate_ingredient_images(db *sql.DB, mapping_id uint, copied_mapping_id uint) ([]models.Ingredient_Image, error) {
+func duplicate_ingredient_images(db *sql.DB, mapping_id uuid.UUID, copied_mapping_id uuid.UUID) ([]models.Ingredient_Image, error) {
 	// Querying existing images
 	rows, err := db.Query(`SELECT 
 			ingredient_mapping_id,
@@ -80,6 +81,7 @@ func duplicate_ingredient_images(db *sql.DB, mapping_id uint, copied_mapping_id 
 	// Prepare the SQL statement
 	stmt, err := txn.Prepare(
 		`INSERT INTO ingredient_image (
+				id,
 				ingredient_mapping_id,
 				name_file,
 				amount,
@@ -87,7 +89,7 @@ func duplicate_ingredient_images(db *sql.DB, mapping_id uint, copied_mapping_id 
 				amount_unit_desc,
 				name_url
 			)
-			VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+			VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
 	)
 	if err != nil {
 		log.Println("insert_ingredient_images (Prepare) | Error: ", err.Error())
@@ -97,15 +99,16 @@ func duplicate_ingredient_images(db *sql.DB, mapping_id uint, copied_mapping_id 
 
 	// Insert each row
 	for i, img := range new_images {
-		row := stmt.QueryRow(img.Ingredient_Mapping_Id, img.Name_File, img.Amount, img.Amount_Unit, img.Amount_Unit_Desc, "")
+		id := uuid.New()
+		_, err = stmt.Exec(id, img.Ingredient_Mapping_Id, img.Name_File, img.Amount, img.Amount_Unit, img.Amount_Unit_Desc, "")
 		new_image := models.Ingredient_Image{
+			ID:                    id,
 			Ingredient_Mapping_Id: img.Ingredient_Mapping_Id,
 			Name_File:             img.Name_File,
 			Amount:                img.Amount,
 			Amount_Unit:           img.Amount_Unit,
 			Amount_Unit_Desc:      img.Amount_Unit_Desc,
 		}
-		err = row.Scan(&new_image.ID)
 		new_images[i] = new_image
 		if err != nil {
 			log.Println("insert_ingredient_images (Exec) | Error: ", err.Error())

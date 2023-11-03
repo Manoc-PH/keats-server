@@ -15,7 +15,7 @@ import (
 // Gets the summary of daily nutrients through a date range
 func Get_Common_Intakes(c *fiber.Ctx, db *sql.DB) error {
 	// auth validation
-	_, id, err := middlewares.AuthMiddleware(c)
+	_, owner_id, err := middlewares.AuthMiddleware(c)
 	if err != nil {
 		log.Println("Get_Common_Intakes | Error on auth middleware: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusUnauthorized)
@@ -28,23 +28,23 @@ func Get_Common_Intakes(c *fiber.Ctx, db *sql.DB) error {
 		return c.Status(fiber.StatusBadRequest).JSON(err_data)
 	}
 	// querying new_intake
-	common_intakes, err := query_and_scan_common_intakes(db, id, reqData)
+	common_intakes, err := query_and_scan_common_intakes(db, owner_id, reqData)
 	if err != nil && err != sql.ErrNoRows {
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
 	return c.Status(fiber.StatusOK).JSON(*common_intakes)
 }
 
-func query_and_scan_common_intakes(db *sql.DB, user_id uuid.UUID, reqData *schemas.Req_Get_Common_Intakes) (*schemas.Res_Get_Common_Intakes, error) {
+func query_and_scan_common_intakes(db *sql.DB, owner_id uuid.UUID, reqData *schemas.Req_Get_Common_Intakes) (*schemas.Res_Get_Common_Intakes, error) {
 	rows, err := db.Query(`
 			SELECT
-				coalesce(intake.food_id, 0),
-				coalesce(intake.ingredient_mapping_id, 0),
+				intake.food_id,
+				intake.ingredient_mapping_id,
 				COUNT(intake.ingredient_mapping_id) AS ingredient_count,
 				COUNT(intake.food_id) AS food_count,
-				coalesce(ingredient.id, 0), coalesce(ingredient.name, ''), coalesce(ingredient.name_ph, ''), coalesce(ingredient.name_owner, ''),
-				coalesce(ingredient_variant.id, 0), coalesce(ingredient_variant.name, ''), coalesce(ingredient_variant.name_ph, ''), 
-				coalesce(ingredient_subvariant.id, 0), coalesce(ingredient_subvariant.name, ''), coalesce(ingredient_subvariant.name_ph, ''),
+				ingredient.id, coalesce(ingredient.name, ''), coalesce(ingredient.name_ph, ''), coalesce(ingredient.name_owner, ''),
+				ingredient_variant.id, coalesce(ingredient_variant.name, ''), coalesce(ingredient_variant.name_ph, ''), 
+				ingredient_subvariant.id, coalesce(ingredient_subvariant.name, ''), coalesce(ingredient_subvariant.name_ph, ''),
 				coalesce(food.name, ''), coalesce(food.name_ph, ''), coalesce(food.name_owner, '')
 			FROM intake
 			LEFT JOIN ingredient_mapping ON intake.ingredient_mapping_id = ingredient_mapping.id   
@@ -62,7 +62,7 @@ func query_and_scan_common_intakes(db *sql.DB, user_id uuid.UUID, reqData *schem
 				ingredient_subvariant.id,
 				food.id HAVING COUNT(*) >= 1
 			ORDER BY COUNT(*) DESC LIMIT 15`,
-		user_id, reqData.Start_Date.Format(constants.YYYY_MM_DD), reqData.End_Date.Format(constants.YYYY_MM_DD),
+		owner_id, reqData.Start_Date.Format(constants.YYYY_MM_DD), reqData.End_Date.Format(constants.YYYY_MM_DD),
 	)
 	if err != nil {
 		log.Println("Get_Common_Intakes | error in querying common intakes: ", err.Error())

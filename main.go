@@ -23,8 +23,9 @@ func main() {
 	consumer_routes.Auth_Routes(app)
 	consumer_routes.Account_Routes(app)
 	consumer_routes.Tracker_Routes(app)
-	consumer_routes.Food_Routes(app)
 	consumer_routes.Ingredient_Routes(app)
+	consumer_routes.Food_Routes(app)
+	consumer_routes.Recipe_Routes(app)
 	consumer_routes.Common_Routes(app)
 	// Admin routes
 	admin_routes.Ingredient_Routes(app)
