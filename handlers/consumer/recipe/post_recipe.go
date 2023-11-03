@@ -157,7 +157,7 @@ func get_food_nutrient(food_id uuid.UUID, db *sql.DB, nutrient *models.Nutrient)
 	}
 	return nil
 }
-func generate_nutrients(db *sql.DB, reqData *[]schemas.Recipe_Ingredient_Schema, servings uint) (*models.Nutrient, error) {
+func generate_nutrients(db *sql.DB, reqData *[]schemas.Recipe_Ingredient_Post, servings uint) (*models.Nutrient, error) {
 	nutrient := new(models.Nutrient)
 	for _, item := range *reqData {
 		item_nutrient := new(models.Nutrient)
@@ -290,8 +290,8 @@ func save_recipe_details(txn *sql.Tx, recipe *schemas.Req_Post_Recipe, nutrient 
 		owner_id,
 		time.Now(),
 		// recipe.Recipe.Category_Id,
-		recipe.Recipe.Thumbnail_Image_Link,
-		recipe.Recipe.Main_Image_Link,
+		recipe.Recipe.Thumbnail_URL,
+		recipe.Recipe.Image_URL,
 		recipe.Recipe.Likes,
 		recipe.Recipe.Rating,
 		recipe.Recipe.Servings,
@@ -456,8 +456,8 @@ func save_recipe_to_meili(db_search *meilisearch.Client, recipe *schemas.Req_Pos
 		"name":                 recipe.Recipe.Name,
 		"name_ph":              recipe.Recipe.Name_Ph,
 		"name_owner":           recipe.Recipe.Name_Owner,
-		"thumbnail_image_link": recipe.Recipe.Thumbnail_Image_Link,
-		"main_image_link":      recipe.Recipe.Main_Image_Link,
+		"thumbnail_image_link": recipe.Recipe.Thumbnail_URL,
+		"main_image_link":      recipe.Recipe.Image_URL,
 		"rating":               recipe.Recipe.Rating,
 		"rating_count":         recipe.Recipe.Rating_Count,
 	}

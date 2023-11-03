@@ -7,23 +7,25 @@ import (
 )
 
 type Recipe struct {
-	ID                   uuid.UUID `json:"id"`
-	Name                 string    `json:"name"`
-	Name_Ph              string    `json:"name_ph"`
-	Name_Owner           string    `json:"name_owner"`
-	Owner_Id             uuid.UUID `json:"owner_id"`
-	Date_Created         time.Time `json:"date_created"`
-	Category_Id          uuid.UUID `json:"category_id"`
-	Thumbnail_Image_Link string    `json:"thumbnail_image_link"`
-	Main_Image_Link      string    `json:"main_image_link"`
-	Likes                uint      `json:"likes"`
-	Rating               float32   `json:"rating"`
-	Rating_Count         uint      `json:"rating_count"`
-	Servings             uint      `json:"servings"`
-	Servings_Size        uint      `json:"servings_size"`
-	Prep_Time            uint      `json:"prep_time"`
-	Description          string    `json:"description"`
-	Nutrient_Id          uuid.UUID `json:"nutrient_id"`
+	ID             uuid.UUID `json:"id"`
+	Name           string    `json:"name"`
+	Name_Ph        string    `json:"name_ph"`
+	Name_Owner     string    `json:"name_owner"`
+	Owner_Id       uuid.UUID `json:"owner_id"`
+	Date_Created   time.Time `json:"date_created"`
+	Category_Id    uuid.UUID `json:"category_id"`
+	Thumbnail_URL  string    `json:"thumbnail_url"`
+	Thumbnail_Name string    `json:"thumbnail_name"`
+	Image_URL      string    `json:"image_url"`
+	Image_Name     string    `json:"image_name"`
+	Likes          uint      `json:"likes"`
+	Rating         float32   `json:"rating"`
+	Rating_Count   uint      `json:"rating_count"`
+	Servings       uint      `json:"servings"`
+	Servings_Size  uint      `json:"servings_size"`
+	Prep_Time      uint      `json:"prep_time"`
+	Description    string    `json:"description"`
+	Nutrient_Id    uuid.UUID `json:"nutrient_id"`
 }
 type Recipe_Ingredient struct {
 	ID                    uuid.UUID `json:"id"`

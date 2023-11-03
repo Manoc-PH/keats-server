@@ -16,17 +16,19 @@ type Res_Patch_Recipe struct {
 
 // Schemas
 type Recipe_Patch struct {
-	ID                   uuid.UUID `json:"id" validate:"required"`
-	Name                 string    `json:"name" validate:"required"`
-	Name_Ph              string    `json:"name_ph"`
-	Category_Id          uuid.UUID `json:"category_id"`
-	Thumbnail_Image_Link string    `json:"thumbnail_image_link"`
-	Main_Image_Link      string    `json:"main_image_link"`
-	Servings             uint      `json:"servings" validate:"required"`
-	Servings_Size        float32   `json:"servings_size" validate:"required"`
-	Prep_Time            uint      `json:"prep_time" validate:"required"`
-	Description          string    `json:"description"`
-	Nutrient_Id          uuid.UUID `json:"nutrient_id"`
+	ID             uuid.UUID `json:"id" validate:"required"`
+	Name           string    `json:"name" validate:"required"`
+	Name_Ph        string    `json:"name_ph"`
+	Category_Id    uuid.UUID `json:"category_id"`
+	Thumbnail_URL  string    `json:"thumbnail_url"`
+	Thumbnail_Name string    `json:"thumbnail_name"`
+	Image_URL      string    `json:"image_url"`
+	Image_Name     string    `json:"image_name"`
+	Servings       uint      `json:"servings" validate:"required"`
+	Servings_Size  float32   `json:"servings_size" validate:"required"`
+	Prep_Time      uint      `json:"prep_time" validate:"required"`
+	Description    string    `json:"description"`
+	Nutrient_Id    uuid.UUID `json:"nutrient_id"`
 }
 
 // Client can send either delete, update, or insert action type which will determine what to do with the data
