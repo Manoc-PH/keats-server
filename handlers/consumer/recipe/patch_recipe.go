@@ -253,9 +253,9 @@ func update_recipe_ingredients(tx *sql.Tx, data *[]schemas.Recipe_Patch_Ingredie
 		return err
 	}
 
-	newIngredients := []schemas.Recipe_Ingredient_Schema{}
+	newIngredients := []schemas.Recipe_Ingredient_Post{}
 	for rows.Next() {
-		newIngredient := schemas.Recipe_Ingredient_Schema{}
+		newIngredient := schemas.Recipe_Ingredient_Post{}
 		err := rows.Scan(
 			&newIngredient.ID,
 			&newIngredient.Food_Id,
@@ -482,7 +482,7 @@ func get_food_nutrient_tx(food_id uuid.UUID, tx *sql.Tx, nutrient *models.Nutrie
 	}
 	return nil
 }
-func generate_nutrients_tx(tx *sql.Tx, reqData *[]schemas.Recipe_Ingredient_Schema, servings uint) (*models.Nutrient, error) {
+func generate_nutrients_tx(tx *sql.Tx, reqData *[]schemas.Recipe_Ingredient_Post, servings uint) (*models.Nutrient, error) {
 	nutrient := new(models.Nutrient)
 	for _, item := range *reqData {
 		item_nutrient := new(models.Nutrient)

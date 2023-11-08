@@ -43,7 +43,7 @@ func Post_Images_Req(c *fiber.Ctx, db *sql.DB) error {
 	// Generating signature
 	strTimestamp := strconv.FormatInt(reqData.Timestamp.Unix(), 10)
 	// TODO FIX SIGNATURE GENERATION
-	signature, err := cld.SignParameters(url.Values{"timestamp": []string{strTimestamp}}, setup.CloudinaryConfig.APISecret)
+	signature, err := cld.SignParameters(url.Values{"timestamp": []string{strTimestamp}}, setup.Cloudinary_Config.APISecret)
 	response := schemas.Res_Post_Images_Req{
 		Food_Images: reqData.Food_Images,
 		Signature:   signature,

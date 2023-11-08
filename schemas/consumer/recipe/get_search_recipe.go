@@ -8,14 +8,16 @@ type Req_Get_Search_Recipe struct {
 }
 
 type Search_Recipe_Result struct {
-	ID                   uuid.UUID `json:"id"`
-	Name                 string    `json:"name"`
-	Name_Ph              string    `json:"name_ph"`
-	Name_Owner           string    `json:"name_owner"`
-	Thumbnail_Image_Link string    `json:"thumbnail_image_link"`
-	Main_Image_Link      string    `json:"main_image_link"`
-	Rating               float32   `json:"rating"`
-	Rating_Count         uint      `json:"rating_count"`
+	ID             uuid.UUID `json:"id"`
+	Name           string    `json:"name"`
+	Name_Ph        string    `json:"name_ph"`
+	Name_Owner     string    `json:"name_owner"`
+	Thumbnail_URL  string    `json:"thumbnail_url"`
+	Thumbnail_Name string    `json:"thumbnail_name"`
+	Image_URL      string    `json:"image_url"`
+	Image_Name     string    `json:"image_name"`
+	Rating         float32   `json:"rating"`
+	Rating_Count   uint      `json:"rating_count"`
 }
 
 type Meili_Res struct {
