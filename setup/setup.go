@@ -152,7 +152,6 @@ func ConnectAdminDB() {
 // }
 
 func setupMeiliIngredients(db *sql.DB, db_search *meilisearch.Client) error {
-	db_search.Index("ingredients").DeleteAllDocuments()
 	numOfRows := 0
 	row := db.QueryRow(`SELECT COUNT(name) FROM ingredient`)
 	err := row.Scan(&numOfRows)
