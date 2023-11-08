@@ -9,43 +9,45 @@ import (
 
 // *REQUESTS
 type Req_Post_Recipe struct {
-	Recipe              Recipe_Schema               `json:"recipe"`
-	Recipe_Ingredients  []Recipe_Ingredient_Schema  `json:"recipe_ingredients" validate:"required,max=10,dive"`
-	Recipe_Instructions []Recipe_Instruction_Schema `json:"recipe_instructions" validate:"required,max=20,dive"`
-	Timestamp           time.Time                   `json:"timestamp" validate:"required"`
+	Recipe              Recipe_Post               `json:"recipe"`
+	Recipe_Ingredients  []Recipe_Ingredient_Post  `json:"recipe_ingredients" validate:"required,max=10,dive"`
+	Recipe_Instructions []Recipe_Instruction_Post `json:"recipe_instructions" validate:"required,max=20,dive"`
+	Timestamp           time.Time                 `json:"timestamp" validate:"required"`
 }
 
 // *RESPONSES
 type Res_Post_Recipe struct {
-	Recipe              Recipe_Schema               `json:"recipe"`
-	Recipe_Ingredients  []Recipe_Ingredient_Schema  `json:"recipe_ingredients"`
-	Recipe_Instructions []Recipe_Instruction_Schema `json:"recipe_instructions"`
-	Nutrient            models.Nutrient             `json:"nutrient"`
-	Signature           string                      `json:"signature"`
-	Timestamp           string                      `json:"timestamp"`
+	Recipe              Recipe_Post               `json:"recipe"`
+	Recipe_Ingredients  []Recipe_Ingredient_Post  `json:"recipe_ingredients"`
+	Recipe_Instructions []Recipe_Instruction_Post `json:"recipe_instructions"`
+	Nutrient            models.Nutrient           `json:"nutrient"`
+	Signature           string                    `json:"signature"`
+	Timestamp           string                    `json:"timestamp"`
 }
 
 // Schemas
-type Recipe_Schema struct {
-	ID                   uuid.UUID `json:"id"`
-	Name                 string    `json:"name" validate:"required"`
-	Name_Ph              string    `json:"name_ph"`
-	Name_Owner           string    `json:"name_owner" validate:"required"`
-	Owner_Id             uuid.UUID `json:"owner_id" validate:"required"`
-	Date_Created         time.Time `json:"date_created"`
-	Category_Id          uuid.UUID `json:"category_id"`
-	Nutrient_Id          uuid.UUID `json:"nutrient_id"`
-	Thumbnail_Image_Link string    `json:"thumbnail_image_link"`
-	Main_Image_Link      string    `json:"main_image_link"`
-	Likes                uint      `json:"likes"`
-	Rating               float32   `json:"rating"`
-	Rating_Count         uint      `json:"rating_count"`
-	Servings             uint      `json:"servings" validate:"required"`
-	Servings_Size        float32   `json:"servings_size" validate:"required"`
-	Prep_Time            uint      `json:"prep_time" validate:"required"`
-	Description          string    `json:"description"`
+type Recipe_Post struct {
+	ID             uuid.UUID `json:"id"`
+	Name           string    `json:"name" validate:"required"`
+	Name_Ph        string    `json:"name_ph"`
+	Name_Owner     string    `json:"name_owner" validate:"required"`
+	Owner_Id       uuid.UUID `json:"owner_id" validate:"required"`
+	Date_Created   time.Time `json:"date_created"`
+	Category_Id    uuid.UUID `json:"category_id"`
+	Nutrient_Id    uuid.UUID `json:"nutrient_id"`
+	Thumbnail_URL  string    `json:"thumbnail_url"`
+	Thumbnail_Name string    `json:"thumbnail_name"`
+	Image_URL      string    `json:"image_url"`
+	Image_Name     string    `json:"image_name"`
+	Likes          uint      `json:"likes"`
+	Rating         float32   `json:"rating"`
+	Rating_Count   uint      `json:"rating_count"`
+	Servings       uint      `json:"servings" validate:"required"`
+	Servings_Size  float32   `json:"servings_size" validate:"required"`
+	Prep_Time      uint      `json:"prep_time" validate:"required"`
+	Description    string    `json:"description"`
 }
-type Recipe_Ingredient_Schema struct {
+type Recipe_Ingredient_Post struct {
 	ID                    uuid.UUID `json:"id"`
 	Food_Id               uuid.UUID `json:"food_id" validate:"required_if=Ingredient_Mapping_Id 0"`
 	Ingredient_Mapping_Id uuid.UUID `json:"ingredient_mapping_id" validate:"required_if=Food_Id 0"`
@@ -55,7 +57,7 @@ type Recipe_Ingredient_Schema struct {
 	Serving_Size          float32   `json:"serving_size"`
 	Recipe_Id             uuid.UUID `json:"recipe_id"`
 }
-type Recipe_Instruction_Schema struct {
+type Recipe_Instruction_Post struct {
 	ID                      uuid.UUID `json:"id"`
 	Recipe_Id               uuid.UUID `json:"recipe_id"`
 	Instruction_Description string    `json:"instruction_description" validate:"required"`

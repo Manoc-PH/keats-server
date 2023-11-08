@@ -36,7 +36,8 @@ func get_recipe_discovery(db *sql.DB, recipe *[]models.Recipe) error {
 			name,
 			name_ph,
 			name_owner,
-			main_image_link,
+			image_url,
+			image_name,
 			rating,
 			rating_count
 		FROM recipe
@@ -56,7 +57,8 @@ func get_recipe_discovery(db *sql.DB, recipe *[]models.Recipe) error {
 				&local_rec.Name,
 				&local_rec.Name_Ph,
 				&local_rec.Name_Owner,
-				&local_rec.Main_Image_Link,
+				&local_rec.Image_URL,
+				&local_rec.Image_Name,
 				&local_rec.Rating,
 				&local_rec.Rating_Count,
 			); err != nil {
