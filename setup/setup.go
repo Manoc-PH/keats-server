@@ -9,6 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/meilisearch/meilisearch-go"
 )
@@ -181,21 +182,22 @@ func setupMeiliIngredients(db *sql.DB, db_search *meilisearch.Client) error {
 }
 func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 	type ingredient_mapping struct {
-		Ingredient_Mapping_Id      uint   `json:"ingredient_mapping_id"`
-		Thumbnail_Image_Link       string `json:"thumbnail_image_link"`
-		Ingredient_Id              uint   `json:"ingredient_id"`
-		Ingredient_Name            string `json:"ingredient_name"`
-		Ingredient_Name_Ph         string `json:"ingredient_name_ph"`
-		Ingredient_Name_Owner      string `json:"ingredient_name_owner"`
-		Ingredient_Variant_Id      uint   `json:"ingredient_variant_id"`
-		Ingredient_Variant_Name    string `json:"ingredient_variant_name"`
-		Ingredient_Subvariant_Id   uint   `json:"ingredient_subvariant_id"`
-		Ingredient_Subvariant_Name string `json:"ingredient_subvariant_name"`
+		Ingredient_Mapping_Id      uuid.UUID `json:"ingredient_mapping_id"`
+		Thumbnail_Image_Link       string    `json:"thumbnail_image_link"`
+		Ingredient_Id              uuid.UUID `json:"ingredient_id"`
+		Ingredient_Name            string    `json:"ingredient_name"`
+		Ingredient_Name_Ph         string    `json:"ingredient_name_ph"`
+		Ingredient_Name_Owner      string    `json:"ingredient_name_owner"`
+		Ingredient_Variant_Id      uuid.UUID `json:"ingredient_variant_id"`
+		Ingredient_Variant_Name    string    `json:"ingredient_variant_name"`
+		Ingredient_Subvariant_Id   uuid.UUID `json:"ingredient_subvariant_id"`
+		Ingredient_Subvariant_Name string    `json:"ingredient_subvariant_name"`
 	}
-	type ingredient_details struct {
-		Ingredient_Mapping_Id      uint   `json:"ingredient_mapping_id"`
-		Ingredient_Variant_Name    string `json:"ingredient_variant_name"`
-		Ingredient_Subvariant_Name string `json:"ingredient_subvariant_name"`
+	type ingredient_mapping_details struct {
+		// mapping id
+		ID uuid.UUID `json:"id"`
+		// ingredient variant + subvariant name
+		N string `json:"n"`
 	}
 	// *This structure works for meilisearch
 	// Using showMatchesPosition parameter when searching we can find the match
@@ -203,12 +205,17 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 	// https://www.meilisearch.com/docs/reference/api/search#show-matches-position
 	// TODO ADD NAME_PH
 	type edible struct {
-		Id                   uint                 `json:"ingredient_id"`
-		Name                 string               `json:"name"`
-		Name_Ph              string               `json:"name_ph"`
-		Name_Owner           string               `json:"name_owner"`
-		Thumbnail_Image_Link string               `json:"thumbnail_image_link"`
-		Ingredient_Details   []ingredient_details `json:"ingredient_details"`
+		Id uuid.UUID `json:"ingredient_id"`
+		// name
+		N string `json:"n"`
+		// name_ph
+		N_Ph string `json:"n_ph"`
+		// name_owner
+		N_O string `json:"n_o"`
+		// thumbnail_image_link
+		T_I_L string `json:"t_i_l"`
+		// ingredient_details
+		I_De []ingredient_mapping_details `json:"i_de"`
 	}
 	docs := map[string]edible{}
 	rows, err := db.Query(`
@@ -219,9 +226,9 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 		ingredient.name_ph,
 		ingredient.name_owner,
 		ingredient.thumbnail_image_link,
-		coalesce(ingredient_variant.id, 0),
+		ingredient_variant.id,
 		coalesce(ingredient_variant.name, ''),
-		coalesce(ingredient_subvariant.id, 0),
+		ingredient_subvariant.id,
 		coalesce(ingredient_subvariant.name, '')
 	FROM ingredient_mapping
 	JOIN ingredient on ingredient_mapping.ingredient_id = ingredient.id
@@ -247,35 +254,34 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 			); err != nil {
 			log.Println("Error scanning ingredient: ", err.Error())
 		}
-		var new_ing_details = ingredient_details{
-			Ingredient_Mapping_Id:      new_ing.Ingredient_Mapping_Id,
-			Ingredient_Variant_Name:    new_ing.Ingredient_Variant_Name,
-			Ingredient_Subvariant_Name: new_ing.Ingredient_Subvariant_Name,
+		var new_ing_details = ingredient_mapping_details{
+			ID: new_ing.Ingredient_Mapping_Id,
+			N:  new_ing.Ingredient_Variant_Name + " " + new_ing.Ingredient_Subvariant_Name,
 		}
 		if entry, ok := docs[new_ing.Ingredient_Name]; ok {
-			entry.Ingredient_Details = append(entry.Ingredient_Details, new_ing_details)
+			entry.I_De = append(entry.I_De, new_ing_details)
 			docs[new_ing.Ingredient_Name] = entry
 		} else {
 			new_edible := edible{
-				Id:                   new_ing.Ingredient_Id,
-				Name:                 new_ing.Ingredient_Name,
-				Name_Ph:              new_ing.Ingredient_Name_Ph,
-				Name_Owner:           new_ing.Ingredient_Name_Owner,
-				Thumbnail_Image_Link: new_ing.Thumbnail_Image_Link,
+				Id:    new_ing.Ingredient_Id,
+				N:     new_ing.Ingredient_Name,
+				N_Ph:  new_ing.Ingredient_Name_Ph,
+				N_O:   new_ing.Ingredient_Name_Owner,
+				T_I_L: new_ing.Thumbnail_Image_Link,
 			}
-			new_edible.Ingredient_Details = append(new_edible.Ingredient_Details, new_ing_details)
+			new_edible.I_De = append(new_edible.I_De, new_ing_details)
 			docs[new_ing.Ingredient_Name] = new_edible
 		}
 	}
 	formatted_doc := []map[string]interface{}{}
 	for _, item := range docs {
 		new_item := []map[string]interface{}{{
-			"id":                   item.Id,
-			"name":                 item.Name,
-			"name_ph":              item.Name_Ph,
-			"name_owner":           item.Name_Owner,
-			"thumbnail_image_link": item.Thumbnail_Image_Link,
-			"ingredient_details":   item.Ingredient_Details,
+			"id":    item.Id,
+			"n":     item.N,
+			"n_ph":  item.N_Ph,
+			"n_o":   item.N_O,
+			"t_i_l": item.T_I_L,
+			"i_de":  item.I_De,
 		}}
 		formatted_doc = append(formatted_doc, new_item[0])
 	}
