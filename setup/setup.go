@@ -229,7 +229,7 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 		coalesce(ingredient_variant.name, ''),
 		ingredient_subvariant.id,
 		coalesce(ingredient_subvariant.name, ''),
-		nutrient.calories
+		CAST(nutrient.calories AS INTEGER)
 	FROM ingredient_mapping
 	JOIN nutrient on ingredient_mapping.nutrient_id = nutrient.id
 	JOIN ingredient on ingredient_mapping.ingredient_id = ingredient.id
