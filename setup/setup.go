@@ -286,7 +286,7 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 			if v.C > highest {
 				highest = v.C
 			}
-			if v.C < lowest {
+			if v.C < lowest || lowest == 0 {
 				lowest = v.C
 			}
 		}
