@@ -32,7 +32,7 @@ func Get_Search_Food(c *fiber.Ctx, db_search *meilisearch.Client) error {
 
 func search_food(db_search *meilisearch.Client, search_term string) []interface{} {
 	res, _ := db_search.Index("food").Search(search_term, &meilisearch.SearchRequest{
-		AttributesToRetrieve: []string{"id", "b", "n", "n_ph", "n_o", "t_i_l"},
+		AttributesToRetrieve: []string{"id", "b", "n", "n_o", "t_i_l", "s_t", "c"},
 		MatchingStrategy:     "last",
 	})
 	return res.Hits

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"server/utilities"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -169,13 +170,6 @@ func setupMeiliIngredients(db *sql.DB, db_search *meilisearch.Client) error {
 			Uid:        "ingredients",
 			PrimaryKey: "id",
 		})
-		filterableAttributes := []string{
-			"name",
-		}
-		db_search.Index("ingredients").UpdateFilterableAttributes(&filterableAttributes)
-		if err != nil {
-			log.Panicln("Could not create index for ingredient in meili db")
-		}
 		insert_ingredients(db, db_search)
 	}
 	return nil
@@ -192,12 +186,15 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 		Ingredient_Variant_Name    string    `json:"ingredient_variant_name"`
 		Ingredient_Subvariant_Id   uuid.UUID `json:"ingredient_subvariant_id"`
 		Ingredient_Subvariant_Name string    `json:"ingredient_subvariant_name"`
+		Calories                   int       `json:"calories"`
 	}
 	type ingredient_mapping_details struct {
 		// mapping id
 		ID uuid.UUID `json:"id"`
 		// ingredient variant + subvariant name
 		N string `json:"n"`
+		// calorie range
+		C int `json:"c"`
 	}
 	// *This structure works for meilisearch
 	// Using showMatchesPosition parameter when searching we can find the match
@@ -213,9 +210,11 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 		// name_owner
 		N_O string `json:"n_o"`
 		// thumbnail_image_link
-		T_I_L string `json:"t_i_l"`
+		T string `json:"t"`
 		// ingredient_details
-		I_De []ingredient_mapping_details `json:"i_de"`
+		D []ingredient_mapping_details `json:"d"`
+		// calorie range
+		C int `json:"c"`
 	}
 	docs := map[string]edible{}
 	rows, err := db.Query(`
@@ -229,8 +228,10 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 		ingredient_variant.id,
 		coalesce(ingredient_variant.name, ''),
 		ingredient_subvariant.id,
-		coalesce(ingredient_subvariant.name, '')
+		coalesce(ingredient_subvariant.name, ''),
+		nutrient.calories
 	FROM ingredient_mapping
+	JOIN nutrient on ingredient_mapping.nutrient_id = nutrient.id
 	JOIN ingredient on ingredient_mapping.ingredient_id = ingredient.id
 	JOIN ingredient_variant on ingredient_mapping.ingredient_variant_id = ingredient_variant.id
 	JOIN ingredient_subvariant on ingredient_mapping.ingredient_subvariant_id = ingredient_subvariant.id`)
@@ -251,37 +252,54 @@ func insert_ingredients(db *sql.DB, db_search *meilisearch.Client) {
 				&new_ing.Ingredient_Variant_Name,
 				&new_ing.Ingredient_Subvariant_Id,
 				&new_ing.Ingredient_Subvariant_Name,
+				&new_ing.Calories,
 			); err != nil {
 			log.Println("Error scanning ingredient: ", err.Error())
 		}
 		var new_ing_details = ingredient_mapping_details{
-			ID: new_ing.Ingredient_Mapping_Id,
-			N:  new_ing.Ingredient_Variant_Name + " " + new_ing.Ingredient_Subvariant_Name,
+			// ID: new_ing.Ingredient_Mapping_Id,
+			N: new_ing.Ingredient_Variant_Name + " " + new_ing.Ingredient_Subvariant_Name,
+			C: new_ing.Calories,
 		}
 		if entry, ok := docs[new_ing.Ingredient_Name]; ok {
-			entry.I_De = append(entry.I_De, new_ing_details)
+			entry.D = append(entry.D, new_ing_details)
 			docs[new_ing.Ingredient_Name] = entry
 		} else {
 			new_edible := edible{
-				Id:    new_ing.Ingredient_Id,
-				N:     new_ing.Ingredient_Name,
-				N_Ph:  new_ing.Ingredient_Name_Ph,
-				N_O:   new_ing.Ingredient_Name_Owner,
-				T_I_L: new_ing.Thumbnail_Image_Link,
+				Id:   new_ing.Ingredient_Id,
+				N:    new_ing.Ingredient_Name,
+				N_Ph: new_ing.Ingredient_Name_Ph,
+				N_O:  new_ing.Ingredient_Name_Owner,
+				T:    new_ing.Thumbnail_Image_Link,
+				C:    new_ing.Calories,
 			}
-			new_edible.I_De = append(new_edible.I_De, new_ing_details)
+			new_edible.D = append(new_edible.D, new_ing_details)
 			docs[new_ing.Ingredient_Name] = new_edible
 		}
 	}
 	formatted_doc := []map[string]interface{}{}
 	for _, item := range docs {
+		highest := 0
+		lowest := 0
+
+		for _, v := range item.D {
+			if v.C > highest {
+				highest = v.C
+			}
+			if v.C < lowest {
+				lowest = v.C
+			}
+		}
+
 		new_item := []map[string]interface{}{{
-			"id":    item.Id,
-			"n":     item.N,
-			"n_ph":  item.N_Ph,
-			"n_o":   item.N_O,
-			"t_i_l": item.T_I_L,
-			"i_de":  item.I_De,
+			"id":   item.Id,
+			"n":    item.N,
+			"n_ph": item.N_Ph,
+			"n_o":  item.N_O,
+			"t":    item.T,
+			"c_l":  strconv.Itoa(lowest),
+			"c_h":  strconv.Itoa(highest),
+			"d":    item.D,
 		}}
 		formatted_doc = append(formatted_doc, new_item[0])
 	}
