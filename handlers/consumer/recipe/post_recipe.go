@@ -157,7 +157,7 @@ func get_food_nutrient(food_id uuid.UUID, db *sql.DB, nutrient *models.Nutrient)
 	}
 	return nil
 }
-func generate_nutrients(db *sql.DB, reqData *[]schemas.Recipe_Ingredient_Schema, servings uint) (*models.Nutrient, error) {
+func generate_nutrients(db *sql.DB, reqData *[]schemas.Recipe_Ingredient_Post, servings uint) (*models.Nutrient, error) {
 	nutrient := new(models.Nutrient)
 	for _, item := range *reqData {
 		item_nutrient := new(models.Nutrient)
@@ -273,8 +273,10 @@ func save_recipe_details(txn *sql.Tx, recipe *schemas.Req_Post_Recipe, nutrient 
 			owner_id,
 			date_created,
 			-- category_id,
-			thumbnail_image_link,
-			main_image_link,
+			thumbnail_url,
+			thumbnail_name,
+			image_url,
+			image_name,
 			likes,
 			rating,
 			servings,
@@ -282,7 +284,7 @@ func save_recipe_details(txn *sql.Tx, recipe *schemas.Req_Post_Recipe, nutrient 
 			prep_time,
 			description,
 			nutrient_id)
-		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
 		recipe.Recipe.ID,
 		recipe.Recipe.Name,
 		recipe.Recipe.Name_Ph,
@@ -290,8 +292,10 @@ func save_recipe_details(txn *sql.Tx, recipe *schemas.Req_Post_Recipe, nutrient 
 		owner_id,
 		time.Now(),
 		// recipe.Recipe.Category_Id,
-		recipe.Recipe.Thumbnail_Image_Link,
-		recipe.Recipe.Main_Image_Link,
+		recipe.Recipe.Thumbnail_URL,
+		recipe.Recipe.Thumbnail_Name,
+		recipe.Recipe.Image_URL,
+		recipe.Recipe.Image_Name,
 		recipe.Recipe.Likes,
 		recipe.Recipe.Rating,
 		recipe.Recipe.Servings,
@@ -452,14 +456,14 @@ func save_nutrient(txn *sql.Tx, nutrient *models.Nutrient) error {
 }
 func save_recipe_to_meili(db_search *meilisearch.Client, recipe *schemas.Req_Post_Recipe) error {
 	new_item := map[string]interface{}{
-		"id":                   recipe.Recipe.ID,
-		"name":                 recipe.Recipe.Name,
-		"name_ph":              recipe.Recipe.Name_Ph,
-		"name_owner":           recipe.Recipe.Name_Owner,
-		"thumbnail_image_link": recipe.Recipe.Thumbnail_Image_Link,
-		"main_image_link":      recipe.Recipe.Main_Image_Link,
-		"rating":               recipe.Recipe.Rating,
-		"rating_count":         recipe.Recipe.Rating_Count,
+		"id":             recipe.Recipe.ID,
+		"name":           recipe.Recipe.Name,
+		"name_ph":        recipe.Recipe.Name_Ph,
+		"name_owner":     recipe.Recipe.Name_Owner,
+		"thumbnail_url":  recipe.Recipe.Thumbnail_URL,
+		"thumbnail_name": recipe.Recipe.Image_URL,
+		"rating":         recipe.Recipe.Rating,
+		"rating_count":   recipe.Recipe.Rating_Count,
 	}
 	_, err := db_search.Index("recipes").AddDocuments(new_item, "id")
 	if err != nil {

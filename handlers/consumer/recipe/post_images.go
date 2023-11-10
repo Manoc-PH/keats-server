@@ -68,6 +68,7 @@ func insert_recipe_images(db *sql.DB, recipe_images []schemas.Recipe_Image_Schem
 		name_url := setup.Cloudinary_URL + "/" + setup.Cloudinary_Config.CloudName + "/image/upload/recipe/images/" + id.String() + ".jpg"
 		recipe_images[i].ID = id
 		recipe_images[i].Name_File = name_file
+		recipe_images[i].Name_URL = name_url
 		_, err := stmt.Exec(
 			id,
 			img.Recipe_Id,

@@ -92,3 +92,9 @@ networks:
 
 # Command for rebuilding compose file:
 # docker-compose -f docker-compose.yml up -d --build
+
+# Command for cleaning docker
+# docker system prune -a --volumes
+
+# Command for deletin the build cache docker
+# docker builder prune -a

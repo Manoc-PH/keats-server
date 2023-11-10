@@ -73,7 +73,8 @@ func get_recipe_filtered(db *sql.DB, filter, order string) ([]models.Recipe, err
 				recipe.name,
 				recipe.name_ph,
 				recipe.name_owner,
-				recipe.main_image_link,
+				recipe.image_url,
+				recipe.image_name,
 				recipe.rating,
 				recipe.rating_count
 			FROM recipe
@@ -88,7 +89,8 @@ func get_recipe_filtered(db *sql.DB, filter, order string) ([]models.Recipe, err
 				recipe.name,
 				recipe.name_ph,
 				recipe.name_owner,
-				recipe.main_image_link,
+				recipe.image_url,
+				recipe.image_name,
 				recipe.rating,
 				recipe.rating_count
 			FROM recipe
@@ -109,7 +111,8 @@ func get_recipe_filtered(db *sql.DB, filter, order string) ([]models.Recipe, err
 				&local_rec.Name,
 				&local_rec.Name_Ph,
 				&local_rec.Name_Owner,
-				&local_rec.Main_Image_Link,
+				&local_rec.Image_URL,
+				&local_rec.Image_Name,
 				&local_rec.Rating,
 				&local_rec.Rating_Count,
 			); err != nil {
@@ -127,7 +130,8 @@ func get_recipe_created(db *sql.DB, owner_id uuid.UUID) ([]models.Recipe, error)
 			name,
 			name_ph,
 			name_owner,
-			main_image_link,
+			image_url,
+			image_name,
 			rating,
 			rating_count
 		FROM recipe 
@@ -146,7 +150,8 @@ func get_recipe_created(db *sql.DB, owner_id uuid.UUID) ([]models.Recipe, error)
 				&local_rec.Name,
 				&local_rec.Name_Ph,
 				&local_rec.Name_Owner,
-				&local_rec.Main_Image_Link,
+				&local_rec.Image_URL,
+				&local_rec.Image_Name,
 				&local_rec.Rating,
 				&local_rec.Rating_Count,
 			); err != nil {
@@ -164,7 +169,8 @@ func get_recipe_liked(db *sql.DB, owner_id uuid.UUID) ([]models.Recipe, error) {
 			recipe.name,
 			recipe.name_ph,
 			recipe.name_owner,
-			recipe.main_image_link,
+			recipe.image_url,
+			recipe.image_name,
 			recipe.rating,
 			recipe.rating_count
 		FROM recipe_like
@@ -184,7 +190,8 @@ func get_recipe_liked(db *sql.DB, owner_id uuid.UUID) ([]models.Recipe, error) {
 				&local_rec.Name,
 				&local_rec.Name_Ph,
 				&local_rec.Name_Owner,
-				&local_rec.Main_Image_Link,
+				&local_rec.Image_URL,
+				&local_rec.Image_Name,
 				&local_rec.Rating,
 				&local_rec.Rating_Count,
 			); err != nil {
