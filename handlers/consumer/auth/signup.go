@@ -137,6 +137,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	res := schemas.Res_Sign_Up{
+		ID:              account_id,
 		Token:           token,
 		Username:        account.Username,
 		Weight:          consumer_vitals.Weight,

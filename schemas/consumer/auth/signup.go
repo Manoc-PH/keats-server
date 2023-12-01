@@ -19,6 +19,7 @@ type Req_Sign_Up struct {
 	// time.Time SHOULD BE IN ISO STRING
 }
 type Res_Sign_Up struct {
+	ID              uuid.UUID `json:"id"`
 	Username        string    `json:"username"`
 	Weight          int       `json:"weight"`
 	Height          int       `json:"height"`

@@ -59,8 +59,10 @@ func Login(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	res := schemas.Res_Login{
-		Username: reqData.Username,
-		Token:    token,
+		ID:              user.ID,
+		Account_Type_Id: user.Account_Type_Id,
+		Username:        reqData.Username,
+		Token:           token,
 	}
 	log.Println("Successfully logged user in")
 	return c.JSON(res)
