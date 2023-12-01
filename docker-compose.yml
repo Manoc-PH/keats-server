@@ -98,3 +98,6 @@ networks:
 
 # Command for deletin the build cache docker
 # docker builder prune -a
+
+# Command for rebuilding only go
+# docker-compose build --no-cache app
