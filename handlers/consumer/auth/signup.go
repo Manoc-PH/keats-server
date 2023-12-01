@@ -136,18 +136,16 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		})
 	}
 
-	// saving jwt to cookie
-	cookie := fiber.Cookie{
-		Name:     "jwt",
-		Value:    token,
-		Expires:  time.Now().AddDate(0, 1, 0),
-		HTTPOnly: true,
-		SameSite: "None",
-		Secure:   true,
+	res := schemas.Res_Sign_Up{
+		Token:           token,
+		Username:        account.Username,
+		Weight:          consumer_vitals.Weight,
+		Height:          consumer_vitals.Height,
+		Birthday:        consumer_vitals.Birthday,
+		Sex:             consumer_vitals.Sex,
+		Activity_Lvl_Id: consumer_vitals.Activity_Lvl_Id,
+		Diet_Plan_Id:    consumer_vitals.Diet_Plan_Id,
 	}
-
-	c.Cookie(&cookie)
-
 	log.Println("Successfully registered account")
-	return c.JSON(account)
+	return c.JSON(res)
 }

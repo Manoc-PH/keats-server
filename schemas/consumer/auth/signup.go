@@ -18,3 +18,13 @@ type Req_Sign_Up struct {
 	Diet_Plan_Id    uuid.UUID `json:"diet_plan_id" validate:"required,min=1,max=32"`
 	// time.Time SHOULD BE IN ISO STRING
 }
+type Res_Sign_Up struct {
+	Username        string    `json:"username"`
+	Weight          int       `json:"weight"`
+	Height          int       `json:"height"`
+	Birthday        time.Time `json:"birthday"`
+	Sex             string    `json:"sex"`
+	Activity_Lvl_Id uuid.UUID `json:"activity_lvl_id"`
+	Diet_Plan_Id    uuid.UUID `json:"diet_plan_id"`
+	Token           string    `json:"token"`
+}

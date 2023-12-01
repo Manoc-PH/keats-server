@@ -58,19 +58,10 @@ func Login(c *fiber.Ctx, db *sql.DB) error {
 		})
 	}
 
-	// saving jwt to cookie
-	cookie := fiber.Cookie{
-		Name:     "jwt",
-		Value:    token,
-		Expires:  time.Now().AddDate(0, 1, 0),
-		HTTPOnly: true,
-		SameSite: "None",
-		Secure:   true,
+	res := schemas.Res_Login{
+		Username: reqData.Username,
+		Token:    token,
 	}
-
-	c.Cookie(&cookie)
-
-	user.Password = nil
 	log.Println("Successfully logged user in")
-	return c.JSON(user)
+	return c.JSON(res)
 }

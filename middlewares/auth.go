@@ -2,9 +2,11 @@ package middlewares
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"server/constants"
 	"server/models"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
@@ -12,11 +14,20 @@ import (
 )
 
 func AuthMiddleware(c *fiber.Ctx) (*jwt.Token, uuid.UUID, error) {
-	cookie := c.Cookies("jwt")
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return nil, uuid.Nil, errors.New("No token passed")
+	}
+
+	// Check if the Authorization header starts with "Bearer"
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		return nil, uuid.Nil, errors.New("No token passed")
+	}
+	bearer_token := strings.TrimPrefix(authHeader, "Bearer ")
 
 	// parsing token
 	token, err := jwt.ParseWithClaims(
-		cookie,
+		bearer_token,
 		&jwt.RegisteredClaims{},
 		func(t *jwt.Token) (interface{}, error) {
 			return []byte(constants.SecretKey), nil
