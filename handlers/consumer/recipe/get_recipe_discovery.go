@@ -67,7 +67,7 @@ func get_recipe_discovery(db *sql.DB, recipe *[]models.Recipe) error {
 		local_recipes = append(local_recipes, local_rec)
 	}
 	if len(local_recipes) > 5 {
-		recipe = &local_recipes
+		*recipe = local_recipes
 		return nil
 	}
 	return nil
