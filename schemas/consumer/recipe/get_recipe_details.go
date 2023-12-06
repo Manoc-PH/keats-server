@@ -12,5 +12,5 @@ type Req_Get_Recipe_Details struct {
 type Res_Get_Recipe_Details struct {
 	Recipe        models.Recipe         `json:"recipe"`
 	Recipe_Images []models.Recipe_Image `json:"recipe_images"`
-	Nutrients     models.Nutrient       `json:"nutrients"`
+	Nutrient      models.Nutrient       `json:"nutrient"`
 }

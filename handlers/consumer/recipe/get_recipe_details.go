@@ -27,7 +27,7 @@ func Get_Recipe_Details(c *fiber.Ctx, db *sql.DB) error {
 	}
 	response := new(schemas.Res_Get_Recipe_Details)
 	// * getting recipe details
-	err = get_recipe_details_and_nutrients(db, reqData.Recipe_Id, &response.Recipe, &response.Nutrients)
+	err = get_recipe_details_and_nutrients(db, reqData.Recipe_Id, &response.Recipe, &response.Nutrient)
 	if err != nil {
 		log.Println("get_recipe_details | Error on get_recipe_details_and_nutrients: ", err.Error())
 		return utilities.Send_Error(c, "An error occured in fetching recipe", fiber.StatusInternalServerError)

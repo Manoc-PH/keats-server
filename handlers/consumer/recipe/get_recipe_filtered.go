@@ -15,6 +15,7 @@ import (
 )
 
 func Get_Recipe_Filtered(c *fiber.Ctx, db *sql.DB) error {
+	// TODO ADD PAGE AND SIZE HANDLING
 	// auth validation
 	_, owner_id, err := middlewares.AuthMiddleware(c)
 	if err != nil {
