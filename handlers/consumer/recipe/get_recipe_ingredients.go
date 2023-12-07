@@ -44,6 +44,7 @@ func get_recipe_ingredients(db *sql.DB, recipe_id uuid.UUID, recipe_ings *[]sche
 			recipe_ingredient.amount_unit,
 			recipe_ingredient.amount_unit_desc,
 			recipe_ingredient.serving_size,
+			nutrient.calories,
 			COALESCE(food.name, ''),
 			COALESCE(food.name_owner, ''),
 			COALESCE(ingredient.name, ''),
@@ -51,6 +52,7 @@ func get_recipe_ingredients(db *sql.DB, recipe_id uuid.UUID, recipe_ings *[]sche
 			COALESCE(ingredient_subvariant.name, ''),
 			COALESCE(ingredient.name_owner, '') 
 		FROM recipe_ingredient
+		LEFT JOIN nutrient on recipe_ingredient.recipe_id = nutrient.parent_id
 		LEFT JOIN food on recipe_ingredient.food_id = food.id
 		LEFT JOIN ingredient_mapping ON recipe_ingredient.ingredient_mapping_id = ingredient_mapping.id
 		LEFT JOIN ingredient ON ingredient_mapping.ingredient_id = ingredient.id
@@ -80,6 +82,7 @@ func get_recipe_ingredients(db *sql.DB, recipe_id uuid.UUID, recipe_ings *[]sche
 				&recipe_ing.Amount_Unit,
 				&recipe_ing.Amount_Unit_Desc,
 				&recipe_ing.Serving_Size,
+				&recipe_ing.Calories,
 				&food_name,
 				&food_owner_name,
 				&ingredient_name,
