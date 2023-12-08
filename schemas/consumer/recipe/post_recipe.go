@@ -30,8 +30,8 @@ type Recipe_Post struct {
 	ID             uuid.UUID `json:"id"`
 	Name           string    `json:"name" validate:"required"`
 	Name_Ph        string    `json:"name_ph"`
-	Name_Owner     string    `json:"name_owner" validate:"required"`
-	Owner_Id       uuid.UUID `json:"owner_id" validate:"required"`
+	Name_Owner     string    `json:"name_owner"`
+	Owner_Id       uuid.UUID `json:"owner_id"`
 	Date_Created   time.Time `json:"date_created"`
 	Category_Id    uuid.UUID `json:"category_id"`
 	Nutrient_Id    uuid.UUID `json:"nutrient_id"`
@@ -43,7 +43,7 @@ type Recipe_Post struct {
 	Rating         float32   `json:"rating"`
 	Rating_Count   uint      `json:"rating_count"`
 	Servings       uint      `json:"servings" validate:"required"`
-	Servings_Size  float32   `json:"servings_size" validate:"required"`
+	Servings_Size  float32   `json:"servings_size"`
 	Prep_Time      uint      `json:"prep_time" validate:"required"`
 	Description    string    `json:"description"`
 }

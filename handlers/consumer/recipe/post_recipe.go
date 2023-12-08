@@ -38,6 +38,13 @@ func Post_Recipe(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error 
 	// Assigning id to recipe
 	reqData.Recipe.ID = uuid.New()
 
+	// Getting owner name
+	name_owner, err := get_name_owner(owner_id, db)
+	if err != nil {
+		return utilities.Send_Error(c, "An error occured in getting owner", fiber.StatusInternalServerError)
+	}
+	reqData.Recipe.Name_Owner = name_owner
+
 	// Generating the nutrients
 	nutrient, err := generate_nutrients(db, &reqData.Recipe_Ingredients, reqData.Recipe.Servings)
 	if err != nil {
@@ -156,6 +163,15 @@ func get_food_nutrient(food_id uuid.UUID, db *sql.DB, nutrient *models.Nutrient)
 		return err
 	}
 	return nil
+}
+func get_name_owner(owner_id uuid.UUID, db *sql.DB) (string, error) {
+	row := db.QueryRow(`SELECT name_first, name_last FROM consumer_profile  WHERE account_id = $1`, owner_id)
+	name_first := ""
+	name_last := ""
+	if err := row.Scan(&name_first, &name_last); err != nil {
+		return "", err
+	}
+	return (name_first + " " + name_last), nil
 }
 func generate_nutrients(db *sql.DB, reqData *[]schemas.Recipe_Ingredient_Post, servings uint) (*models.Nutrient, error) {
 	nutrient := new(models.Nutrient)
