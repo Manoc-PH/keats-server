@@ -11,7 +11,7 @@ func Recipe_Routes(app *fiber.App) {
 	r := app.Group("/api/recipe")
 
 	r.Post("", func(c *fiber.Ctx) error { return handlers.Post_Recipe(c, setup.DB, setup.DB_Search) })
-	r.Post("/images", func(c *fiber.Ctx) error { return handlers.Post_Image(c, setup.DB) })
+	r.Post("/image", func(c *fiber.Ctx) error { return handlers.Post_Image(c, setup.DB) })
 	r.Post("/review", func(c *fiber.Ctx) error { return handlers.Post_Recipe_Review(c, setup.DB, setup.DB_Search) })
 	r.Post("/like", func(c *fiber.Ctx) error { return handlers.Post_Recipe_Like(c, setup.DB) })
 	r.Get("", func(c *fiber.Ctx) error { return handlers.Get_Recipe_Details(c, setup.DB) })

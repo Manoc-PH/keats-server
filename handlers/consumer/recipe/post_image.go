@@ -35,28 +35,29 @@ func Post_Image(c *fiber.Ctx, db *sql.DB) error {
 		log.Println("Post_Images_Req | Error on insert_recipe_image: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 	}
-	strTimestamp := strconv.FormatInt(time.Time.Unix(time.Now()), 10)
+	strTimestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	values := url.Values{
+		"timestamp": []string{strTimestamp},
+		"public_id": []string{new_image.Name_File},
+	}
 	signature, err := cld.SignParameters(
-		url.Values{
-			"timestamp": []string{strTimestamp},
-			"public_id": []string{new_image.Name_File},
-		},
+		values,
 		setup.Cloudinary_Config.APISecret,
 	)
 
-	response := schemas.Res_Post_Image{
-		Signature:  signature,
-		Timestamp:  strTimestamp,
-		Upload_URL: setup.Cloudinary_URL + "/" + setup.Cloudinary_Config.CloudName + "/image/upload",
-		API_key:    setup.Cloudinary_Config.APIKey,
-	}
-	return c.Status(fiber.StatusOK).JSON(response)
+	new_image.Signature = signature
+	new_image.Timestamp = strTimestamp
+	new_image.Upload_URL = setup.Cloudinary_URL + "/" + setup.Cloudinary_Config.CloudName + "/image/upload"
+	new_image.API_key = setup.Cloudinary_Config.APIKey
+
+	return c.Status(fiber.StatusOK).JSON(new_image)
 }
 
-func insert_recipe_image(db *sql.DB, recipe_image schemas.Req_Post_Image) (schemas.Req_Post_Image, error) {
+func insert_recipe_image(db *sql.DB, recipe_image schemas.Req_Post_Image) (schemas.Res_Post_Image, error) {
 	id := uuid.New()
-	new_image := schemas.Req_Post_Image{
+	new_image := schemas.Res_Post_Image{
 		ID:             id,
+		Recipe_Id:      recipe_image.Recipe_Id,
 		Name_File:      "/recipe/images/" + id.String() + ".jpg",
 		Name_URL:       setup.Cloudinary_URL + "/" + setup.Cloudinary_Config.CloudName + "/image/upload/recipe/images/" + id.String() + ".jpg",
 		Name_URL_Local: recipe_image.Name_URL_Local,
@@ -69,7 +70,8 @@ func insert_recipe_image(db *sql.DB, recipe_image schemas.Req_Post_Image) (schem
 		amount,
 		amount_unit,
 		amount_unit_desc)
-	VALUES ($1, $2, $3, $4, $5, $6, $7)`, id,
+	VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		id,
 		new_image.Recipe_Id,
 		new_image.Name_File,
 		new_image.Name_URL,
