@@ -50,7 +50,7 @@ type Cloudinary_Config_Type struct {
 }
 
 var Cloudinary_Config Cloudinary_Config_Type
-var Cloudinary_URL = "https://res.cloudinary.com"
+var Cloudinary_URL string
 
 func SetupApp() *fiber.App {
 	app := fiber.New(FiberConfig)
@@ -62,6 +62,7 @@ func SetupApp() *fiber.App {
 	CloudName := utilities.GoDotEnvVariable("CLOUDINARY_NAME")
 	APIKey := utilities.GoDotEnvVariable("CLOUDINARY_API_KEY")
 	APISecret := utilities.GoDotEnvVariable("CLOUDINARY_API_SECRET")
+	Cloudinary_URL = utilities.GoDotEnvVariable("CLOUDINARY_URL")
 	Cloudinary_Config = Cloudinary_Config_Type{
 		CloudName: CloudName,
 		APIKey:    APIKey,
