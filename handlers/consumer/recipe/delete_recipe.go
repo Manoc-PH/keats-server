@@ -47,6 +47,13 @@ func Delete_Recipe(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) erro
 		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
 	}
 
+	// deleting recipe images
+	err = delete_recipe_images(tx, reqData.ID)
+	if err != nil {
+		log.Println("Delete_Recipe | Error on delete_recipe_images: ", err.Error())
+		return utilities.Send_Error(c, "An error occured", fiber.StatusInternalServerError)
+	}
+
 	// deleting recipe
 	err = delete_recipe(tx, reqData.ID)
 	if err != nil {
@@ -85,6 +92,10 @@ func get_recipe_nutrient_id_and_owner(db *sql.DB, recipe_id uuid.UUID, recipe *m
 		return err
 	}
 	return nil
+}
+func delete_recipe_images(tx *sql.Tx, recipe_id uuid.UUID) error {
+	_, err := tx.Exec(`DELETE FROM recipe_images WHERE recipe_id = $1`, recipe_id)
+	return err
 }
 func delete_recipe(tx *sql.Tx, recipe_id uuid.UUID) error {
 	_, err := tx.Exec(`DELETE FROM recipe WHERE id = $1`, recipe_id)
