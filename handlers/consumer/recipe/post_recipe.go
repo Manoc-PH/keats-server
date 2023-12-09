@@ -3,17 +3,13 @@ package handlers
 import (
 	"database/sql"
 	"log"
-	"net/url"
 	"server/constants"
 	"server/middlewares"
 	"server/models"
 	schemas "server/schemas/consumer/recipe"
-	"server/setup"
 	"server/utilities"
-	"strconv"
 	"time"
 
-	cld "github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/meilisearch/meilisearch-go"
@@ -60,17 +56,11 @@ func Post_Recipe(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error 
 	}
 
 	// Generating signature
-	strTimestamp := strconv.FormatInt(reqData.Timestamp.Unix(), 10)
-	signature, err := cld.SignParameters(url.Values{"timestamp": []string{strTimestamp}}, setup.Cloudinary_Config.APISecret)
 	response := schemas.Res_Post_Recipe{
 		Recipe:              reqData.Recipe,
 		Recipe_Ingredients:  reqData.Recipe_Ingredients,
 		Recipe_Instructions: reqData.Recipe_Instructions,
-		Nutrient:            *nutrient,
-		Signature:           signature,
-		Timestamp:           strTimestamp,
-		Upload_URL:          setup.Cloudinary_URL + "/" + setup.Cloudinary_Config.CloudName + "/image/upload",
-		API_key:             setup.Cloudinary_Config.APIKey}
+		Nutrient:            *nutrient}
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 func get_ingredient_nutrient(ingredient_mapping_id uuid.UUID, db *sql.DB, nutrient *models.Nutrient) error {
