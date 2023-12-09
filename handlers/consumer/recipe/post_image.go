@@ -59,7 +59,7 @@ func insert_recipe_image(db *sql.DB, recipe_image schemas.Req_Post_Image) (schem
 		ID:             id,
 		Recipe_Id:      recipe_image.Recipe_Id,
 		Name_File:      "/recipe/images/" + id.String(),
-		Name_URL:       setup.Cloudinary_URL + "/" + setup.CloudName + "/image/upload/recipe/images/" + id.String() + ".jpg",
+		Name_URL:       setup.CLOUDINARY_UPLOADED_URL + "/" + setup.CloudName + "/image/upload/keats/recipe/images/" + id.String() + ".jpg",
 		Name_URL_Local: recipe_image.Name_URL_Local,
 	}
 	_, err := db.Exec(`INSERT INTO recipe_image (
