@@ -58,7 +58,7 @@ func insert_recipe_image(db *sql.DB, recipe_image schemas.Req_Post_Image) (schem
 	new_image := schemas.Res_Post_Image{
 		ID:             id,
 		Recipe_Id:      recipe_image.Recipe_Id,
-		Name_File:      "/recipe/images/" + id.String() + ".jpg",
+		Name_File:      "/recipe/images/" + id.String(),
 		Name_URL:       setup.Cloudinary_URL + "/" + setup.Cloudinary_Config.CloudName + "/image/upload/recipe/images/" + id.String() + ".jpg",
 		Name_URL_Local: recipe_image.Name_URL_Local,
 	}
