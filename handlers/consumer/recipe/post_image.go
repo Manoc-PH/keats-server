@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"log"
-	"net/url"
 	"server/middlewares"
 	schemas "server/schemas/consumer/recipe"
 	"server/setup"
@@ -36,9 +35,10 @@ func Post_Image(c *fiber.Ctx, db *sql.DB) error {
 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
 	}
 	strTimestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	values := url.Values{
-		"timestamp": []string{strTimestamp},
-		"public_id": []string{new_image.Name_File},
+	// ! DO NOT USE url.Values IT CRASHES THE SERVER ON CONCCURENT REQS
+	values := map[string][]string{
+		"timestamp": {strTimestamp},
+		"public_id": {new_image.Name_File},
 	}
 	signature, err := cld.SignParameters(
 		values,
