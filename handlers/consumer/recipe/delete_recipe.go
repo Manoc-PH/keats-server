@@ -94,7 +94,7 @@ func get_recipe_nutrient_id_and_owner(db *sql.DB, recipe_id uuid.UUID, recipe *m
 	return nil
 }
 func delete_recipe_images(tx *sql.Tx, recipe_id uuid.UUID) error {
-	_, err := tx.Exec(`DELETE FROM recipe_images WHERE recipe_id = $1`, recipe_id)
+	_, err := tx.Exec(`DELETE FROM recipe_image WHERE recipe_id = $1`, recipe_id)
 	return err
 }
 func delete_recipe(tx *sql.Tx, recipe_id uuid.UUID) error {
