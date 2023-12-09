@@ -22,7 +22,7 @@ type Recipe struct {
 	Rating         float32   `json:"rating"`
 	Rating_Count   uint      `json:"rating_count"`
 	Servings       uint      `json:"servings"`
-	Servings_Size  uint      `json:"servings_size"`
+	Servings_Size  float32   `json:"servings_size"`
 	Prep_Time      uint      `json:"prep_time"`
 	Description    string    `json:"description"`
 	Nutrient_Id    uuid.UUID `json:"nutrient_id"`
