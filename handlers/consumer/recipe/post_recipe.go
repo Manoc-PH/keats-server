@@ -70,7 +70,7 @@ func Post_Recipe(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error 
 		Signature:           signature,
 		Timestamp:           strTimestamp,
 		Upload_URL:          setup.Cloudinary_URL + "/" + setup.Cloudinary_Config.CloudName + "/image/upload",
-	}
+		API_key:             setup.Cloudinary_Config.APIKey}
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 func get_ingredient_nutrient(ingredient_mapping_id uuid.UUID, db *sql.DB, nutrient *models.Nutrient) error {

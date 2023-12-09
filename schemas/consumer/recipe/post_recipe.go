@@ -24,6 +24,7 @@ type Res_Post_Recipe struct {
 	Signature           string                    `json:"signature"`
 	Timestamp           string                    `json:"timestamp"`
 	Upload_URL          string                    `json:"upload_url"`
+	API_key             string                    `json:"api_key"`
 }
 
 // Schemas
