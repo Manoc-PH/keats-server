@@ -14,6 +14,7 @@ type Recipe_Image_Schema struct {
 	Recipe_Id        uuid.UUID `json:"recipe_id" validate:"required"`
 	Name_File        string    `json:"name_file"`
 	Name_URL         string    `json:"name_url"`
+	Name_URL_Local   string    `json:"name_url_local"`
 	Amount           float32   `json:"amount"`
 	Amount_Unit      string    `json:"amount_unit"`
 	Amount_Unit_Desc string    `json:"amount_unit_desc"`

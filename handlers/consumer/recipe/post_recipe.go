@@ -69,6 +69,7 @@ func Post_Recipe(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error 
 		Nutrient:            *nutrient,
 		Signature:           signature,
 		Timestamp:           strTimestamp,
+		Upload_URL:          setup.Cloudinary_URL + "/" + setup.Cloudinary_Config.CloudName + "/image/upload",
 	}
 	return c.Status(fiber.StatusOK).JSON(response)
 }
