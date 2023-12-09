@@ -12,7 +12,6 @@ type Req_Post_Recipe struct {
 	Recipe              Recipe_Post               `json:"recipe"`
 	Recipe_Ingredients  []Recipe_Ingredient_Post  `json:"recipe_ingredients" validate:"required,max=10,dive"`
 	Recipe_Instructions []Recipe_Instruction_Post `json:"recipe_instructions" validate:"required,max=20,dive"`
-	Timestamp           time.Time                 `json:"timestamp" validate:"required"`
 }
 
 // *RESPONSES
@@ -21,10 +20,6 @@ type Res_Post_Recipe struct {
 	Recipe_Ingredients  []Recipe_Ingredient_Post  `json:"recipe_ingredients"`
 	Recipe_Instructions []Recipe_Instruction_Post `json:"recipe_instructions"`
 	Nutrient            models.Nutrient           `json:"nutrient"`
-	Signature           string                    `json:"signature"`
-	Timestamp           string                    `json:"timestamp"`
-	Upload_URL          string                    `json:"upload_url"`
-	API_key             string                    `json:"api_key"`
 }
 
 // Schemas
