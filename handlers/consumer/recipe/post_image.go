@@ -42,13 +42,13 @@ func Post_Image(c *fiber.Ctx, db *sql.DB) error {
 	}
 	signature, err := cld.SignParameters(
 		values,
-		setup.Cloudinary_Config.APISecret,
+		setup.APISecret,
 	)
 
 	new_image.Signature = signature
 	new_image.Timestamp = strTimestamp
-	new_image.Upload_URL = setup.Cloudinary_URL + "/" + setup.Cloudinary_Config.CloudName + "/image/upload"
-	new_image.API_key = setup.Cloudinary_Config.APIKey
+	new_image.Upload_URL = setup.Cloudinary_URL + "/" + setup.CloudName + "/image/upload"
+	new_image.API_key = setup.APIKey
 
 	return c.Status(fiber.StatusOK).JSON(new_image)
 }
@@ -59,7 +59,7 @@ func insert_recipe_image(db *sql.DB, recipe_image schemas.Req_Post_Image) (schem
 		ID:             id,
 		Recipe_Id:      recipe_image.Recipe_Id,
 		Name_File:      "/recipe/images/" + id.String(),
-		Name_URL:       setup.Cloudinary_URL + "/" + setup.Cloudinary_Config.CloudName + "/image/upload/recipe/images/" + id.String() + ".jpg",
+		Name_URL:       setup.Cloudinary_URL + "/" + setup.CloudName + "/image/upload/recipe/images/" + id.String() + ".jpg",
 		Name_URL_Local: recipe_image.Name_URL_Local,
 	}
 	_, err := db.Exec(`INSERT INTO recipe_image (
