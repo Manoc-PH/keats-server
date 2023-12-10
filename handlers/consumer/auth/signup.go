@@ -96,7 +96,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 			consumer_vitals_id,
 			name_first,
 			name_last)
-		VALUES ($1, $2, $3, $4, $5)`,
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		account_profile.ID,
 		account_profile.Account_Id,
 		account_profile.Date_Updated,
