@@ -36,7 +36,7 @@ func search_recipe(db_search *meilisearch.Client, search_term string) []interfac
 			"id",
 			"name",
 			"name_owner",
-			"thumbnail_image_link",
+			"image_url",
 			"rating",
 			"rating_count",
 		},

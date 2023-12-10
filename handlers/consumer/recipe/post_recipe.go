@@ -463,14 +463,14 @@ func save_nutrient(txn *sql.Tx, nutrient *models.Nutrient) error {
 }
 func save_recipe_to_meili(db_search *meilisearch.Client, recipe *schemas.Req_Post_Recipe) error {
 	new_item := map[string]interface{}{
-		"id":             recipe.Recipe.ID,
-		"name":           recipe.Recipe.Name,
-		"name_ph":        recipe.Recipe.Name_Ph,
-		"name_owner":     recipe.Recipe.Name_Owner,
-		"thumbnail_url":  recipe.Recipe.Thumbnail_URL,
-		"thumbnail_name": recipe.Recipe.Image_URL,
-		"rating":         recipe.Recipe.Rating,
-		"rating_count":   recipe.Recipe.Rating_Count,
+		"id":            recipe.Recipe.ID,
+		"name":          recipe.Recipe.Name,
+		"name_ph":       recipe.Recipe.Name_Ph,
+		"name_owner":    recipe.Recipe.Name_Owner,
+		"thumbnail_url": recipe.Recipe.Thumbnail_URL,
+		"image_url":     recipe.Recipe.Image_URL,
+		"rating":        recipe.Recipe.Rating,
+		"rating_count":  recipe.Recipe.Rating_Count,
 	}
 	_, err := db_search.Index("recipes").AddDocuments(new_item, "id")
 	if err != nil {
