@@ -98,6 +98,7 @@ func update_recipe_main_image(db *sql.DB, recipe_image schemas.Req_Patch_Main_Im
 // https://cloudinary.com/documentation/upload_images#authenticated_requests
 func update_recipe_image_meili(db_search *meilisearch.Client, recipe schemas.Req_Patch_Main_Image) error {
 	new_item := map[string]interface{}{
+		"id":        recipe.Recipe_Id,
 		"image_url": recipe.Image_URL,
 	}
 	_, err := db_search.Index("recipes").UpdateDocuments(new_item, "id")
