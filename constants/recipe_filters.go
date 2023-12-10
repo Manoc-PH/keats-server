@@ -26,6 +26,8 @@ var Recipe_Nutrition_Categories = Recipe_Nutrition_Category_Struct{
 	L_Fats:    "l_fats",
 }
 
+// ! THIS CAUSES FATAL ERROR CONCURRENT READS TO A MAP
+// TODO CREATE A FUNCTION THAT OUTPUTS THIS DATA
 var Recipe_Nutrition_Categories_SQL = map[string]string{
 	"h_protein": "protein",
 	"h_carbs":   "carbs",

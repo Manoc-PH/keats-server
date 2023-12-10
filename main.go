@@ -13,6 +13,7 @@ func main() {
 	setup.ConnectAdminDB()
 	app := setup.SetupApp()
 
+	defer setup.DB.Close()
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
