@@ -25,7 +25,7 @@ func Recipe_Routes(app *fiber.App) {
 	r.Get("/filtered", func(c *fiber.Ctx) error { return handlers.Get_Recipe_Filtered(c, setup.DB) })
 	r.Patch("", func(c *fiber.Ctx) error { return handlers.Patch_Recipe(c, setup.DB, setup.DB_Search) })
 	r.Patch("/review", func(c *fiber.Ctx) error { return handlers.Patch_Recipe_Review(c, setup.DB, setup.DB_Search) })
-	r.Patch("/main/image", func(c *fiber.Ctx) error { return handlers.Patch_Main_Image(c, setup.DB) })
+	r.Patch("/main/image", func(c *fiber.Ctx) error { return handlers.Patch_Main_Image(c, setup.DB, setup.DB_Search) })
 	r.Delete("", func(c *fiber.Ctx) error { return handlers.Delete_Recipe(c, setup.DB, setup.DB_Search) })
 	r.Delete("/like", func(c *fiber.Ctx) error { return handlers.Delete_Recipe_Like(c, setup.DB) })
 	r.Delete("/review", func(c *fiber.Ctx) error { return handlers.Delete_Recipe_Review(c, setup.DB) })

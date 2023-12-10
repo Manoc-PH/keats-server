@@ -13,9 +13,10 @@ import (
 	cld "github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/meilisearch/meilisearch-go"
 )
 
-func Patch_Main_Image(c *fiber.Ctx, db *sql.DB) error {
+func Patch_Main_Image(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error {
 	// auth validation
 	_, _, err := middlewares.AuthMiddleware(c)
 	if err != nil {
@@ -53,6 +54,12 @@ func Patch_Main_Image(c *fiber.Ctx, db *sql.DB) error {
 	new_image.Upload_URL = setup.Cloudinary_URL + "/" + setup.CloudName + "/image/upload"
 	new_image.API_key = setup.APIKey
 
+	err = update_recipe_image_meili(db_search, *reqData)
+	if err != nil {
+		log.Println("Patch_Main_Image | Error on update_recipe_image_meili: ", err.Error())
+		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
+	}
+
 	return c.Status(fiber.StatusOK).JSON(new_image)
 }
 
@@ -89,3 +96,13 @@ func update_recipe_main_image(db *sql.DB, recipe_image schemas.Req_Patch_Main_Im
 
 // Documentation for uploading assets to cloudinary:
 // https://cloudinary.com/documentation/upload_images#authenticated_requests
+func update_recipe_image_meili(db_search *meilisearch.Client, recipe schemas.Req_Patch_Main_Image) error {
+	new_item := map[string]interface{}{
+		"image_url": recipe.Image_URL,
+	}
+	_, err := db_search.Index("recipes").UpdateDocuments(new_item, "id")
+	if err != nil {
+		return err
+	}
+	return nil
+}
