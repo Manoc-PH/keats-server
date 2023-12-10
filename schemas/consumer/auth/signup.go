@@ -10,6 +10,8 @@ type Req_Sign_Up struct {
 	Username string `json:"username" validate:"required,min=3,max=32"`
 	Password string `json:"password" validate:"required,min=10,max=32"` //,missingRequiredCharacters // add this for password validation
 
+	Name_First      string    `json:"name_first" validate:"required"`
+	Name_Last       string    `json:"name_last" validate:"required"`
 	Weight          int       `json:"weight" validate:"required,min=1,max=200"`
 	Height          int       `json:"height" validate:"required,min=1,max=250"`
 	Birthday        time.Time `json:"birthday" validate:"required"`

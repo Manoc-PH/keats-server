@@ -48,6 +48,8 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		Date_Updated:       time.Now(),
 		Date_Created:       time.Now(),
 		Consumer_Vitals_Id: consumer_vitals.ID,
+		Name_First:         reqData.Name_First,
+		Name_Last:          reqData.Name_Last,
 	}
 	account := models.Account{
 		ID:              account_id,
@@ -91,13 +93,17 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 			account_id,
 			date_updated,
 			date_created,
-			consumer_vitals_id)
+			consumer_vitals_id,
+			name_first,
+			name_last)
 		VALUES ($1, $2, $3, $4, $5)`,
 		account_profile.ID,
 		account_profile.Account_Id,
 		account_profile.Date_Updated,
 		account_profile.Date_Created,
 		account_profile.Consumer_Vitals_Id,
+		account_profile.Name_First,
+		account_profile.Name_Last,
 	)
 	if err != nil {
 		log.Println("Sign_Up | Error: ", err.Error())
