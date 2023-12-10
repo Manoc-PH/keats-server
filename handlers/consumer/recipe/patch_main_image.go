@@ -54,7 +54,7 @@ func Patch_Main_Image(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) e
 	new_image.Upload_URL = setup.Cloudinary_URL + "/" + setup.CloudName + "/image/upload"
 	new_image.API_key = setup.APIKey
 
-	err = update_recipe_image_meili(db_search, *reqData)
+	err = update_recipe_image_meili(db_search, new_image)
 	if err != nil {
 		log.Println("Patch_Main_Image | Error on update_recipe_image_meili: ", err.Error())
 		return utilities.Send_Error(c, err.Error(), fiber.StatusInternalServerError)
@@ -96,7 +96,7 @@ func update_recipe_main_image(db *sql.DB, recipe_image schemas.Req_Patch_Main_Im
 
 // Documentation for uploading assets to cloudinary:
 // https://cloudinary.com/documentation/upload_images#authenticated_requests
-func update_recipe_image_meili(db_search *meilisearch.Client, recipe schemas.Req_Patch_Main_Image) error {
+func update_recipe_image_meili(db_search *meilisearch.Client, recipe schemas.Res_Patch_Main_Image) error {
 	new_item := map[string]interface{}{
 		"id":        recipe.Recipe_Id,
 		"image_url": recipe.Image_URL,
