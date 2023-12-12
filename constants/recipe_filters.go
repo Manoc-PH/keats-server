@@ -26,21 +26,36 @@ var Recipe_Nutrition_Categories = Recipe_Nutrition_Category_Struct{
 	L_Fats:    "l_fats",
 }
 
-// ! THIS CAUSES FATAL ERROR CONCURRENT READS TO A MAP
-// TODO CREATE A FUNCTION THAT OUTPUTS THIS DATA
-var Recipe_Nutrition_Categories_SQL = map[string]string{
-	"h_protein": "protein",
-	"h_carbs":   "carbs",
-	"h_fats":    "fats",
-	"l_cal":     "calories",
-	"l_carbs":   "carbs",
-	"l_fats":    "fats",
+func Get_Nutrition_Categories(v string) string {
+	var Recipe_Nutrition_Categories_SQL = map[string]string{
+		"h_protein": "protein",
+		"h_carbs":   "carbs",
+		"h_fats":    "fats",
+		"l_cal":     "calories",
+		"l_carbs":   "carbs",
+		"l_fats":    "fats",
+	}
+
+	value, exists := Recipe_Nutrition_Categories_SQL[v]
+	if exists {
+		return value
+	} else {
+		return ""
+	}
 }
-var Recipe_Nutrition_Categories_Order = map[string]string{
-	"h_protein": "DESC",
-	"h_carbs":   "DESC",
-	"h_fats":    "DESC",
-	"l_cal":     "ASC",
-	"l_carbs":   "ASC",
-	"l_fats":    "ASC",
+func Get_Nutrition_Categories_Order(v string) string {
+	var Recipe_Nutrition_Categories_Order = map[string]string{
+		"h_protein": "DESC",
+		"h_carbs":   "DESC",
+		"h_fats":    "DESC",
+		"l_cal":     "ASC",
+		"l_carbs":   "ASC",
+		"l_fats":    "ASC",
+	}
+	value, exists := Recipe_Nutrition_Categories_Order[v]
+	if exists {
+		return value
+	} else {
+		return ""
+	}
 }

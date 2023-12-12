@@ -52,8 +52,8 @@ func Get_Recipe_Filtered(c *fiber.Ctx, db *sql.DB) error {
 	// getting recipe details
 	recipes, err := get_recipe_filtered(
 		db,
-		constants.Recipe_Nutrition_Categories_SQL[reqData.Filter],
-		constants.Recipe_Nutrition_Categories_Order[reqData.Filter],
+		constants.Get_Nutrition_Categories(reqData.Filter),
+		constants.Get_Nutrition_Categories_Order(reqData.Filter),
 	)
 	if err != nil {
 		log.Println("Get_Recipe_Filtered | Error on get_recipe_filtered: ", err.Error())
