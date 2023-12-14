@@ -18,7 +18,6 @@ type Res_Patch_Recipe struct {
 type Recipe_Patch struct {
 	ID             uuid.UUID `json:"id" validate:"required"`
 	Name           string    `json:"name" validate:"required"`
-	Name_Ph        string    `json:"name_ph"`
 	Category_Id    uuid.UUID `json:"category_id"`
 	Thumbnail_URL  string    `json:"thumbnail_url"`
 	Thumbnail_Name string    `json:"thumbnail_name"`

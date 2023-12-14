@@ -80,15 +80,13 @@ func Patch_Recipe(c *fiber.Ctx, db *sql.DB, db_search *meilisearch.Client) error
 func update_recipe_details(tx *sql.Tx, data *schemas.Recipe_Patch) error {
 	// TODO ADD category_id, thumbnail_image_link, main_image_link
 	_, err := tx.Exec(`UPDATE recipe SET 
-			name = $1,
-			name_ph = $2,
-			servings = $3,
-			servings_size = $4,
-			prep_time = $5,
-			description = $6
-		WHERE id = $7`,
+			name = $1, 
+			servings = $2,
+			servings_size = $3,
+			prep_time = $4,
+			description = $5
+		WHERE id = $6`,
 		data.Name,
-		data.Name_Ph,
 		data.Servings,
 		data.Servings_Size,
 		data.Prep_Time,
@@ -100,9 +98,8 @@ func update_recipe_details(tx *sql.Tx, data *schemas.Recipe_Patch) error {
 func update_recipe_details_meili(db_search *meilisearch.Client, data *schemas.Recipe_Patch) error {
 	document := []map[string]interface{}{
 		{
-			"id":      data.ID,
-			"name":    data.Name,
-			"name_ph": data.Name_Ph,
+			"id":   data.ID,
+			"name": data.Name,
 		},
 	}
 	_, err := db_search.Index("recipes").UpdateDocuments(document)
