@@ -152,6 +152,7 @@ func Sign_Up(c *fiber.Ctx, db *sql.DB) error {
 		Sex:             consumer_vitals.Sex,
 		Activity_Lvl_Id: consumer_vitals.Activity_Lvl_Id,
 		Diet_Plan_Id:    consumer_vitals.Diet_Plan_Id,
+		Account_Type_Id: account_type_id,
 	}
 	log.Println("Successfully registered account")
 	return c.JSON(res)

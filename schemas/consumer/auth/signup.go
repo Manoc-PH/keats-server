@@ -30,4 +30,5 @@ type Res_Sign_Up struct {
 	Activity_Lvl_Id uuid.UUID `json:"activity_lvl_id"`
 	Diet_Plan_Id    uuid.UUID `json:"diet_plan_id"`
 	Token           string    `json:"token"`
+	Account_Type_Id uuid.UUID `json:"account_type_id"`
 }
