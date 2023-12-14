@@ -39,9 +39,9 @@ type Recipe_Post struct {
 	Likes          uint      `json:"likes"`
 	Rating         float32   `json:"rating"`
 	Rating_Count   uint      `json:"rating_count"`
-	Servings       uint      `json:"servings" validate:"required"`
+	Servings       float32   `json:"servings" validate:"required"`
 	Servings_Size  float32   `json:"servings_size"`
-	Prep_Time      uint      `json:"prep_time" validate:"required"`
+	Prep_Time      float32   `json:"prep_time" validate:"required"`
 	Description    string    `json:"description"`
 }
 type Recipe_Ingredient_Post struct {

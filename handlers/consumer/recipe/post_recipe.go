@@ -164,7 +164,7 @@ func get_name_owner(owner_id uuid.UUID, db *sql.DB) (string, error) {
 	}
 	return (name_first + " " + name_last), nil
 }
-func generate_nutrients(db *sql.DB, reqData *[]schemas.Recipe_Ingredient_Post, servings uint) (*models.Nutrient, error) {
+func generate_nutrients(db *sql.DB, reqData *[]schemas.Recipe_Ingredient_Post, servings float32) (*models.Nutrient, error) {
 	nutrient := new(models.Nutrient)
 	for _, item := range *reqData {
 		item_nutrient := new(models.Nutrient)

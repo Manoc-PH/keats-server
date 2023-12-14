@@ -25,7 +25,7 @@ type Recipe_Patch struct {
 	Image_Name     string    `json:"image_name"`
 	Servings       uint      `json:"servings" validate:"required"`
 	Servings_Size  float32   `json:"servings_size" validate:"required"`
-	Prep_Time      uint      `json:"prep_time" validate:"required"`
+	Prep_Time      float32   `json:"prep_time" validate:"required"`
 	Description    string    `json:"description"`
 	Nutrient_Id    uuid.UUID `json:"nutrient_id"`
 }
